@@ -1,8 +1,8 @@
 # Build output
 /dist/
 /bin/
-/devcontainer-lint
-/devcontainer-lsp
+/dcx
+/dcx.exe
 
 # Test and coverage artefacts
 *.test

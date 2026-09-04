@@ -1,9 +1,22 @@
-BINARY := devcontainer-lint
-PKG    := lonhutt.com/devcontainer-lint
+BINARY := dcx
+PKG    := github.com/lonhutt/dcx
+
+# Windows has no Unix `date`, and GNU make dispatches $(shell) through cmd.exe
+# there, so guard the shell-dependent defaults. CI passes these in explicitly.
+ifeq ($(OS),Windows_NT)
+  EXT  := .exe
+  DATE ?= unknown
+else
+  EXT  :=
+  DATE ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+endif
 
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 COMMIT  ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo none)
-DATE    ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+
+# Race is the local default. CI clears it on the legs where it is not wanted:
+# it needs cgo and a C toolchain, and adds nothing outside linux/amd64.
+TESTFLAGS ?= -race
 
 LDFLAGS := -s -w \
 	-X main.version=$(VERSION) \
@@ -14,15 +27,15 @@ LDFLAGS := -s -w \
 
 .PHONY: build
 build: ## Build the CLI into ./bin
-	go build -ldflags "$(LDFLAGS)" -o bin/$(BINARY) ./cmd/$(BINARY)
+	go build -ldflags "$(LDFLAGS)" -o bin/$(BINARY)$(EXT) ./cmd/$(BINARY)
 
 .PHONY: test
-test: ## Run tests with the race detector
-	go test -race ./...
+test: ## Run tests (TESTFLAGS=-race by default)
+	go test $(TESTFLAGS) ./...
 
 .PHONY: cover
 cover: ## Run tests and write a coverage profile
-	go test -race -coverprofile=coverage.out ./...
+	go test $(TESTFLAGS) -coverprofile=coverage.out -covermode=atomic ./...
 	go tool cover -func=coverage.out | tail -1
 
 .PHONY: vet

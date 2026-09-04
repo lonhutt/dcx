@@ -33,4 +33,4 @@ formatters:
   settings:
     goimports:
       local-prefixes:
-        - lonhutt.com/devcontainer-lint
+        - github.com/lonhutt/dcx

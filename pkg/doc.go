@@ -1,4 +1,4 @@
-// Package devcontainerlint documents the public API surface of devcontainer-lint.
+// Package dcx documents the public API surface of dcx.
 //
 // Everything under pkg/ is public, semver-stable API. Rule IDs, the Diagnostic
 // shape, and the exported signatures of these packages are a compatibility
@@ -18,4 +18,4 @@
 //	report    -> render the resulting diagnostics
 //
 // with position, vfs, and diagnostic as the shared vocabulary beneath all of it.
-package devcontainerlint
+package dcx

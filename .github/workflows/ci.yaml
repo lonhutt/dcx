@@ -2,32 +2,114 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+
+# Least privilege: nothing here needs write access.
+permissions:
+  contents: read
+
+# A newer push to the same ref cancels the older run, so redundant work does not
+# eat into the wall-time budget.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  # All six release targets must compile. Cross-compilation on ubuntu runners is
+  # far cheaper than native arm runners and asserts exactly what we need here:
+  # that the code builds everywhere we ship.
   build:
+    name: build ${{ matrix.goos }}/${{ matrix.goarch }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {goos: linux, goarch: amd64}
+          - {goos: linux, goarch: arm64}
+          - {goos: darwin, goarch: amd64}
+          - {goos: darwin, goarch: arm64}
+          - {goos: windows, goarch: amd64}
+          - {goos: windows, goarch: arm64}
     steps:
-      - name: Checkout repository code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: actions/setup-go@v5
         with:
-          go-version-file: 'go.mod'
-      
-      - name: build
-        run: make build
+          go-version-file: go.mod
+          cache: true
 
-      - name: test
-        run: make test
-      
-      - name: vet
-        run: make vet
-      
-      - name: lint
-        run: make lint
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: go build ./...
+
+  # Tests run natively. The race detector is restricted to linux/amd64: it needs
+  # cgo and a C toolchain, and running it on every leg buys no extra signal while
+  # costing minutes.
+  test:
+    name: test ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-latest, race: true}
+          - {os: macos-latest, race: false}
+          - {os: windows-latest, race: false}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        if: ${{ !matrix.race }}
+        run: go test ./...
+
+      - name: Test with race detector and coverage
+        if: ${{ matrix.race }}
+        run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
+
+      # Non-blocking until CODECOV_TOKEN is configured, so a missing secret
+      # cannot turn the matrix red.
+      - name: Upload coverage
+        if: ${{ matrix.race }}
+        continue-on-error: true
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage.out
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
+  # Lint results are platform-independent, so this runs once rather than three
+  # times. It also exercises a Makefile target, which keeps CI and the local
+  # `make check` entry point from drifting apart.
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Check formatting
+        run: make fmt-check
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.13.2

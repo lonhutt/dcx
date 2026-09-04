@@ -1,4 +1,4 @@
-# devcontainer-lint — Design Document
+# dcx — Design Document
 
 **Status:** Draft for review
 **Date:** 2026-09-04
@@ -8,8 +8,8 @@
 
 ## 1. Overview
 
-`devcontainer-lint` is a standalone, dependency-free command line linter for
-`devcontainer.json` files, built against the
+`dcx` is a standalone, dependency-free static analyser for `devcontainer.json`,
+built against the
 [Development Container Specification](https://containers.dev/implementors/spec/).
 
 It is the first component of a three-part family:
@@ -17,8 +17,8 @@ It is the first component of a three-part family:
 | Component | Deliverable | Status |
 | --- | --- | --- |
 | **Core library** (`pkg/…`) | Reusable Go packages: parse → model → analyze → diagnose | This doc |
-| **CLI** (`cmd/devcontainer-lint`) | Standalone binary for terminals, CI, pre-commit | This doc |
-| **LSP server** (`cmd/devcontainer-lsp`) | Language server over the same core | Designed for, built later |
+| **CLI** (`cmd/dcx`) | `dcx check` — standalone binary for terminals, CI, pre-commit | This doc |
+| **LSP server** (`cmd/dcx`) | `dcx serve` — the same binary, over stdio | Designed for, built later |
 | **VSCode extension** (`extensions/vscode`) | Thin TypeScript client | This doc |
 
 ### 1.1 Goals
@@ -226,23 +226,22 @@ addition rather than a rewrite. **Every one of them is cheap now and expensive l
 ### 4.3 Package layout
 
 ```
-devcontainer-lint/
+dcx/
 ├── go.mod
 ├── cmd/
-│   ├── devcontainer-lint/       # CLI entry point
-│   └── devcontainer-lsp/        # LSP entry point (added at M8)
+│   └── dcx/                     # single binary: check, serve, explain, feature
 ├── pkg/
 │   ├── lint/                    # facade: Analyze(), Document, Options
 │   ├── vfs/                     # FS interface, OS impl, overlay impl
 │   ├── position/                # Offset, Range, LineIndex, UTF-16 conversion
-│   ├── diagnostic/             # Diagnostic, Severity, Fix, TextEdit
+│   ├── diagnostic/              # Diagnostic, Severity, Fix, TextEdit
 │   ├── jsonc/                   # lexer, parser, CST nodes, error recovery
 │   ├── discovery/               # config file location per spec §3.1
 │   ├── schema/                  # go:embed'd upstream schemas + validator
 │   ├── model/                   # typed semantic model over the CST
 │   ├── features/                # feature ref parsing, OCI resolution, cache
 │   ├── registry/                # extension-registry adapters (Open VSX, gallery, static)
-│   ├── lintconfig/              # .devcontainer-lint.yaml loading + merge
+│   ├── lintconfig/              # .dcx.yaml loading + merge
 │   ├── suppress/                # inline comment directive parsing
 │   ├── rules/
 │   │   ├── engine.go            # registry, ordering, execution
@@ -256,7 +255,7 @@ devcontainer-lint/
 
 `pkg/` is the public API surface. It is documented and semver-stable so that an LSP
 living in a *separate* repository remains possible — but the default plan keeps the
-server in-tree as `cmd/devcontainer-lsp` to avoid cross-repo version skew.
+server in-tree as `cmd/dcx` to avoid cross-repo version skew.
 
 ---
 
@@ -385,7 +384,7 @@ Offline, we can only check reference *syntax* and pinning. With `--online`, we f
 each feature's `devcontainer-feature.json` from its OCI artifact to validate option
 names and values against the declared `options` schema, and to surface `deprecated`.
 
-Cached under `$XDG_CACHE_HOME/devcontainer-lint/features/` keyed by resolved digest,
+Cached under `$XDG_CACHE_HOME/dcx/features/` keyed by resolved digest,
 with a configurable TTL. Network failures **degrade to a warning, never an error** —
 a linter that fails closed on a flaky registry is a linter people disable.
 
@@ -485,7 +484,7 @@ settings or group policy — outside the repository entirely.
 Two consequences:
 
 1. **Auto-discovery is dropped.** The `policy` source is always explicitly configured
-   in `.devcontainer-lint.yaml` — inline, or a path to a policy file the org
+   in `.dcx.yaml` — inline, or a path to a policy file the org
    distributes by its own means. It is *our* input data, not a mirror of something VS
    Code reads from the repo.
 2. **This is itself a lintable mistake**, and exactly the silent failure this project
@@ -501,14 +500,14 @@ matters, because two different concerns are in play.
 
 - **Source definitions** (id, kind, url, credentials) may be declared in the project
   config *and* extended by a user-level config at
-  `$XDG_CONFIG_HOME/devcontainer-lint/config.yaml`. A developer on VSCodium can add
+  `$XDG_CONFIG_HOME/dcx/config.yaml`. A developer on VSCodium can add
   Open VSX to their own checks without editing a shared file.
 - **Policy** (which sources are `required`, and the `satisfy` mode) is
   **project-owned only**. It is a team decision about what this repo must support,
   and a user-level file must not be able to weaken it.
 
 **Credentials are never literals.** A token is given as an env var name or a
-credential-helper command, never a value. `.devcontainer-lint.yaml` is a committed
+credential-helper command, never a value. `.dcx.yaml` is a committed
 file, and we ship a `security/hardcoded-secret` rule — inviting a PAT into our own
 config would be indefensible. The loader rejects a literal-looking token outright.
 
@@ -673,7 +672,7 @@ Rules marked 🌐 require `--online`.
 
 | ID | Default | Description |
 | --- | --- | --- |
-| `meta/unused-suppression` | warning | A `devcontainer-lint-disable-*` directive suppressed nothing |
+| `meta/unused-suppression` | warning | A `dcx-disable-*` directive suppressed nothing |
 
 **Total: 71 rules across 15 categories.**
 
@@ -690,7 +689,7 @@ Rules marked 🌐 require `--online`.
 ### 7.1 Invocation
 
 ```
-devcontainer-lint [flags] [path...]
+dcx check [flags] [path...]
 ```
 
 `path` may be a `devcontainer.json` file, or a directory. With no path, the current
@@ -776,7 +775,7 @@ GitHub Security tab with no extra work from the user.
 
 ### 8.1 File
 
-`.devcontainer-lint.yaml` (also `.yml`, `.json`) — **these three and nothing else; no
+`.dcx.yaml` (also `.yml`, `.json`) — **these three and nothing else; no
 TOML, no bespoke format** — discovered by walking upward from the linted file to the
 repository root.
 
@@ -861,16 +860,16 @@ differentiator over schema-only validation.
 
 ```jsonc
 {
-  // devcontainer-lint-disable-next-line security/docker-socket-mount
+  // dcx-disable-next-line security/docker-socket-mount
   "mounts": ["source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"],
 
-  "privileged": true, // devcontainer-lint-disable-line security/privileged -- CI needs this
+  "privileged": true, // dcx-disable-line security/privileged -- CI needs this
 }
 ```
 
-- `devcontainer-lint-disable-next-line <ids…>`
-- `devcontainer-lint-disable-line <ids…>`
-- `devcontainer-lint-disable-file <ids…>` (must be in the leading comment block)
+- `dcx-disable-next-line <ids…>`
+- `dcx-disable-line <ids…>`
+- `dcx-disable-file <ids…>` (must be in the leading comment block)
 - Everything after ` -- ` is a reason, preserved in JSON/SARIF output.
 - With no IDs, all rules are suppressed for that scope.
 - A `meta/unused-suppression` rule (default `warning`) flags directives that
@@ -902,17 +901,23 @@ CLI rule set is stable (M8), and its existence is what §4.2's invariants pay fo
 - Cancellation: each `didChange` cancels the previous analysis `context`.
 - Positions: `pkg/position` converts byte offsets to UTF-16, per LSP spec.
 - The server shares the CLI's config discovery, so a project's
-  `.devcontainer-lint.yaml` governs the editor identically.
+  `.dcx.yaml` governs the editor identically.
 
-### 9.3 Should the LSP be a separate repository?
+### 9.3 One binary, not two
 
-**Recommendation: no — keep it in-tree as `cmd/devcontainer-lsp`.** The server and
-the rule set change together; a split repo means every rule addition becomes a
-two-repo dance with a `go.mod` bump in between. The `pkg/` API is kept documented and
-stable regardless, so extraction remains possible if the server later grows features
-(refactorings, workspace-wide symbol support) that have their own release rhythm.
+The server is a **subcommand of the same binary**, not a separate executable:
+`dcx serve --stdio` alongside `dcx check`. Three reasons:
 
----
+1. **The extension bundles one artefact instead of two.** DCL-47 ships a
+   platform-specific VSIX for six targets; two binaries would double both the
+   payload and the packaging matrix.
+2. **The server and the rule set change together.** A split would make every rule
+   addition a two-artefact release with a version-skew window in between.
+3. **Users install one thing.** `brew install dcx` gives you the CLI, the language
+   server, and everything the extension needs.
+
+The `pkg/` API stays documented and semver-stable regardless, so extracting the
+server later remains possible if it ever grows its own release rhythm.
 
 ## 10. VSCode Extension
 
@@ -921,18 +926,18 @@ stable regardless, so extraction remains possible if the server later grows feat
 ### 10.1 Two-phase plan
 
 **Phase 1 (M7) — CLI-driven.** No LSP required. The extension spawns
-`devcontainer-lint --format json` on open and on save, parses the output, and
+`dcx check --format json` on open and on save, parses the output, and
 populates a `DiagnosticCollection`. Roughly 250 lines. This ships real value long
 before the server exists, and it validates the JSON output contract.
 
 **Phase 2 (M8) — LSP-driven.** Replace the runner with `vscode-languageclient`
-spawning `devcontainer-lsp --stdio`. Diagnostics arrive over the wire; hover,
+spawning `dcx serve --stdio`. Diagnostics arrive over the wire; hover,
 completion, code actions, and document links come along for free. The Phase 1 code
 path is deleted, not maintained in parallel.
 
 ### 10.2 Binary resolution
 
-In order: `devcontainerLint.path` setting → bundled binary in `bin/` → `PATH`. If all
+In order: `dcx.path` setting → bundled binary in `bin/` → `PATH`. If all
 three fail, show a notification with an install command rather than failing silently.
 
 ### 10.3 Packaging
@@ -949,12 +954,12 @@ and `workspaceContains:**/.devcontainer.json`.
 
 | Setting | Default | Description |
 | --- | --- | --- |
-| `devcontainerLint.enable` | `true` | Master switch |
-| `devcontainerLint.path` | `""` | Override binary location |
-| `devcontainerLint.run` | `onSave` | `onSave` \| `onType` |
-| `devcontainerLint.online` | `false` | Enable network rules |
-| `devcontainerLint.configPath` | `""` | Explicit config file |
-| `devcontainerLint.trace.server` | `off` | LSP tracing |
+| `dcx.enable` | `true` | Master switch |
+| `dcx.path` | `""` | Override binary location |
+| `dcx.run` | `onSave` | `onSave` \| `onType` |
+| `dcx.online` | `false` | Enable network rules |
+| `dcx.configPath` | `""` | Explicit config file |
+| `dcx.trace.server` | `off` | LSP tracing |
 
 Commands: *Lint Workspace*, *Fix All Auto-fixable Problems*, *Restart Server*,
 *Show Output*.
@@ -985,11 +990,11 @@ positives on real-world configs".
 | Channel | Mechanism |
 | --- | --- |
 | GitHub Releases | GoReleaser, 6 platform archives + checksums + SBOM |
-| `go install` | `go install github.com/<owner>/devcontainer-lint/cmd/devcontainer-lint@latest` |
+| `go install` | `go install github.com/lonhutt/dcx/cmd/dcx@latest` |
 | Homebrew | Tap, updated by GoReleaser |
 | Scoop | Bucket, updated by GoReleaser |
 | Linux packages | `.deb`, `.rpm`, `.apk` via GoReleaser's nfpm |
-| Docker | Distroless image, `ghcr.io/<owner>/devcontainer-lint` |
+| Docker | Distroless image, `ghcr.io/lonhutt/dcx` |
 | pre-commit | `.pre-commit-hooks.yaml` with a `golang` hook and a binary-download hook |
 | GitHub Action | Composite action wrapping the binary, uploading SARIF |
 | VSCode | Marketplace + Open VSX, platform-specific VSIX |
@@ -1019,7 +1024,7 @@ Semantic versioning. Rule IDs are public API:
 | **M8** | VSCode extension v1 | CLI-driven diagnostics, binary bundling, platform VSIX, settings | Published to Marketplace + Open VSX |
 | **M9** | Network rules | OCI feature resolution, cache, `--online`, option validation; `openvsx` and `vscode-gallery` sources and the three network `vscode/` rules (3 rules) | Feature option errors detected against real registries; Open VSX portability gap detected on a known-proprietary extension |
 | **M10** | Fixes | `Fix` on fixable rules, `--fix`, `--fix-dry-run`, convergence tests | All rules marked *fixable* apply cleanly |
-| **M11** | LSP server | `cmd/devcontainer-lsp`, diagnostics, code actions, hover, completion, links | Works in VSCode and Neovim |
+| **M11** | LSP server | `cmd/dcx`, diagnostics, code actions, hover, completion, links | Works in VSCode and Neovim |
 | **M12** | Extension v2 | Switch to `LanguageClient`, delete Phase 1 path | Feature parity plus hover/completion |
 
 M0–M7 constitute a genuinely useful, releasable tool. Everything after is additive.
@@ -1077,7 +1082,7 @@ want `token-command: gh auth token` so no long-lived token sits in the environme
 A natural second target reusing the entire pipeline: parser, schema layer, rule
 engine, reporters, and CLI all apply unchanged.
 
-- **Shape:** `devcontainer-lint feature ./src/my-feature`, with a `feature/*` schema
+- **Shape:** `dcx feature ./src/my-feature`, with a `feature/*` schema
   vendored alongside the devcontainer schema and a new rule namespace.
 - **Candidate rules:** required `id`/`version`/`name`; `id` matches the directory
   name; semver `version`; option `default` satisfies its own `enum`; `dependsOn` and
@@ -1104,5 +1109,5 @@ engine, reporters, and CLI all apply unchanged.
 | Extension sources | Open VSX default; Marketplace opt-in | Marketplace ToS restricts offerings to Visual Studio products |
 | Enterprise path | Consume VS Code's `extensions.allowed` verbatim | Offline, no auth, no new syntax — the org already wrote it |
 | Source config | Definitions layered user+project; `required` project-only | Adding your own registry is personal; what the repo must support is a team decision |
-| LSP location | In-tree `cmd/devcontainer-lsp` | Server and rules change together |
+| LSP location | `dcx serve`, same binary | One artefact to bundle, install, and version |
 | Extension | Phase 1 CLI-driven, Phase 2 LSP | Ships value early; validates the JSON contract |

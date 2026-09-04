@@ -1,6 +1,10 @@
-# devcontainer-lint
+# dcx
 
-A standalone static analyser for `devcontainer.json`, built against the
+[![CI](https://github.com/lonhutt/dcx/actions/workflows/ci.yaml/badge.svg)](https://github.com/lonhutt/dcx/actions/workflows/ci.yaml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/lonhutt/dcx.svg)](https://pkg.go.dev/github.com/lonhutt/dcx)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+Static analysis for dev container configuration, built against the
 [Development Container Specification](https://containers.dev/implementors/spec/).
 
 > **Status: skeleton.** The repository layout and tooling are in place; no rules are
@@ -13,13 +17,34 @@ schema validation. Editors that do validate produce unusable errors, because the
 official schema's top level is a nest of `oneOf` branches — a missing `image` key
 yields `must match exactly one schema in oneOf` rather than something you can act on.
 
-devcontainer-lint discriminates the configuration scenario itself, then reports:
+`dcx` discriminates the configuration scenario itself, then reports:
 
 ```
 .devcontainer/devcontainer.json:14:3: error: 'image' and 'dockerComposeFile' cannot
   both be set — a Compose configuration takes its image from the Compose file
   [scenario/conflicting-source]
 ```
+
+## Install
+
+```sh
+go install github.com/lonhutt/dcx/cmd/dcx@latest
+```
+
+Release archives, Homebrew, Scoop, Linux packages and a container image are planned —
+see Design §12.
+
+## Usage
+
+```
+dcx check [path...]     Analyse devcontainer.json
+dcx serve --stdio       Run the language server
+dcx explain <rule-id>   Describe a rule
+dcx feature <path>      Analyse devcontainer-feature.json
+```
+
+One binary, subcommands rather than separate tools — so the CLI, the language server,
+and the editor extension all ship the same artefact.
 
 ## Planned surface
 
@@ -31,14 +56,29 @@ devcontainer-lint discriminates the configuration scenario itself, then reports:
   degrade to a warning when a registry is unreachable.
 - **`text`, `compact`, `json`, `sarif`, and `github` output**, with exit code 1 for
   findings and 2 for tool errors so CI can tell them apart.
-- **Editor support** via a VS Code extension and, later, a language server sharing
-  this same core.
+- **Editor support** via a VS Code extension and a language server sharing this core.
+
+## Configuration
+
+`.dcx.yaml` (also `.yml`, `.json`) in your repository, discovered by walking upward.
+Rules can be suppressed inline, using the comments JSONC already allows:
+
+```jsonc
+{
+  // dcx-disable-next-line security/docker-socket-mount
+  "mounts": ["source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"]
+}
+```
+
+## Contributing
+
+Issues and pull requests: <https://github.com/lonhutt/dcx>
 
 ## Development
 
 ```sh
 make check     # fmt-check, vet, lint, test — everything CI runs
-make build     # build ./bin/devcontainer-lint
+make build     # build ./bin/dcx
 make help      # list all targets
 ```
 
@@ -51,7 +91,7 @@ contract. See [`pkg/doc.go`](pkg/doc.go) and Design §4.3.
 
 | Path | Purpose |
 | --- | --- |
-| `cmd/devcontainer-lint/` | CLI entry point |
+| `cmd/dcx/` | Single binary: check, serve, explain, feature |
 | `pkg/jsonc/` | JSONC lexer and concrete syntax tree |
 | `pkg/position/` | Byte offsets, UTF-8 columns, UTF-16 LSP positions |
 | `pkg/vfs/` | Filesystem abstraction, including editor overlays |
