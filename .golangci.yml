@@ -1,0 +1,36 @@
+version: "2"
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - revive
+    - misspell
+    - gocritic
+    - bodyclose
+    - errorlint
+  exclusions:
+    presets:
+      - std-error-handling
+    rules:
+      # pkg/doc.go is a documentation-only package whose name intentionally
+      # differs from its directory.
+      - path: pkg/doc\.go
+        linters:
+          - revive
+      # Table-driven tests carry long literal blocks.
+      - path: _test\.go
+        linters:
+          - gocritic
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - lonhutt.com/devcontainer-lint

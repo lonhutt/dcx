@@ -1,0 +1,20 @@
+# Build output
+/dist/
+/bin/
+/devcontainer-lint
+/devcontainer-lsp
+
+# Test and coverage artefacts
+*.test
+*.out
+coverage.*
+
+# Editor and OS noise
+.DS_Store
+.idea/
+*.swp
+
+# Extension build output
+extensions/vscode/node_modules/
+extensions/vscode/out/
+extensions/vscode/*.vsix
