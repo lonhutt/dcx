@@ -54,6 +54,10 @@ jobs:
     name: test ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
+    # Mapped here because the `secrets` context is not available in a
+    # step-level `if`, but `env` is.
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     strategy:
       fail-fast: false
       matrix:
@@ -80,15 +84,37 @@ jobs:
         if: ${{ matrix.race }}
         run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
 
-      # Non-blocking until CODECOV_TOKEN is configured, so a missing secret
-      # cannot turn the matrix red.
-      - name: Upload coverage
+      # Coverage reporting that needs no secret and no third-party service:
+      # the number lands in the job summary, the profile in an artifact.
+      - name: Coverage summary
         if: ${{ matrix.race }}
-        continue-on-error: true
+        run: |
+          go tool cover -func=coverage.out | tail -1
+          {
+            echo '### Coverage'
+            echo
+            echo '```'
+            go tool cover -func=coverage.out | tail -25
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage profile
+        if: ${{ matrix.race }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-profile
+          path: coverage.out
+          if-no-files-found: error
+
+      # Publishes trend data only when a token is configured. Gated on the
+      # secret rather than left to fail invisibly: a tokenless upload is
+      # rejected by Codecov while still reporting the step as successful.
+      - name: Publish to Codecov
+        if: ${{ matrix.race && env.CODECOV_TOKEN != '' }}
         uses: codecov/codecov-action@v5
         with:
           files: coverage.out
-          token: ${{ secrets.CODECOV_TOKEN }}
+          token: ${{ env.CODECOV_TOKEN }}
           fail_ci_if_error: false
 
   # Lint results are platform-independent, so this runs once rather than three
