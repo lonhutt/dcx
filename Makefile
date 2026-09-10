@@ -54,9 +54,23 @@ fmt: ## Format the tree
 fmt-check: ## Fail if anything is unformatted
 	@out=$$(gofmt -l .); if [ -n "$$out" ]; then echo "unformatted:"; echo "$$out"; exit 1; fi
 
+# Go fuzzes one target per invocation, so discover them rather than naming one:
+# a hardcoded target silently passes once the package it names moves or is not
+# written yet. Exits non-zero if it finds nothing, for the same reason.
+FUZZTIME ?= 30s
+
 .PHONY: fuzz
-fuzz: ## Short fuzz run over the JSONC parser (DCL-10)
-	go test -run=NONE -fuzz=FuzzParse -fuzztime=60s ./pkg/jsonc
+fuzz: ## Bounded fuzz run over every Fuzz target (FUZZTIME=30s)
+	@set -e; \
+	found=0; \
+	for pkg in $$(go list ./...); do \
+		for fn in $$(go test -list='Fuzz.*' $$pkg 2>/dev/null | grep '^Fuzz' || true); do \
+			found=1; \
+			echo "==> $$pkg $$fn ($(FUZZTIME))"; \
+			go test -run='^$$' -fuzz="^$$fn$$" -fuzztime=$(FUZZTIME) $$pkg; \
+		done; \
+	done; \
+	if [ $$found -eq 0 ]; then echo "no fuzz targets found"; exit 1; fi
 
 .PHONY: check
 check: fmt-check vet lint test ## Everything CI runs
