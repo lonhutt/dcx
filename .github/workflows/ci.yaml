@@ -117,6 +117,37 @@ jobs:
           token: ${{ env.CODECOV_TOKEN }}
           fail_ci_if_error: false
 
+  # Go fuzzes one target per invocation, and its corpus of "interesting" inputs is
+  # a machine-local cache by design — not something to commit. The seed corpus
+  # (f.Add, plus any crasher checked in) already runs as an ordinary test in the
+  # `test` job; this job is the part that explores inputs nobody has seen yet.
+  #
+  # Time-boxed rather than exhaustive: the point is steady pressure on every PR.
+  # On a failure the toolchain writes the reproducer under testdata/fuzz/, so it
+  # is uploaded — committing that file turns the crash into a permanent test.
+  fuzz:
+    name: fuzz
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Fuzz
+        run: make fuzz FUZZTIME=60s
+
+      - name: Upload crash reproducers
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fuzz-crashers
+          path: "**/testdata/fuzz/**"
+          if-no-files-found: ignore
+
   # Lint results are platform-independent, so this runs once rather than three
   # times. It also exercises a Makefile target, which keeps CI and the local
   # `make check` entry point from drifting apart.
