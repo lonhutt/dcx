@@ -1,33 +1,34 @@
 # dcx — Design Document
 
 **Status:** Draft for review
-**Date:** 2026-09-04
-**Language:** Go (see [Language Decision](#2-language-decision))
+**Date:** 2026-09-10
+**Language:** TypeScript on Bun (see [Language Decision](#2-language-decision))
 
 ---
 
 ## 1. Overview
 
-`dcx` is a standalone, dependency-free static analyser for `devcontainer.json`,
-built against the
+`dcx` is a standalone static analyser for `devcontainer.json`, built against the
 [Development Container Specification](https://containers.dev/implementors/spec/).
 
 It is the first component of a three-part family:
 
 | Component | Deliverable | Status |
 | --- | --- | --- |
-| **Core library** (`pkg/…`) | Reusable Go packages: parse → model → analyze → diagnose | This doc |
-| **CLI** (`cmd/dcx`) | `dcx check` — standalone binary for terminals, CI, pre-commit | This doc |
-| **LSP server** (`cmd/dcx`) | `dcx serve` — the same binary, over stdio | Designed for, built later |
-| **VSCode extension** (`extensions/vscode`) | Thin TypeScript client | This doc |
+| **Core library** (`src/…`) | Reusable TypeScript modules: parse → model → analyze → diagnose | This doc |
+| **CLI** (`src/cli`) | `dcx check` — for terminals, CI, pre-commit | This doc |
+| **LSP server** (`src/server`) | `dcx serve` — the same package, over stdio | Designed for, built later |
+| **VSCode extension** (`extensions/vscode`) | Imports the server in-process | This doc |
 
 ### 1.1 Goals
 
 - **G1** — Catch every class of `devcontainer.json` defect that can be detected
   statically, with precise source spans and human-readable messages.
-- **G2** — Ship as a single static binary with no runtime dependency.
+- **G2** — Ship as a single npm package with no runtime dependency beyond Bun or
+  Node, and no native addons. Self-contained executables are available for
+  environments without a JavaScript runtime.
 - **G3** — Be architecturally ready for an LSP from day one: no global state, no
-  direct filesystem access from rules, cancellable analysis, byte-accurate
+  direct filesystem access from rules, cancellable analysis, editor-accurate
   positions, and machine-applicable fixes.
 - **G4** — Be usable non-interactively: stable exit codes, JSON and SARIF output,
   GitHub annotations, pre-commit hook.
@@ -66,41 +67,76 @@ human can act on.
 
 ## 2. Language Decision
 
-**Chosen: Go.**
+**Chosen: TypeScript, running on Bun.**
 
 ### 2.1 Rationale
 
-| Criterion | Go | TypeScript | Python |
+| Criterion | TypeScript / Bun | Go | Python |
 | --- | --- | --- | --- |
-| CLI distribution | Single static binary, no runtime | Needs Node | Needs Python/uv |
-| Cold start | ~5 ms | ~150–300 ms | ~200–400 ms |
-| JSON Schema 2019-09 + `unevaluatedProperties` | `santhosh-tekuri/jsonschema/v6` | Ajv 2019 | `jsonschema` 4.x |
-| JSONC parser with positions | Hand-rolled (~700 LOC) | `jsonc-parser` (ideal) | Hand-rolled |
-| LSP framework | `tliron/glsp`, `go.lsp.dev` | `vscode-languageserver-node` (reference impl) | `pygls` |
-| Cross-compilation for VSIX targets | Trivial | N/A | Painful |
+| CLI distribution | npm package; optional 78 MB executable | Single ~2 MB static binary | Needs Python/uv |
+| Cold start | **9 ms measured** (3 ms of which is process spawn) | ~5 ms | ~200–400 ms |
+| JSON Schema 2019-09 + `unevaluatedProperties` | Ajv 2019, precompiled standalone | `santhosh-tekuri/jsonschema/v6` | `jsonschema` 4.x |
+| JSONC parser with positions | **`jsonc-parser` — the parser VS Code itself uses** | Hand-rolled (~700 LOC) | Hand-rolled |
+| LSP framework | `vscode-languageserver-node` — the reference implementation | `tliron/glsp`, `go.lsp.dev` | `pygls` |
+| Extension integration | **In-process import; no subprocess, no binary to ship** | Spawn a per-platform binary | N/A |
 
-The decisive argument: **the VSCode extension is a thin client in every scenario.**
-Once an LSP exists, the extension is ~200 lines that spawn a server process and wire
-up `LanguageClient`. TypeScript's "one language everywhere" advantage is therefore
-much smaller than it first appears, while distribution size and startup latency are
-permanent, daily-felt properties of a linter — and Go wins both outright.
+The measurements above were taken on this machine against a trivial CLI: `bun
+build --compile --minify --bytecode` produces a 78 MB executable that starts in 9 ms
+median over 30 runs, against a 3 ms floor for `/bin/true`.
+
+Three arguments decide it.
+
+**The cold-start objection was aimed at Node, not at Bun.** A ~5 ms versus ~9 ms
+difference, half of which is process-spawn overhead that any language pays, is not
+something a human operating a linter can perceive. Startup latency is no longer a
+differentiator; it was the load-bearing argument for a compiled language and it does
+not survive measurement.
+
+**`jsonc-parser` is not merely a convenient library — it is the parser VS Code
+uses.** A linter for a JSONC file whose primary consumer is VS Code has exactly one
+thing it must never get wrong: disagreeing with the editor about what the document
+says. Adopting the editor's own parser makes that agreement structural rather than
+aspirational. Every hand-rolled parser is a standing invitation to diverge on some
+escape sequence or recovery decision, and that divergence surfaces as a false
+positive in the one place it is least welcome.
+
+**The extension stops being a client at all.** The argument for Go was that the
+extension is a thin client either way, so sharing a language buys little. That holds
+only while the server is a separate process. In TypeScript the server is an
+`import`: no binary to resolve, no subprocess to spawn or supervise, no
+platform-specific VSIX matrix, no version skew between an extension and a binary
+released on a different cadence. §10.3 of the Go design specified six build targets
+and a CI matrix to copy the right executable into `bin/` before packaging. That
+entire section is deleted here rather than ported.
 
 ### 2.2 Accepted costs
 
-- **A hand-written JSONC parser.** Bounded (~700 LOC), one-time, and it lets us build
-  exactly the CST a linter wants: comments retained and attachable, trailing commas
-  recorded rather than discarded, duplicate keys preserved, and error recovery that
-  keeps analysing after a syntax fault.
-- **A bilingual repository.** Go core plus a small TypeScript extension. Managed by
-  keeping the boundary narrow: the extension only ever talks JSON-over-stdio or LSP.
-- **Platform-specific VSIX packaging.** Six build targets. Handled once in CI via
-  GoReleaser plus `vsce package --target`.
+- **78 MB executables.** Bun embeds a full JavaScript engine, and its own
+  documentation concedes the binary is too big. This is a real and permanent loss
+  against Go's ~2 MB. It is mitigated, not solved, by making npm the primary
+  distribution channel (§12): the audience for a `devcontainer.json` linter runs
+  Node already, and the extension ships no binary at all. Executables remain
+  available for Docker images and runtime-free CI.
+- **No native fuzzer.** Go's `testing.F` has no Bun equivalent. Property-based
+  testing via `fast-check` covers the same ground with more setup (§11).
+- **Ajv generates validator code at runtime.** That fits poorly with
+  `--compile --bytecode`. We compile validators to standalone modules at build time
+  instead (§5.5), which is better practice regardless — it makes schema compilation
+  a build-time cost rather than a per-invocation one.
+- **Single-threaded analysis.** Rules run sequentially rather than in goroutines.
+  For a ~24 KB document this is not a real cost, and it removes a class of data race
+  the Go design had to reason about (§5.6).
+- **A dependency tree.** Go's ethos of near-zero dependencies is not available here.
+  We hold the line at **three** runtime dependencies in the core — `jsonc-parser`,
+  `ajv`, and `yaml` — each pinned in the lockfile, audited, and justified in §5. The
+  LSP server entry point adds `vscode-languageserver` as an optional fourth (§9).
 
 ---
 
 ## 3. Specification Model
 
-Facts extracted from the spec that drive the design.
+Facts extracted from the spec that drive the design. This section is
+language-independent and is unchanged from the original design.
 
 ### 3.1 Discovery order
 
@@ -186,21 +222,21 @@ HTTPS tarball, and local relative path (`./feature`). Feature metadata lives in
 ```
                      ┌────────────────────────────────────────┐
    CLI ──────────────┤                                        │
-   LSP server ───────┤            pkg/lint (facade)           │
-   Extension ────────┤     Analyze(ctx, Document, Options)    │
+   LSP server ───────┤            src/lint (facade)           │
+   Extension ────────┤   analyze(doc, options, signal)        │
                      └────────────────────┬───────────────────┘
                                           │
    ┌──────────────┬──────────────┬────────┴──────┬──────────────┬─────────────┐
    │  discovery   │    jsonc     │     model     │    rules     │   report    │
-   │  locate the  │  lex→parse→  │  CST → typed  │  engine +    │  text/json/ │
-   │  config file │  CST (+pos)  │  semantic AST │  registry    │  sarif/gh   │
+   │  locate the  │  jsonc-parser│  CST → typed  │  engine +    │  text/json/ │
+   │  config file │  adapter→CST │  semantic AST │  registry    │  sarif/gh   │
    └──────┬───────┴──────┬───────┴───────┬───────┴──────┬───────┴─────────────┘
           │              │               │              │
    ┌──────┴──────┐ ┌─────┴─────┐  ┌──────┴──────┐ ┌─────┴──────┐ ┌───────────┐
    │     vfs     │ │ position  │  │   schema    │ │  features  │ │ diagnostic│
-   │ overlay FS  │ │ LineIndex │  │  embedded   │ │ OCI + cache│ │ Range/Fix │
-   │ (unsaved    │ │ UTF-8↔16  │  │  2019-09    │ │  (network) │ │  Severity │
-   │  buffers)   │ │           │  │  validator  │ │            │ │           │
+   │ overlay FS  │ │ LineIndex │  │ text-import │ │ OCI + cache│ │ Range/Fix │
+   │ (unsaved    │ │ UTF-16↔   │  │ + standalone│ │  (network) │ │  Severity │
+   │  buffers)   │ │ display   │  │ Ajv 2019    │ │            │ │           │
    └─────────────┘ └───────────┘  └─────────────┘ └────────────┘ └───────────┘
 ```
 
@@ -209,186 +245,342 @@ HTTPS tarball, and local relative path (`./feature`). Feature metadata lives in
 These are the constraints that make a future language server a straightforward
 addition rather than a rewrite. **Every one of them is cheap now and expensive later.**
 
-1. **No `os.Exit`, no `panic`, no writing to stdout below `cmd/`.** The core returns
-   values. Only `main` decides process fate.
-2. **All filesystem access goes through `vfs.FS`.** An editor holds unsaved buffers
-   that do not exist on disk; the LSP supplies an overlay FS whose contents come from
-   `textDocument/didChange`. A rule that calls `os.ReadFile` is unusable in an editor.
-3. **Every diagnostic carries a byte-offset `Range`, never a line/column string.**
-   Rendering to a terminal caret or to an LSP UTF-16 position is a display concern,
-   handled by `pkg/position`.
-4. **`Analyze` takes a `context.Context` and honours cancellation.** Editors
-   re-analyse on keystroke and abandon in-flight runs constantly.
-5. **`Diagnostic` has an optional `Fix []TextEdit` from day one.** The CLI uses it for
-   `--fix`; the LSP serves it as `textDocument/codeAction`. Retrofitting fixes onto a
-   rule set built without them means touching every rule.
+1. **No `process.exit`, no thrown exception escaping the core, no `console.*` below
+   `src/cli`.** The core returns values. Only the CLI entry point decides process
+   fate. An exception that escapes `analyze()` takes down a language server that is
+   expected to stay up for hours.
+2. **All filesystem access goes through the `FileSystem` interface.** An editor holds
+   unsaved buffers that do not exist on disk; the LSP supplies an overlay FS whose
+   contents come from `textDocument/didChange`. A rule that calls `Bun.file` directly
+   is unusable in an editor.
+3. **Every diagnostic carries a `Range` of UTF-16 code-unit offsets.** This is the
+   unit JavaScript strings are indexed in, the unit `jsonc-parser` reports, and the
+   unit the LSP `Position` type is defined in — so the common path requires no
+   conversion at all. Rendering a terminal caret needs a *display width*, not a byte
+   count, and that conversion is `src/position`'s job (§5.2).
+4. **`analyze()` accepts an `AbortSignal` and honours it.** Editors re-analyse on
+   keystroke and abandon in-flight runs constantly.
+5. **`Diagnostic` has an optional `fix?: TextEdit[]` from day one.** The CLI uses it
+   for `--fix`; the LSP serves it as `textDocument/codeAction`. Retrofitting fixes
+   onto a rule set built without them means touching every rule.
+
+Invariant 3 is the one that changed direction from the original design, which
+mandated byte offsets internally. In Go that was correct: strings are byte slices and
+UTF-16 is foreign, so byte offsets are the natural internal unit and the LSP edge
+pays the conversion. In JavaScript the same reasoning points the opposite way.
+Holding byte offsets internally here would mean a `TextEncoder` round-trip at every
+boundary — on entry from the parser, and again on exit to the editor — to arrive back
+at the unit we started in.
 
 ### 4.3 Package layout
 
 ```
 dcx/
-├── go.mod
-├── cmd/
-│   └── dcx/                     # single binary: check, serve, explain, feature
-├── pkg/
-│   ├── lint/                    # facade: Analyze(), Document, Options
-│   ├── vfs/                     # FS interface, OS impl, overlay impl
-│   ├── position/                # Offset, Range, LineIndex, UTF-16 conversion
+├── package.json                 # subpath exports; bin: dcx
+├── tsconfig.json
+├── src/
+│   ├── cli/                     # argv parsing, process exit, stdout — check, explain, feature
+│   ├── server/                  # LSP server over stdio
+│   ├── lint/                    # facade: analyze(), Document, Options
+│   ├── vfs/                     # FileSystem interface, Bun impl, overlay impl
+│   ├── position/                # Offset, Range, LineIndex, display-width conversion
 │   ├── diagnostic/              # Diagnostic, Severity, Fix, TextEdit
-│   ├── jsonc/                   # lexer, parser, CST nodes, error recovery
+│   ├── jsonc/                   # jsonc-parser adapter → CST + comment list
 │   ├── discovery/               # config file location per spec §3.1
-│   ├── schema/                  # go:embed'd upstream schemas + validator
+│   ├── schema/                  # vendored schemas + generated Ajv validators
 │   ├── model/                   # typed semantic model over the CST
 │   ├── features/                # feature ref parsing, OCI resolution, cache
-│   ├── registry/                # extension-registry adapters (Open VSX, gallery, static)
+│   ├── registry/                # extension-registry adapters (Open VSX, gallery, policy)
 │   ├── lintconfig/              # .dcx.yaml loading + merge
 │   ├── suppress/                # inline comment directive parsing
 │   ├── rules/
-│   │   ├── engine.go            # registry, ordering, execution
-│   │   ├── rule.go              # Rule interface
-│   │   └── <category>/          # one package per rule category
+│   │   ├── engine.ts            # registry, ordering, execution
+│   │   ├── rule.ts              # Rule interface
+│   │   └── <category>/          # one directory per rule category
 │   └── report/                  # text, json, sarif, github formatters
 ├── schemas/                     # vendored upstream JSON schemas
+├── scripts/                     # build-time codegen (Ajv standalone compilation)
 ├── testdata/                    # fixture corpus + golden files
-└── extensions/vscode/           # TypeScript extension
+└── extensions/vscode/           # VSCode extension
 ```
 
-`pkg/` is the public API surface. It is documented and semver-stable so that an LSP
-living in a *separate* repository remains possible — but the default plan keeps the
-server in-tree as `cmd/dcx` to avoid cross-repo version skew.
+The public API surface is declared explicitly through `exports` in `package.json`
+rather than by directory convention:
+
+```json
+{
+  "exports": {
+    ".":             "./src/lint/index.ts",
+    "./diagnostic":  "./src/diagnostic/index.ts",
+    "./rules":       "./src/rules/index.ts",
+    "./server":      "./src/server/index.ts"
+  }
+}
+```
+
+Anything not listed is private and may change without a major version. This is
+stricter than Go's `pkg/` convention, which exports every capitalised identifier in
+every package whether or not that was intended.
+
+Bun runs TypeScript sources directly, so there is no build step during development
+and no `dist/` to keep in sync. The only generated artefacts are the standalone Ajv
+validators (§5.5), produced by `scripts/` and committed.
 
 ---
 
 ## 5. Component Specifications
 
-### 5.1 `pkg/jsonc` — the parser
+### 5.1 `src/jsonc` — the parser adapter
 
-A hand-written lexer and recursive-descent parser producing a **concrete** syntax
-tree. Concrete, not abstract: a linter must be able to point at the comma nobody
-should have typed.
+The original design called for a hand-written lexer and recursive-descent parser,
+roughly 700 lines, justified by the absence of a Go library that preserves comments
+*and* positions *and* recovers from errors. TypeScript has exactly that library, and
+it is the one VS Code uses. `src/jsonc` is therefore an **adapter**, not a parser —
+roughly 150 lines.
 
-**Node kinds:** `Object`, `Array`, `Property`, `String`, `Number`, `Boolean`, `Null`,
-`Comment`, `Error`.
+`jsonc-parser` supplies, directly:
 
-Every node carries `Offset` and `Length` (byte-based). Objects retain their
-`Property` list *in source order, including duplicates* — silently dropping a
-duplicate key would hide one of the highest-value diagnostics.
+| Requirement | Mechanism |
+| --- | --- |
+| CST with positions | `parseTree()` → nodes with `offset`, `length`, `type`, `colonOffset` |
+| Error recovery | Parsing continues past faults; `ParseError[]` is an out-parameter |
+| Duplicate keys preserved | Property children are a source-ordered list, not a map |
+| Trailing commas | `allowTrailingComma` option; positions recovered via `visit()` |
+| Node lookup by JSON Pointer | `findNodeAtLocation(root, path)` |
+| Node lookup by offset | `findNodeAtOffset(root, offset)` — the LSP hover/completion primitive |
+| Format-preserving edits | `modify()` / `applyEdits()` |
 
-**Requirements:**
+Two things it does not give us, which the adapter supplies:
 
-- Line (`//`) and block (`/* */`) comments preserved as nodes, attachable to the
-  following property for suppression directives.
-- Trailing commas parsed successfully but recorded on the node.
-- **Error recovery.** On a malformed value, emit an `Error` node, resynchronise at the
-  next `,` or `}`, and continue. A file with one syntax error must still produce
-  semantic diagnostics for the rest of the document — this is what makes the editor
-  experience tolerable while typing.
-- Native Go fuzzing over the parser; it must never panic on arbitrary bytes.
+**Comments are not tree nodes.** `parseTree()` discards them; `visit()` reports them
+through an `onComment(offset, length, startLine, startChar)` callback. The adapter
+runs `visit()` alongside `parseTree()` and collects comments into a source-ordered
+side list, then attaches each to the property that follows it. Suppression directives
+(§8.2) read from that list. This is a genuine ergonomic loss against a CST with
+`Comment` nodes in it, and it is the main cost of the decision — but attaching by
+offset is about twenty lines, and it buys the parser itself for free.
 
-### 5.2 `pkg/position` — coordinates
+**Trailing commas are permitted, not reported.** With `allowTrailingComma: true` the
+parse succeeds silently; with it `false` the position arrives as a `ParseError`. The
+adapter parses permissively and locates trailing commas through `visit()`'s
+`onSeparator` callback, recording them on the enclosing node so
+`syntax/trailing-comma` can report a span.
 
-Internally everything is a byte offset. `LineIndex` is built once per document and
-converts:
+The resulting `Document` is:
 
-- byte offset ↔ (line, UTF-8 column) — for terminal output
-- byte offset ↔ (line, UTF-16 code unit) — for LSP `Position`
-
-The UTF-16 conversion is required by the LSP spec and is a classic source of
-off-by-N bugs with non-ASCII content. Building it in from the start costs nothing.
-
-### 5.3 `pkg/vfs` — filesystem abstraction
-
-```go
-type FS interface {
-    ReadFile(path string) ([]byte, error)
-    Stat(path string) (fs.FileInfo, error)
-    ReadDir(path string) ([]fs.DirEntry, error)
+```ts
+interface Document {
+  readonly uri: string;
+  readonly text: string;
+  readonly root: Node | undefined;      // undefined for empty/unparseable input
+  readonly comments: readonly Comment[];
+  readonly errors: readonly ParseError[];
+  readonly lines: LineIndex;
 }
 ```
 
-Two implementations: `OSFS` (the CLI) and `OverlayFS` (the LSP — in-memory documents
-layered over `OSFS`). Rules receive an `FS` and never touch `os` directly.
+Rules consume `Document` and the re-exported `Node` type. Should `jsonc-parser` ever
+need replacing, the blast radius is this directory.
 
-### 5.4 `pkg/model` — semantic model
+**`modify()` and `applyEdits()` deserve particular note.** They perform
+format-preserving edits against the *source text*, honouring the surrounding
+indentation and leaving comments intact. In the Go design, every fixable rule had to
+construct its own `TextEdit` spans by hand and the convergence tests existed largely
+to catch mistakes in that arithmetic. Here, a rule that wants to move root
+`extensions` into `customizations.vscode.extensions` expresses it as two `modify()`
+calls against JSON paths. §13's M10 shrinks accordingly.
+
+### 5.2 `src/position` — coordinates
+
+Internally everything is a **UTF-16 code-unit offset**: the unit JavaScript string
+indices use, the unit `jsonc-parser` emits, and the unit LSP `Position` is defined
+in. Conversion to an LSP position is therefore a line lookup and a subtraction, with
+no character re-encoding on the path an editor exercises on every keystroke.
+
+`LineIndex` is built once per document — a single pass recording the offset of each
+line start — and converts:
+
+- offset → `{ line, character }` for LSP, by binary search over line starts
+- offset → `{ line, column }` for terminal output, where *column* is a **display
+  width**, not a code-unit count
+
+The second conversion is the one that carries real complexity, and it is complexity
+the original design did not account for. A caret rendered under a span must line up
+with what the terminal actually draws, which means accounting for East Asian wide
+characters (two columns), combining marks (zero), and tabs (to the next tab stop). A
+byte count gets this wrong for exactly the same inputs a code-unit count does; the
+Go design's "byte offset ↔ (line, UTF-8 column)" mapping would not have produced a
+correctly aligned caret for a CJK container name either. We use
+`Bun.stringWidth()`, which implements the width rules natively and requires no
+dependency.
+
+Surrogate pairs are the remaining subtlety. An emoji in a `name` field is one code
+point, two UTF-16 code units, and two display columns. Ranges must never split a
+surrogate pair; the adapter asserts this in development builds.
+
+### 5.3 `src/vfs` — filesystem abstraction
+
+```ts
+interface FileSystem {
+  readFile(path: string): Promise<string>;
+  stat(path: string): Promise<Stats | undefined>;
+  readDir(path: string): Promise<DirEntry[]>;
+}
+```
+
+Two implementations: `BunFS` (the CLI, over `Bun.file`) and `OverlayFS` (the LSP —
+in-memory documents layered over `BunFS`). Rules receive a `FileSystem` and never
+import `Bun.file` or `node:fs` directly.
+
+`stat` returns `undefined` rather than throwing on a missing path. The `fs/*` rules
+(§6.5) exist precisely to report missing paths, so absence is an expected result, not
+an exceptional one — and invariant 1 says exceptions do not escape the core.
+
+### 5.4 `src/model` — semantic model
 
 Lowers the CST into a typed structure, and — critically — **discriminates the
 scenario** before schema validation runs:
 
-```go
-type Scenario int
-const (
-    ScenarioUnknown Scenario = iota  // no container source found
-    ScenarioImage                    // has `image`
-    ScenarioDockerfile               // has `build.dockerfile` or legacy `dockerFile`
-    ScenarioCompose                  // has `dockerComposeFile`
-    ScenarioAmbiguous                // more than one of the above
-    ScenarioMetadataOnly             // valid: common properties only
-)
+```ts
+type Scenario =
+  | { kind: "unknown" }                                   // no container source found
+  | { kind: "image";      image: Field<string> }
+  | { kind: "dockerfile"; dockerfile: Field<string>; legacy: boolean }
+  | { kind: "compose";    files: Field<string>[]; service: Field<string> | undefined }
+  | { kind: "ambiguous";  sources: Field<unknown>[] }     // more than one of the above
+  | { kind: "metadataOnly" };                             // valid: common properties only
+```
+
+A discriminated union rather than Go's `iota` enum, and the difference is not
+cosmetic. The Go version carried a `Scenario` integer and left every consumer to
+re-derive which fields were populated; here the payload travels with the tag, and a
+`switch` over `kind` that forgets a case is a compile error under `strict`. The
+`ambiguous` case carrying its conflicting sources is what lets
+`scenario/conflicting-source` name both offenders with spans rather than reporting a
+generic conflict.
+
+Every field on the model retains a back-pointer to its CST node:
+
+```ts
+interface Field<T> {
+  readonly value: T;
+  readonly node: Node;     // for the span
+}
 ```
 
 Knowing the scenario is what converts `"must match exactly one schema in oneOf"` into
 `"'image' and 'dockerComposeFile' cannot both be set: a Compose configuration takes
-its image from the Compose file"`. Every field on the model retains a back-pointer to
-its CST node so any rule can produce an exact span.
+its image from the Compose file"`.
 
-### 5.5 `pkg/schema` — schema validation
+### 5.5 `src/schema` — schema validation
 
-The upstream schemas are vendored into `schemas/` and embedded with `go:embed` — the
-linter must work offline and must not vary its behaviour with network conditions. A
-CI job checks the vendored copy against upstream weekly and opens a PR on drift.
+The upstream schemas are vendored into `schemas/` — the linter must work offline and
+must not vary its behaviour with network conditions. A CI job checks the vendored
+copy against upstream weekly and opens a PR on drift.
 
-Validation uses `santhosh-tekuri/jsonschema/v6` (draft 2019-09 + `unevaluatedProperties`).
+Where Go used `go:embed`, Bun uses a **text import**, which embeds the file contents
+into the module graph at build time:
 
-**Error translation is a first-class concern.** Raw validator output is routed
-through a translation layer that:
+```ts
+import baseSchema from "../../schemas/devContainer.base.schema.json" with { type: "text" };
+```
+
+In a compiled executable the text is stored once in the engine's own string
+representation and handed back without a copy.
+
+Validation uses **Ajv 2019** (`ajv/dist/2019`), which supports draft 2019-09
+including `unevaluatedProperties`.
+
+**Validators are compiled at build time, not at startup.** Ajv's normal mode
+generates validator source and evaluates it with `new Function`. That is a poor fit
+for a compiled executable with `--bytecode`, and it charges every single invocation
+for compiling a 24 KB schema. Instead, `scripts/build-validators.ts` runs Ajv with
+`code: { source: true, esm: true }` and writes standalone ESM modules into
+`src/schema/generated/`, which are committed and imported like ordinary code. The
+schema becomes a build-time input, dead code is eliminated by the bundler, and no
+code is generated at runtime. The weekly drift job regenerates these alongside the
+vendored schema, so a stale validator is a CI failure rather than a silent
+divergence.
+
+**Error translation is a first-class concern.** Ajv reports errors as
+`{ instancePath, schemaPath, keyword, params, message }`, where `instancePath` is a
+JSON Pointer. Raw output is routed through a translation layer that:
 
 1. Uses the already-known `Scenario` to select the *relevant* `oneOf` branch and
-   discard errors from the branches that were never applicable.
-2. Maps the JSON Pointer in each error back to a CST node for an exact span.
-3. Rewrites the message into prose, adding the enum's valid values, a spelling
-   suggestion for unknown properties (Levenshtein over the known key set), and a
-   documentation link.
+   discard errors from the branches that were never applicable. Ajv reports every
+   failed branch, so an unfiltered run against this schema produces dozens of errors
+   for a single mistake — this step is what makes the output usable at all.
+2. Maps `instancePath` to a CST node for an exact span. The pointer splits into path
+   segments and goes straight into `findNodeAtLocation(root, path)`, so this is a
+   lookup rather than a traversal we write ourselves.
+3. Rewrites the message into prose, adding the enum's valid values (from
+   `params.allowedValues`), a spelling suggestion for unknown properties
+   (Levenshtein over the known key set), and a documentation link.
 
-### 5.6 `pkg/rules` — the rule engine
+Ajv must run with `allErrors: true` so step 1 has a full set to filter.
 
-```go
-type Rule interface {
-    ID() string                     // e.g. "security/docker-socket-mount"
-    Description() string
-    DefaultSeverity() diagnostic.Severity
-    Category() Category
-    RequiresNetwork() bool
-    Check(ctx context.Context, p *Pass) 
+### 5.6 `src/rules` — the rule engine
+
+```ts
+interface Rule {
+  readonly id: string;                  // e.g. "security/docker-socket-mount"
+  readonly description: string;
+  readonly defaultSeverity: Severity;
+  readonly category: Category;
+  readonly requiresNetwork: boolean;
+  check(pass: Pass): void | Promise<void>;
 }
 
-type Pass struct {
-    Doc      *jsonc.Document   // CST + source text
-    Model    *model.DevContainer
-    FS       vfs.FS
-    Dir      string            // directory containing devcontainer.json
-    Features features.Resolver // nil when offline
-    Report   func(diagnostic.Diagnostic)
+interface Pass {
+  readonly doc: Document;               // CST + source text
+  readonly model: DevContainer;
+  readonly fs: FileSystem;
+  readonly dir: string;                 // directory containing devcontainer.json
+  readonly features: FeatureResolver | undefined;   // undefined when offline
+  readonly signal: AbortSignal;
+  report(d: Diagnostic): void;
 }
 ```
 
-Rules register themselves in an `init()` into a package-level registry. The engine:
+Rules are registered by **explicit import into a manifest**, not by a side effect at
+load time. Go's `init()`-based self-registration has no safe equivalent here: module
+side effects run on import, and a bundler is free to drop or reorder a module whose
+exports are unused. `src/rules/index.ts` lists every rule explicitly. The cost is one
+line per rule; the benefit is that tree-shaking, test isolation, and rule ordering
+all become predictable, and a rule that was never imported fails a registry
+completeness test rather than silently not running.
 
-1. Filters by config (severity `off`) and by `RequiresNetwork()` when offline.
-2. Runs rules concurrently — they are pure functions over an immutable `Pass`.
+The engine:
+
+1. Filters by config (severity `off`) and by `requiresNetwork` when offline.
+2. Runs offline rules **sequentially**, awaiting `null` between rules to yield to the
+   event loop. Network-dependent rules run concurrently via `Promise.all`, since they
+   are I/O-bound and that is where concurrency actually pays.
 3. Collects diagnostics, applies inline suppressions, sorts by position.
-4. Checks `ctx.Done()` between rules for LSP cancellation.
+4. Checks `signal.aborted` between rules for LSP cancellation.
 
-### 5.7 `pkg/features` — feature resolution
+Point 2 is a deliberate simplification of the Go design, which ran all rules
+concurrently. For a document measured in kilobytes the offline rule set is
+single-digit milliseconds of pure CPU work; parallelising it across workers would
+cost more in structured-clone overhead than it saves. Sequential execution also makes
+diagnostic ordering deterministic without a sort key tiebreaker, and removes any
+question of two rules observing the model mid-mutation.
+
+### 5.7 `src/features` — feature resolution
 
 Offline, we can only check reference *syntax* and pinning. With `--online`, we fetch
 each feature's `devcontainer-feature.json` from its OCI artifact to validate option
 names and values against the declared `options` schema, and to surface `deprecated`.
 
-Cached under `$XDG_CACHE_HOME/dcx/features/` keyed by resolved digest,
-with a configurable TTL. Network failures **degrade to a warning, never an error** —
-a linter that fails closed on a flaky registry is a linter people disable.
+OCI registry access is plain `fetch` against the distribution API — a token request
+against the registry's auth endpoint, then a manifest fetch, then a blob fetch.
+No client library is required and none is taken.
 
-### 5.8 `pkg/registry` — extension sources and policy
+Cached under `$XDG_CACHE_HOME/dcx/features/` keyed by resolved digest, with a
+configurable TTL. Network failures **degrade to a warning, never an error** — a
+linter that fails closed on a flaky registry is a linter people disable.
+
+### 5.8 `src/registry` — extension sources and policy
 
 Verifying `customizations.vscode.extensions` requires knowing where extensions come
 from — and **there is no single answer.** Four facts drive the design:
@@ -426,19 +618,19 @@ the check is **fully offline**.
 
 **Adapter interface:**
 
-```go
-type Source interface {
-    ID() string
-    RequiresNetwork() bool
-    Lookup(ctx context.Context, publisher, name string) (*Extension, error)
+```ts
+interface Source {
+  readonly id: string;
+  readonly requiresNetwork: boolean;
+  lookup(publisher: string, name: string, signal: AbortSignal): Promise<Extension | undefined>;
 }
 
-type Extension struct {
-    Version         string
-    Deprecated      bool
-    Downloadable    bool     // false ⇒ unpublished or removed
-    AllowedVersions []string // from policy sources; nil ⇒ unconstrained
-    TargetPlatforms []string
+interface Extension {
+  readonly version: string;
+  readonly deprecated: boolean;
+  readonly downloadable: boolean;          // false ⇒ unpublished or removed
+  readonly allowedVersions: string[] | undefined;  // from policy sources; undefined ⇒ unconstrained
+  readonly targetPlatforms: string[];
 }
 ```
 
@@ -450,7 +642,7 @@ Three implementations:
 | `vscode-gallery` | `POST {serviceUrl}/extensionquery` using VS Code's gallery protocol. Covers the Microsoft Marketplace, the Private Marketplace container, and any gallery implementing it. | yes | optional token |
 | `policy` | Parses VS Code's own `extensions.allowed` object, from a file path or inline in our config. | **no** | none |
 
-### 5.8.1 Why `policy` is the recommended enterprise path
+#### 5.8.1 Why `policy` is the recommended enterprise path
 
 The Private Marketplace authenticates through `extensions.gallery.authProvider` —
 a GitHub Enterprise or Entra ID sign-in flow, not a static token. **The linter does
@@ -463,7 +655,7 @@ bites — *will this extension install for our developers at all* — and it rea
 the org has already written for a different purpose. Gallery queries remain available
 for anyone who wants them, with a token supplied out-of-band.
 
-### 5.8.2 `extensions.allowed` cannot come from the repository
+#### 5.8.2 `extensions.allowed` cannot come from the repository
 
 There is no in-repo location VS Code honours for this policy, and that is deliberate.
 `extensions.allowed` is **application-scoped**. VS Code maintains a list of settings
@@ -484,32 +676,30 @@ settings or group policy — outside the repository entirely.
 Two consequences:
 
 1. **Auto-discovery is dropped.** The `policy` source is always explicitly configured
-   in `.dcx.yaml` — inline, or a path to a policy file the org
-   distributes by its own means. It is *our* input data, not a mirror of something VS
-   Code reads from the repo.
+   in `.dcx.yaml` — inline, or a path to a policy file the org distributes by its own
+   means. It is *our* input data, not a mirror of something VS Code reads from the repo.
 2. **This is itself a lintable mistake**, and exactly the silent failure this project
    exists to catch. Hence `vscode/ineffective-application-setting`: it flags any
    application-scoped setting placed in `customizations.vscode.settings`, where it
    will be quietly discarded. The rule covers the whole application-scoped set, not
    just `extensions.allowed`.
 
-### 5.8.3 Configuration is layered, and split by ownership
+#### 5.8.3 Configuration is layered, and split by ownership
 
-The user's point stands: this must be per-project. But *which* part is per-project
-matters, because two different concerns are in play.
+Two different concerns are in play, and they have different owners.
 
 - **Source definitions** (id, kind, url, credentials) may be declared in the project
-  config *and* extended by a user-level config at
-  `$XDG_CONFIG_HOME/dcx/config.yaml`. A developer on VSCodium can add
-  Open VSX to their own checks without editing a shared file.
+  config *and* extended by a user-level config at `$XDG_CONFIG_HOME/dcx/config.yaml`.
+  A developer on VSCodium can add Open VSX to their own checks without editing a
+  shared file.
 - **Policy** (which sources are `required`, and the `satisfy` mode) is
   **project-owned only**. It is a team decision about what this repo must support,
   and a user-level file must not be able to weaken it.
 
 **Credentials are never literals.** A token is given as an env var name or a
-credential-helper command, never a value. `.dcx.yaml` is a committed
-file, and we ship a `security/hardcoded-secret` rule — inviting a PAT into our own
-config would be indefensible. The loader rejects a literal-looking token outright.
+credential-helper command, never a value. `.dcx.yaml` is a committed file, and we
+ship a `security/hardcoded-secret` rule — inviting a PAT into our own config would be
+indefensible. The loader rejects a literal-looking token outright.
 
 **Lookups are case-insensitive.** Open VSX's canonical record for `golang.go` is
 namespace `golang`, name `Go`. A rule reporting "not found" on a case difference
@@ -527,6 +717,8 @@ renamed and never changes meaning. Removal requires a major version.
 
 Severities: `error`, `warning`, `info`, `off`.
 Rules marked 🌐 require `--online`.
+
+This catalog describes the spec, not the implementation language, and is unchanged.
 
 ### 6.1 `syntax/` — parse-level
 
@@ -625,7 +817,7 @@ Rules marked 🌐 require `--online`.
 
 | ID | Default | Description |
 | --- | --- | --- |
-| `lifecycle/shell-syntax-in-array-form` | warning | Array form bypasses the shell; `&&`, `|`, `>` will be literal arguments |
+| `lifecycle/shell-syntax-in-array-form` | warning | Array form bypasses the shell; `&&`, `\|`, `>` will be literal arguments |
 | `lifecycle/parallel-non-string-value` | error | Object (parallel) form requires string or array values |
 | `lifecycle/initialize-runs-on-host` | info | `initializeCommand` executes on the host, not in the container |
 | `lifecycle/empty-command` | warning | Empty command string |
@@ -674,13 +866,9 @@ Rules marked 🌐 require `--online`.
 | --- | --- | --- |
 | `meta/unused-suppression` | warning | A `dcx-disable-*` directive suppressed nothing |
 
-**Total: 71 rules across 15 categories.**
-
-> Correction: earlier drafts of this document stated 52 and then 58. Both were
-> arithmetic slips in the running total; the per-category tables were correct. The
-> figure above is a recount: syntax 3, schema 4, scenario 7, semantic 8, fs 5,
-> deprecation 4, feature 8, port 5, mount 4, lifecycle 4, security 6, vscode 7,
-> repro 3, style 2, meta 1.
+**Total: 71 rules across 15 categories** — syntax 3, schema 4, scenario 7, semantic 8,
+fs 5, deprecation 4, feature 8, port 5, mount 4, lifecycle 4, security 6, vscode 7,
+repro 3, style 2, meta 1.
 
 ---
 
@@ -695,6 +883,10 @@ dcx check [flags] [path...]
 `path` may be a `devcontainer.json` file, or a directory. With no path, the current
 directory is used.
 
+Argument parsing uses Bun's built-in `parseArgs` (`node:util`). No dependency is
+taken for this; the flag set below is entirely expressible in it, and a CLI framework
+would be the single largest dependency in the project for the least benefit.
+
 ### 7.2 Target resolution
 
 Given a directory, resolve in spec precedence order:
@@ -705,7 +897,7 @@ Given a directory, resolve in spec precedence order:
 
 If none is found, exit 2 with a message naming the paths searched. `--recursive`
 walks the tree for every dev container config beneath the target, honouring
-`.gitignore`.
+`.gitignore`. `Bun.Glob` supplies the traversal.
 
 ### 7.3 Flags
 
@@ -729,6 +921,9 @@ walks the tree for every dev container config beneath the target, honouring
 | `--list-rules` | Print the rule catalog (respects `--format json`) |
 | `--version` | Version, commit, build date |
 
+Colour detection uses `Bun.color` and honours `NO_COLOR`, `FORCE_COLOR`, and TTY
+detection in that order.
+
 ### 7.4 Exit codes
 
 | Code | Meaning |
@@ -738,7 +933,9 @@ walks the tree for every dev container config beneath the target, honouring
 | 2 | Tool error: bad usage, unreadable file, no config found |
 
 Separating 1 from 2 is what lets CI distinguish "your config is wrong" from "the
-linter broke".
+linter broke". Per invariant 1, `process.exit` is called in exactly one place —
+`src/cli/main.ts` — and an unexpected exception is caught there, reported as an
+internal error, and turned into exit 2.
 
 ### 7.5 Text output
 
@@ -760,6 +957,9 @@ linter broke".
 ✖ 1 error, 2 warnings in 1 file
 ```
 
+Caret alignment uses the display-width conversion from §5.2, so the underline lines
+up under non-ASCII content rather than drifting.
+
 `compact` format is one line per diagnostic (`file:line:col: severity: message [id]`)
 for editor `errorformat` integration and grep.
 
@@ -769,15 +969,23 @@ SARIF 2.1.0 with `rules[]` populated from the registry, so GitHub code scanning 
 descriptions and help URIs. This makes the linter a first-class citizen in the
 GitHub Security tab with no extra work from the user.
 
+Regions are emitted as `startLine`/`startColumn`/`endLine`/`endColumn`. SARIF columns
+are 1-based character offsets, which our UTF-16 offsets convert to directly; the
+`byteOffset` properties the Go design would have used are optional and are omitted.
+
 ---
 
 ## 8. Configuration
 
 ### 8.1 File
 
-`.dcx.yaml` (also `.yml`, `.json`) — **these three and nothing else; no
-TOML, no bespoke format** — discovered by walking upward from the linted file to the
+`.dcx.yaml` (also `.yml`, `.json`) — **these three and nothing else; no TOML, no
+bespoke format** — discovered by walking upward from the linted file to the
 repository root.
+
+YAML parsing uses the `yaml` package. This is the third and last runtime dependency.
+Bun has no built-in YAML parser, and hand-rolling one to read a config file would be
+the worst kind of not-invented-here.
 
 ```yaml
 version: 1
@@ -848,6 +1056,10 @@ extensions:
   satisfy: all
 ```
 
+The loaded config is validated by its own Ajv validator, generated by the same
+build-time step as the devcontainer schema (§5.5), so a malformed `.dcx.yaml`
+produces a diagnostic with a span rather than a runtime type error.
+
 Precedence, lowest to highest: rule defaults → user config → project config →
 environment → CLI flags. The one exception is `required` and `satisfy` under
 `extension-sources`, which are project-owned: a user-level config may add source
@@ -875,77 +1087,105 @@ differentiator over schema-only validation.
 - A `meta/unused-suppression` rule (default `warning`) flags directives that
   suppressed nothing — otherwise suppressions rot silently.
 
+Directives are read from the comment side list produced by the parser adapter
+(§5.1), matched to diagnostics by line.
+
 ---
 
 ## 9. LSP Integration Plan
 
 The server is a **thin adapter**, not a second implementation. It is built once the
-CLI rule set is stable (M8), and its existence is what §4.2's invariants pay for.
+CLI rule set is stable (M11), and its existence is what §4.2's invariants pay for.
+
+It uses `vscode-languageserver-node`, which is the reference implementation of the
+protocol rather than a third-party binding — the same codebase VS Code's own language
+servers are built on. It is a runtime dependency of the `./server` entry point only
+and is declared `optional`, so installing `dcx` for CLI or CI use does not pull it
+in. The core library never imports it.
 
 ### 9.1 Server surface
 
 | Capability | Backed by |
 | --- | --- |
-| `textDocument/publishDiagnostics` | `lint.Analyze` on open/change (debounced ~200 ms) |
-| `textDocument/codeAction` | `Diagnostic.Fix` — already produced by rules |
+| `textDocument/publishDiagnostics` | `analyze()` on open/change (debounced ~200 ms) |
+| `textDocument/codeAction` | `Diagnostic.fix` — already produced by rules |
 | `textDocument/hover` | Property descriptions from the embedded schema |
 | `textDocument/completion` | Property names, enum values, feature IDs 🌐 |
 | `textDocument/documentLink` | `build.dockerfile`, `dockerComposeFile`, local features |
 | `textDocument/definition` | Jump from `service` to its Compose definition |
 | `workspace/executeCommand` | "Fix all auto-fixable problems" |
 
+Hover and completion both need "which node is under the cursor", which is
+`findNodeAtOffset()` from the parser adapter — a function we get rather than write.
+
 ### 9.2 Mechanics
 
 - Transport: stdio (`--stdio`), matching every editor's expectation.
 - Sync: incremental (`TextDocumentSyncKind.Incremental`); `OverlayFS` holds buffers.
-- Cancellation: each `didChange` cancels the previous analysis `context`.
-- Positions: `pkg/position` converts byte offsets to UTF-16, per LSP spec.
-- The server shares the CLI's config discovery, so a project's
-  `.dcx.yaml` governs the editor identically.
+- Cancellation: each `didChange` aborts the previous analysis via its `AbortController`.
+- Positions: offsets are already UTF-16 code units, so an LSP `Position` is a line
+  lookup and a subtraction (§5.2).
+- The server shares the CLI's config discovery, so a project's `.dcx.yaml` governs
+  the editor identically.
 
-### 9.3 One binary, not two
+### 9.3 One package, not two
 
-The server is a **subcommand of the same binary**, not a separate executable:
+The server is a **subcommand of the same package**, not a separate artefact:
 `dcx serve --stdio` alongside `dcx check`. Three reasons:
 
-1. **The extension bundles one artefact instead of two.** DCL-47 ships a
-   platform-specific VSIX for six targets; two binaries would double both the
-   payload and the packaging matrix.
-2. **The server and the rule set change together.** A split would make every rule
+1. **The server and the rule set change together.** A split would make every rule
    addition a two-artefact release with a version-skew window in between.
-3. **Users install one thing.** `brew install dcx` gives you the CLI, the language
-   server, and everything the extension needs.
+2. **Users install one thing.** `bun add -d dcx` gives you the CLI and the language
+   server, and the extension needs nothing further.
+3. **There is no packaging pressure to split.** The Go design had to weigh bundling
+   one binary against two; here both are entry points in a package that the extension
+   imports directly.
 
-The `pkg/` API stays documented and semver-stable regardless, so extracting the
-server later remains possible if it ever grows its own release rhythm.
+The `exports` surface in §4.3 stays documented and semver-stable regardless, so
+extracting the server later remains possible if it ever grows its own release rhythm.
+
+---
 
 ## 10. VSCode Extension
 
-`extensions/vscode`, TypeScript, deliberately minimal.
+`extensions/vscode`, TypeScript, deliberately minimal — and substantially smaller
+than the Go design's equivalent, because there is no binary to find, ship, version,
+or spawn.
 
 ### 10.1 Two-phase plan
 
-**Phase 1 (M7) — CLI-driven.** No LSP required. The extension spawns
-`dcx check --format json` on open and on save, parses the output, and
-populates a `DiagnosticCollection`. Roughly 250 lines. This ships real value long
-before the server exists, and it validates the JSON output contract.
+**Phase 1 (M8) — in-process, direct.** No LSP required. The extension imports the
+lint facade directly, calls `analyze()` on open and on save, and populates a
+`DiagnosticCollection`. Roughly 100 lines. There is no subprocess, no JSON parsing of
+another process's stdout, and no error path for "the binary is missing".
 
-**Phase 2 (M8) — LSP-driven.** Replace the runner with `vscode-languageclient`
-spawning `dcx serve --stdio`. Diagnostics arrive over the wire; hover,
-completion, code actions, and document links come along for free. The Phase 1 code
-path is deleted, not maintained in parallel.
+**Phase 2 (M12) — LSP-driven.** Replace the direct call with
+`vscode-languageclient`, running `src/server` in a Node IPC transport. Diagnostics
+arrive over the protocol; hover, completion, code actions, and document links come
+along with it. The Phase 1 code path is deleted, not maintained in parallel.
+
+The reason to move to Phase 2 at all is not the extension — Phase 1 serves VS Code
+perfectly well. It is Neovim, Helix, and Zed, which need a real server over stdio.
 
 ### 10.2 Binary resolution
 
-In order: `dcx.path` setting → bundled binary in `bin/` → `PATH`. If all
-three fail, show a notification with an install command rather than failing silently.
+None required. The Go design needed a three-step resolution order — `dcx.path`
+setting, then a bundled binary in `bin/`, then `PATH` — plus a notification for the
+case where all three failed. The extension bundles the analyser as JavaScript and
+runs it in the extension host, so none of that exists.
+
+A `dcx.path` setting is retained for one narrow case: pointing the extension at a
+locally built checkout during development on dcx itself.
 
 ### 10.3 Packaging
 
-Platform-specific VSIX via `vsce package --target <t>` for `win32-x64`,
-`win32-arm64`, `linux-x64`, `linux-arm64`, `darwin-x64`, `darwin-arm64`. GoReleaser
-produces the binaries; a CI matrix copies the right one into `bin/` before packaging.
-The Marketplace serves each user only their platform's ~6 MB payload.
+One VSIX, all platforms. `bun build --target=node` bundles the extension and the
+analyser into a single JavaScript file of roughly 200 KB, and `vsce package` ships
+it.
+
+This replaces the Go design's six platform-specific VSIX targets, the CI matrix that
+copied the right executable into `bin/` before packaging, and the ~6 MB per-platform
+payload. It is the single largest simplification in this document.
 
 ### 10.4 Activation and settings
 
@@ -955,11 +1195,11 @@ and `workspaceContains:**/.devcontainer.json`.
 | Setting | Default | Description |
 | --- | --- | --- |
 | `dcx.enable` | `true` | Master switch |
-| `dcx.path` | `""` | Override binary location |
+| `dcx.path` | `""` | Point at a local checkout (development only) |
 | `dcx.run` | `onSave` | `onSave` \| `onType` |
 | `dcx.online` | `false` | Enable network rules |
 | `dcx.configPath` | `""` | Explicit config file |
-| `dcx.trace.server` | `off` | LSP tracing |
+| `dcx.trace.server` | `off` | LSP tracing (Phase 2) |
 
 Commands: *Lint Workspace*, *Fix All Auto-fixable Problems*, *Restart Server*,
 *Show Output*.
@@ -968,36 +1208,60 @@ Commands: *Lint Workspace*, *Fix All Auto-fixable Problems*, *Restart Server*,
 
 ## 11. Testing Strategy
 
+`bun test` throughout — Jest-compatible API, built in, no runner dependency and no
+transform configuration.
+
 | Layer | Approach |
 | --- | --- |
-| **Parser** | Table-driven unit tests; Go native fuzzing (`FuzzParse`) asserting no panic and that offsets stay within bounds |
-| **Rules** | Golden-file tests: `testdata/rules/<rule-id>/<case>.jsonc` with `// want: error: …` annotations inline, in the style of Go's `analysistest`. The annotation sits on the line the diagnostic must target, so span correctness is tested implicitly. |
-| **Schema translation** | Snapshot tests over the rewritten message for each error class |
-| **CLI** | End-to-end tests over `testdata/projects/*` asserting stdout, stderr, and exit code |
-| **Formatters** | Golden files; SARIF output validated against the SARIF 2.1.0 schema |
-| **Corpus** | A vendored set of ~200 real `devcontainer.json` files harvested from public repos. CI asserts zero panics and snapshots the aggregate diagnostic counts — a diff in that snapshot forces a deliberate review of any rule change's blast radius. |
+| **Parser adapter** | Table-driven unit tests over the adapter's additions: comment attachment, trailing-comma positions, error surfacing. We do not re-test `jsonc-parser` itself. |
+| **Rules** | Golden-file tests: `testdata/rules/<rule-id>/<case>.jsonc` with `// want: error: …` annotations inline. The annotation sits on the line the diagnostic must target, so span correctness is tested implicitly. |
+| **Schema translation** | Snapshot tests (`toMatchSnapshot`) over the rewritten message for each error class |
+| **CLI** | End-to-end tests over `testdata/projects/*` asserting stdout, stderr, and exit code, driven through `Bun.$` |
+| **Formatters** | Golden files; SARIF output validated against the SARIF 2.1.0 schema by a generated Ajv validator |
+| **Corpus** | A vendored set of ~200 real `devcontainer.json` files harvested from public repos. CI asserts zero exceptions and snapshots the aggregate diagnostic counts — a diff in that snapshot forces a deliberate review of any rule change's blast radius. |
 | **Fixes** | Every fixable rule has a `.jsonc` / `.fixed.jsonc` pair; the test applies fixes and asserts the result, then re-lints to assert convergence |
+| **Property-based** | `fast-check` over the analyser: arbitrary JSONC input must never throw, and every reported range must be within document bounds and must not split a surrogate pair |
 | **Extension** | `@vscode/test-electron` integration test asserting diagnostics appear for a fixture workspace |
 
-The corpus test is the single highest-value item here: it is the difference between
-"the rule works on my example" and "the rule does not produce a wall of false
+Two notes on what changed.
+
+**There is no native fuzzer.** Go's `testing.F` with coverage-guided mutation has no
+Bun equivalent, and this is a genuine loss — it is the tool that finds the input you
+did not think of. `fast-check` with a JSONC-shaped arbitrary plus a mutation pass over
+the corpus covers most of the same ground, but through generators we have to write.
+The mitigating factor is that the highest-risk component, the parser, is now a
+widely-deployed library rather than 700 lines of our own recursive descent.
+
+**The corpus test remains the single highest-value item here.** It is the difference
+between "the rule works on my example" and "the rule does not produce a wall of false
 positives on real-world configs".
 
 ---
 
 ## 12. Distribution
 
-| Channel | Mechanism |
-| --- | --- |
-| GitHub Releases | GoReleaser, 6 platform archives + checksums + SBOM |
-| `go install` | `go install github.com/lonhutt/dcx/cmd/dcx@latest` |
-| Homebrew | Tap, updated by GoReleaser |
-| Scoop | Bucket, updated by GoReleaser |
-| Linux packages | `.deb`, `.rpm`, `.apk` via GoReleaser's nfpm |
-| Docker | Distroless image, `ghcr.io/lonhutt/dcx` |
-| pre-commit | `.pre-commit-hooks.yaml` with a `golang` hook and a binary-download hook |
-| GitHub Action | Composite action wrapping the binary, uploading SARIF |
-| VSCode | Marketplace + Open VSX, platform-specific VSIX |
+npm is the primary channel. The audience for a `devcontainer.json` linter overwhelmingly
+has a JavaScript runtime already, and the payload difference is three orders of
+magnitude — a published package of roughly 300 KB against a 78 MB executable.
+
+| Channel | Mechanism | Payload |
+| --- | --- | --- |
+| **npm** | `bunx dcx check`, or `bun add -d dcx` / `npm i -D dcx` | ~300 KB |
+| **Executables** | `bun build --compile --target=<t>` for the 8 supported targets; attached to GitHub Releases with checksums and SBOM | ~78 MB each |
+| **Homebrew** | Tap wrapping the executable | ~78 MB |
+| **Docker** | `ghcr.io/lonhutt/dcx`, `oven/bun`-based | ~120 MB |
+| **pre-commit** | `.pre-commit-hooks.yaml` with a `node` hook, plus a binary-download hook | — |
+| **GitHub Action** | Composite action running `bunx dcx`, uploading SARIF | — |
+| **VSCode** | Marketplace + Open VSX, one VSIX for all platforms | ~200 KB |
+
+Executables exist for the environments that genuinely have no runtime — a distroless
+CI image, a bootstrapping script — and are honestly labelled as the heavyweight
+option. Note that `bun build --compile` cross-compiles from any host to all eight
+targets, so the release job is a single-runner loop rather than a matrix of runners.
+
+Scoop and the Linux packages (`.deb`/`.rpm`/`.apk`) from the Go design are dropped.
+GoReleaser produced them nearly for free; here each would be hand-rolled packaging
+around a 78 MB payload for an audience already served by npm.
 
 ### 12.1 Versioning policy
 
@@ -1007,33 +1271,41 @@ Semantic versioning. Rule IDs are public API:
 - **Minor** — new rules (may cause new findings; release notes list them), new flags.
 - **Major** — rule removal or rename, severity promotion to `error`, exit-code changes.
 
+The `exports` map in §4.3 is versioned on the same policy: adding a subpath is minor,
+removing or narrowing one is major.
+
 ---
 
 ## 13. Milestones
 
 | # | Milestone | Content | Exit criterion |
 | --- | --- | --- | --- |
-| **M0** | Foundations | Repo, `go.mod`, CI (test/lint/build matrix), `position`, `vfs`, `diagnostic` packages | CI green on all 6 platforms |
-| **M1** | JSONC parser | Lexer, parser, CST, comment retention, error recovery, fuzzing | Parses the 200-file corpus with zero panics |
-| **M2** | Schema layer | Vendored schemas, `go:embed`, 2019-09 validation, scenario discrimination, error translation | Every schema error class yields a human-readable message with an exact span |
-| **M3** | Rule engine | `Rule` interface, registry, concurrent execution, config file, inline suppressions | Engine runs with a trivial rule set; suppressions tested |
+| **M0** | Foundations | Repo, `package.json`, CI (test/typecheck/lint), `position`, `vfs`, `diagnostic` modules | CI green; `position` round-trips the Unicode test corpus |
+| **M1** | JSONC adapter | `jsonc-parser` wrapper, comment side-list and attachment, trailing-comma positions, `Document` type | Parses the 200-file corpus with zero exceptions; comment attachment verified against fixtures |
+| **M2** | Schema layer | Vendored schemas, text imports, build-time Ajv standalone generation, scenario discrimination, error translation | Every schema error class yields a human-readable message with an exact span |
+| **M3** | Rule engine | `Rule` interface, manifest registry, sequential execution, config file, inline suppressions | Engine runs with a trivial rule set; suppressions tested; registry completeness test passes |
 | **M4** | Core rules | `syntax/`, `schema/`, `scenario/`, `semantic/`, `fs/`, `deprecation/` — 31 rules | Golden tests pass for each |
 | **M5** | CLI | Discovery, all flags, `text`/`compact`/`json` output, exit codes | End-to-end tests pass; usable by hand |
 | **M6** | Extended rules | `feature/` (offline), `port/`, `mount/`, `lifecycle/`, `security/`, `repro/`, `style/`, plus `meta/`, the four offline `vscode/` rules and the `policy` source — 37 rules | Corpus false-positive review complete |
-| **M7** | Reporters + release | SARIF, GitHub annotations, GoReleaser, Homebrew, Docker, pre-commit, GH Action | `v0.1.0` published and installable |
-| **M8** | VSCode extension v1 | CLI-driven diagnostics, binary bundling, platform VSIX, settings | Published to Marketplace + Open VSX |
+| **M7** | Reporters + release | SARIF, GitHub annotations, npm publish, executables, Docker, pre-commit, GH Action | `v0.1.0` published and installable via `bunx` |
+| **M8** | VSCode extension v1 | In-process diagnostics, single VSIX, settings | Published to Marketplace + Open VSX |
 | **M9** | Network rules | OCI feature resolution, cache, `--online`, option validation; `openvsx` and `vscode-gallery` sources and the three network `vscode/` rules (3 rules) | Feature option errors detected against real registries; Open VSX portability gap detected on a known-proprietary extension |
-| **M10** | Fixes | `Fix` on fixable rules, `--fix`, `--fix-dry-run`, convergence tests | All rules marked *fixable* apply cleanly |
-| **M11** | LSP server | `cmd/dcx`, diagnostics, code actions, hover, completion, links | Works in VSCode and Neovim |
+| **M10** | Fixes | `fix` on fixable rules via `modify()`, `--fix`, `--fix-dry-run`, convergence tests | All rules marked *fixable* apply cleanly |
+| **M11** | LSP server | `src/server`, diagnostics, code actions, hover, completion, links | Works in VSCode and Neovim |
 | **M12** | Extension v2 | Switch to `LanguageClient`, delete Phase 1 path | Feature parity plus hover/completion |
 
 M0–M7 constitute a genuinely useful, releasable tool. Everything after is additive.
 
+M1, M8, and M10 are materially cheaper than their Go equivalents — the parser is a
+wrapper rather than a recursive-descent implementation, the extension ships no
+binary, and fixes are expressed as `modify()` calls against JSON paths rather than
+hand-computed edit spans. M0 and M2 are slightly more expensive: `position` carries
+display-width handling the Go design underspecified, and M2 gains a build-time
+codegen step.
+
 ---
 
 ## 14. Resolved Decisions
-
-Every question from the review draft is now closed.
 
 | # | Question | Resolution |
 | --- | --- | --- |
@@ -1045,6 +1317,8 @@ Every question from the review draft is now closed.
 | 6 | `devcontainer-feature.json` linting | **Not in v1.** Tracked as [D3](#15-deferred-backlog). |
 | 7 | Rule ID scheme | **`category/kebab-name`.** No numeric aliases. |
 | 8 | Config file format | **YAML and JSON only.** No TOML, no bespoke format, nothing else. |
+| 9 | Runtime dependency budget | **Three in the core, and they are named:** `jsonc-parser`, `ajv`, `yaml`. Anything else must displace one of them or be written in-tree. The `./server` entry point adds `vscode-languageserver` as an optional dependency, not installed for CLI use. |
+| 10 | Node compatibility | **Bun is the development and primary runtime; the published package must also run on Node 22+.** Bun-specific APIs (`Bun.file`, `Bun.Glob`, `Bun.stringWidth`) are confined to `src/vfs`, `src/cli`, and `src/position`, each behind a narrow interface with a Node fallback. The core is runtime-agnostic, which is also what lets the VSCode extension host run it unchanged. |
 
 ---
 
@@ -1071,8 +1345,8 @@ platform-qualified versions (`"5.0.0@win32-x64"`). Whether a devcontainer's own
 Today a `vscode-gallery` source takes a token via `token-env` only. Some users will
 want `token-command: gh auth token` so no long-lived token sits in the environment.
 
-- **Do:** add `token-command` to the source schema; execute it, trim, treat a
-  non-zero exit as an unreachable source (warning, not error).
+- **Do:** add `token-command` to the source schema; execute it via `Bun.$`, trim,
+  treat a non-zero exit as an unreachable source (warning, not error).
 - **Explicitly still out of scope:** OAuth against
   `extensions.gallery.authProvider`. That decision does not get revisited here.
 - **Blocked by:** M9. **Blocks:** nothing.
@@ -1082,8 +1356,8 @@ want `token-command: gh auth token` so no long-lived token sits in the environme
 A natural second target reusing the entire pipeline: parser, schema layer, rule
 engine, reporters, and CLI all apply unchanged.
 
-- **Shape:** `dcx feature ./src/my-feature`, with a `feature/*` schema
-  vendored alongside the devcontainer schema and a new rule namespace.
+- **Shape:** `dcx feature ./src/my-feature`, with a `feature/*` schema vendored
+  alongside the devcontainer schema and a new rule namespace.
 - **Candidate rules:** required `id`/`version`/`name`; `id` matches the directory
   name; semver `version`; option `default` satisfies its own `enum`; `dependsOn` and
   `installsAfter` reference resolvable features; `install.sh` exists and is
@@ -1092,22 +1366,90 @@ engine, reporters, and CLI all apply unchanged.
   registry, so this is a new schema plus a new namespace, not a new tool.
 - **Blocked by:** M7 (stable rule engine and reporters). **Blocks:** nothing.
 
+### D4 — Worker-parallel corpus linting — *low*
+
+`--recursive` over a monorepo with hundreds of dev container configs is the one case
+where single-threaded analysis (§5.6) could become noticeable. If it does, the fix is
+`Worker` over *files*, not over rules: each worker owns a document end to end, so the
+structured-clone cost is one string in and one diagnostic array out.
+
+- **Trigger:** a measured `--recursive` run exceeding ~2 s on a real repository.
+- **Blocked by:** M5. **Blocks:** nothing.
+
 ---
 
 ## 16. Summary of Key Decisions
 
 | Decision | Choice | Reason |
 | --- | --- | --- |
-| Language | Go | Single binary, ~5 ms startup; the extension is a thin client either way |
-| Parser | Hand-written JSONC CST | No Go library preserves comments *and* positions *and* recovers from errors |
-| Schema | Vendored + `go:embed`, `santhosh-tekuri/jsonschema/v6` | Offline-deterministic; draft 2019-09 + `unevaluatedProperties` |
+| Language | TypeScript on Bun | 9 ms measured start; the whole target ecosystem — parser, LSP framework, extension host — is TypeScript |
+| Parser | `jsonc-parser` behind a thin adapter | It is the parser VS Code uses; agreeing with the editor becomes structural, not aspirational |
+| Schema | Vendored + text import, Ajv 2019 compiled standalone at build time | Offline-deterministic; draft 2019-09 + `unevaluatedProperties`; no runtime codegen |
 | Error quality | Discriminate scenario *before* validating | Turns `oneOf` noise into actionable prose — the core value of the project |
-| Filesystem | `vfs.FS` abstraction everywhere | Unsaved editor buffers are the whole reason an LSP needs it |
-| Positions | Byte offsets internally, converted at the edge | Terminal carets and LSP UTF-16 from one source of truth |
-| Fixes | `Diagnostic.Fix` from rule #1 | Retrofitting fixes means rewriting every rule |
+| Filesystem | `FileSystem` interface everywhere | Unsaved editor buffers are the whole reason an LSP needs it |
+| Positions | UTF-16 code units internally; display width at the terminal edge | The unit the parser, the language, and the protocol already share |
+| Rule registration | Explicit manifest, not load-time side effects | Bundler-safe and testable; `init()` has no safe equivalent |
+| Concurrency | Sequential offline, concurrent for network I/O | Parallelism where it pays; determinism where it doesn't |
+| Fixes | `Diagnostic.fix` from rule #1, via `modify()` | Retrofitting fixes means rewriting every rule; format-preserving edits come free |
 | Network | Off by default, degrades to warning | A linter that fails on a flaky registry gets disabled |
 | Extension sources | Open VSX default; Marketplace opt-in | Marketplace ToS restricts offerings to Visual Studio products |
 | Enterprise path | Consume VS Code's `extensions.allowed` verbatim | Offline, no auth, no new syntax — the org already wrote it |
 | Source config | Definitions layered user+project; `required` project-only | Adding your own registry is personal; what the repo must support is a team decision |
-| LSP location | `dcx serve`, same binary | One artefact to bundle, install, and version |
-| Extension | Phase 1 CLI-driven, Phase 2 LSP | Ships value early; validates the JSON contract |
+| LSP location | `dcx serve`, same package | One thing to install and version |
+| Extension | Phase 1 in-process, Phase 2 LSP | Ships value early; Phase 2 exists for Neovim and Zed, not for VS Code |
+| Distribution | npm primary, executables secondary | 300 KB against 78 MB, for an audience that has a runtime already |
+
+---
+
+## 17. Assessment
+
+What this language choice actually costs and buys, stated plainly.
+
+### 17.1 What got better
+
+**The parser stops being ours.** §5.1 falls from ~700 lines of hand-written lexer and
+recursive-descent parser to a ~150 line adapter, and — more importantly — the
+remaining risk moves from our code to Microsoft's. For a tool whose correctness is
+defined as *agreeing with VS Code about what this file says*, using VS Code's parser
+is not a convenience but a correctness argument.
+
+**The extension stops being a distribution problem.** Six platform-specific VSIX
+targets, a CI matrix to place the right executable in `bin/`, a three-step binary
+resolution order, and the whole class of "the bundled binary doesn't match the
+extension version" bug are deleted rather than ported. One VSIX, ~200 KB, everywhere.
+
+**Fixes get cheaper.** `modify()` / `applyEdits()` perform format-preserving edits
+against JSON paths, so M10 stops being an exercise in hand-computed edit arithmetic.
+
+**Positions get simpler.** UTF-16 offsets are what the parser emits, what the
+language indexes strings by, and what the protocol is defined in. The conversion the
+Go design had to perform on the editor's hottest path does not exist.
+
+### 17.2 What got worse
+
+**Binary size: 78 MB against roughly 2 MB, measured.** This is the real loss and
+there is no mitigation that makes it go away — only the observation that npm, not the
+executable, is now the path almost everyone takes. Anyone who genuinely needs a
+runtime-free single file is worse off by a factor of forty.
+
+**No coverage-guided fuzzer.** `fast-check` covers similar ground through generators
+we write rather than mutation the tool discovers. Partly offset by the parser no
+longer being ours to fuzz.
+
+**A dependency tree.** Three runtime dependencies against Go's near-zero-dependency
+norm, plus a transitive graph and a supply chain to watch. Decision 9 caps it.
+
+**Single-threaded.** Immaterial for one document, potentially material for
+`--recursive` over a monorepo. D4 holds the escape hatch.
+
+### 17.3 The argument that did not survive
+
+The Go design's §2.1 rested on TypeScript costing 150–300 ms to start. That figure
+describes Node. Bun starts this CLI in **9 ms median over 30 runs**, of which 3 ms is
+process-spawn overhead any language pays — against the ~5 ms the Go design claimed
+for itself. A 4 ms difference on a tool a human invokes on save is not a
+differentiator, and it was the load-bearing argument for compiling ahead of time.
+
+What remains of the original case for Go is binary size, and binary size mattered
+chiefly *because* the extension had to bundle the thing. In TypeScript it does not.
+The two costs were load-bearing for each other, and neither stands alone.

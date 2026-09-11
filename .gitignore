@@ -1,20 +1,34 @@
-# Build output
-/dist/
-/bin/
-/dcx
-/dcx.exe
+# dependencies (bun install)
+node_modules
 
-# Test and coverage artefacts
-*.test
-*.out
-coverage.*
+# output
+out
+dist
+*.tgz
 
-# Editor and OS noise
+# code coverage
+coverage
+*.lcov
+
+# logs
+logs
+_.log
+report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# caches
+.eslintcache
+.cache
+*.tsbuildinfo
+
+# IntelliJ based IDEs
+.idea
+
+# Finder (MacOS) folder config
 .DS_Store
-.idea/
-*.swp
-
-# Extension build output
-extensions/vscode/node_modules/
-extensions/vscode/out/
-extensions/vscode/*.vsix
