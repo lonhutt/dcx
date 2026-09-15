@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Bun: Debug Active Test File",
+      "type": "bun",
+      "request": "launch",
+      "program": "${file}",
+      "runtimeArgs": ["test"],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

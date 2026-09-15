@@ -1,0 +1,23 @@
+{
+  "name": "dcx",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "prettier": "3.9.6"
+  },
+  "peerDependencies": {
+    "typescript": "^7"
+  },
+  "scripts": {
+    "build": "bun build ./index.ts --compile --minify --sourcemap --bytecode --outfile dist/dcx",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "ajv": "^8.20.0",
+    "jsonc-parser": "^3.3.1",
+    "yaml": "^2.9.0"
+  }
+}
