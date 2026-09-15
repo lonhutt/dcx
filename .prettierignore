@@ -1,0 +1,10 @@
+# .gitignore is honoured automatically; these are tracked but not ours to format.
+
+# Upstream spec submodule and schemas vendored from it
+devcontainer-spec
+schemas
+
+# Fixtures may be deliberately malformed
+testdata
+
+bun.lock
