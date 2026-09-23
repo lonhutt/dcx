@@ -1,0 +1,3 @@
+[test]
+coverage = true # Enables coverage by default on every 'bun test' run
+coverageReporter = ["text", "lcov"] # Generates terminal summary AND lcov file

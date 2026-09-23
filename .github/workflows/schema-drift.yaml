@@ -1,0 +1,75 @@
+name: Schema drift
+
+# schemas/ is a symlink into the pinned devcontainer-spec submodule, not an
+# independent copy — so there is no local file to diff against upstream. What can
+# actually go stale is the pin itself: this job compares the submodule's checked-out
+# commit against devcontainers/spec's remote main and opens a PR bumping the pin
+# (and regenerating the Ajv validators against the new schema content) on drift.
+# Never fails the build — a stale pin is worth a PR, not a red CI run.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # weekly, Monday 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-drift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Compare pinned commit against upstream main
+        id: drift
+        run: |
+          pinned="$(git -C devcontainer-spec rev-parse HEAD)"
+          upstream="$(git ls-remote https://github.com/devcontainers/spec.git refs/heads/main | cut -f1)"
+          echo "pinned=$pinned" >> "$GITHUB_OUTPUT"
+          echo "upstream=$upstream" >> "$GITHUB_OUTPUT"
+          if [ "$pinned" = "$upstream" ]; then
+            echo "drifted=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "drifted=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: oven-sh/setup-bun@v2
+        if: steps.drift.outputs.drifted == 'true'
+
+      - name: Bump the pin and regenerate validators
+        if: steps.drift.outputs.drifted == 'true'
+        run: |
+          git -C devcontainer-spec checkout "${{ steps.drift.outputs.upstream }}"
+
+          retrieved="$(date -u +%Y-%m-%d)"
+          tmp="$(mktemp)"
+          jq --arg commit "${{ steps.drift.outputs.upstream }}" \
+             --arg retrieved "$retrieved" \
+             'map_values(.commit = $commit | .retrieved = $retrieved | .url |= sub("/spec/[^/]+/schemas/"; "/spec/" + $commit + "/schemas/"))' \
+             src/schema/provenance.json > "$tmp"
+          mv "$tmp" src/schema/provenance.json
+
+          bun install
+          bun run scripts/build-validators.ts
+
+      - name: Open a PR
+        if: steps.drift.outputs.drifted == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore: bump devcontainer-spec to ${{ steps.drift.outputs.upstream }}"
+          title: "chore: bump devcontainer-spec pin to ${{ steps.drift.outputs.upstream }}"
+          body: |
+            `devcontainers/spec`'s `main` moved from `${{ steps.drift.outputs.pinned }}`
+            to `${{ steps.drift.outputs.upstream }}`. This bumps the submodule pin,
+            refreshes `src/schema/provenance.json`, and regenerates the Ajv validators
+            against the new schema content.
+
+            Opened automatically by the schema-drift workflow — review the schema diff
+            before merging.
+          branch: chore/schema-drift
+          delete-branch: true

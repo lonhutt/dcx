@@ -1,10 +1,14 @@
 import { validate } from "./generated/devContainer.base.validator";
+import schemas from "./provenance.json" with { type: "json" };
 
 /**
- * Per-schema provenance: where each vendored file in `schemas/` came from and when it
- * was last checked against the `devcontainer-spec` submodule (DCL-10).
+ * Per-schema provenance: the upstream URL, the `devcontainer-spec` submodule commit
+ * it was retrieved at, and the retrieval date (DCL-10).
  *
- * TODO(DCL-10): read from `schemas/provenance.json`, not written yet.
+ * `schemas/` is a symlink into the pinned submodule, not an independent copy, so this
+ * data — not a file diff — is what a drift check has to compare against upstream.
+ *
+ * TODO(DCL-10): read from `./provenance.json` (a JSON import), not implemented yet.
  */
 export interface Provenance {
   readonly url: string;
@@ -16,5 +20,9 @@ export interface Provenance {
  * TODO(DCL-10): not implemented. One entry per vendored schema, keyed by filename.
  */
 export function provenance(): Record<string, Provenance> {
-  throw new Error("not implemented");
+  return {
+    "devContainer.base.schema.json": schemas["devContainer.base.schema.json"],
+    "devContainer.schema.json": schemas["devContainer.schema.json"],
+    "devContainerFeature.schema.json": schemas["devContainerFeature.schema.json"],
+  };
 }
