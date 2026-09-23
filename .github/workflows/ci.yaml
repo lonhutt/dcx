@@ -27,25 +27,19 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {goos: linux, goarch: amd64}
-          - {goos: linux, goarch: arm64}
-          - {goos: darwin, goarch: amd64}
-          - {goos: darwin, goarch: arm64}
-          - {goos: windows, goarch: amd64}
-          - {goos: windows, goarch: arm64}
+          - { goos: linux, goarch: amd64 }
+          - { goos: linux, goarch: arm64 }
+          - { goos: darwin, goarch: amd64 }
+          - { goos: darwin, goarch: arm64 }
+          - { goos: windows, goarch: amd64 }
+          - { goos: windows, goarch: arm64 }
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          cache: true
+      - uses: oven-sh/setup-bun@v2
 
       - name: Build
-        env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
-        run: go build ./...
+        run: bun ci
+        run: bun run build
 
   # Tests run natively. The race detector is restricted to linux/amd64: it needs
   # cgo and a C toolchain, and running it on every leg buys no extra signal while
@@ -62,111 +56,23 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {os: ubuntu-latest, race: true}
-          - {os: macos-latest, race: false}
-          - {os: windows-latest, race: false}
+          - { os: ubuntu-latest, race: true }
+          - { os: macos-latest, race: false }
+          - { os: windows-latest, race: false }
     steps:
       - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
 
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          cache: true
-
-      - name: Vet
-        run: go vet ./...
+      - name: Format
+        run: bun run format:check
 
       - name: Test
         if: ${{ !matrix.race }}
-        run: go test ./...
+        run: bun test
 
-      - name: Test with race detector and coverage
-        if: ${{ matrix.race }}
-        run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
-
-      # Coverage reporting that needs no secret and no third-party service:
-      # the number lands in the job summary, the profile in an artifact.
       - name: Coverage summary
         if: ${{ matrix.race }}
-        run: |
-          go tool cover -func=coverage.out | tail -1
-          {
-            echo '### Coverage'
-            echo
-            echo '```'
-            go tool cover -func=coverage.out | tail -25
-            echo '```'
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload coverage profile
-        if: ${{ matrix.race }}
-        uses: actions/upload-artifact@v4
+        uses: codecov/codecov-action@v3
         with:
-          name: coverage-profile
-          path: coverage.out
-          if-no-files-found: error
-
-      # Publishes trend data only when a token is configured. Gated on the
-      # secret rather than left to fail invisibly: a tokenless upload is
-      # rejected by Codecov while still reporting the step as successful.
-      - name: Publish to Codecov
-        if: ${{ matrix.race && env.CODECOV_TOKEN != '' }}
-        uses: codecov/codecov-action@v5
-        with:
-          files: coverage.out
-          token: ${{ env.CODECOV_TOKEN }}
-          fail_ci_if_error: false
-
-  # Go fuzzes one target per invocation, and its corpus of "interesting" inputs is
-  # a machine-local cache by design — not something to commit. The seed corpus
-  # (f.Add, plus any crasher checked in) already runs as an ordinary test in the
-  # `test` job; this job is the part that explores inputs nobody has seen yet.
-  #
-  # Time-boxed rather than exhaustive: the point is steady pressure on every PR.
-  # On a failure the toolchain writes the reproducer under testdata/fuzz/, so it
-  # is uploaded — committing that file turns the crash into a permanent test.
-  fuzz:
-    name: fuzz
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          cache: true
-
-      - name: Fuzz
-        run: make fuzz FUZZTIME=60s
-
-      - name: Upload crash reproducers
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: fuzz-crashers
-          path: "**/testdata/fuzz/**"
-          if-no-files-found: ignore
-
-  # Lint results are platform-independent, so this runs once rather than three
-  # times. It also exercises a Makefile target, which keeps CI and the local
-  # `make check` entry point from drifting apart.
-  lint:
-    name: lint
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          cache: true
-
-      - name: Check formatting
-        run: make fmt-check
-
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v9
-        with:
-          version: v2.13.2
+          file: ./coverage/lcov.info
+          fail_ci_if_error: true

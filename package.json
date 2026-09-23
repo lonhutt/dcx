@@ -13,7 +13,8 @@
   "scripts": {
     "build": "bun build ./index.ts --compile --minify --sourcemap --bytecode --outfile dist/dcx",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test": "bun test"
   },
   "dependencies": {
     "ajv": "^8.20.0",

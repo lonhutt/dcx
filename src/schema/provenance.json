@@ -1,0 +1,17 @@
+{
+  "devContainer.base.schema.json": {
+    "url": "https://raw.githubusercontent.com/devcontainers/spec/c95ffeed1d059abfe9ffbe79762dc2fa4e7c2421/schemas/devContainer.base.schema.json",
+    "commit": "c95ffeed1d059abfe9ffbe79762dc2fa4e7c2421",
+    "retrieved": "2026-09-15"
+  },
+  "devContainer.schema.json": {
+    "url": "https://raw.githubusercontent.com/devcontainers/spec/c95ffeed1d059abfe9ffbe79762dc2fa4e7c2421/schemas/devContainer.schema.json",
+    "commit": "c95ffeed1d059abfe9ffbe79762dc2fa4e7c2421",
+    "retrieved": "2026-09-15"
+  },
+  "devContainerFeature.schema.json": {
+    "url": "https://raw.githubusercontent.com/devcontainers/spec/c95ffeed1d059abfe9ffbe79762dc2fa4e7c2421/schemas/devContainerFeature.schema.json",
+    "commit": "c95ffeed1d059abfe9ffbe79762dc2fa4e7c2421",
+    "retrieved": "2026-09-15"
+  }
+}
