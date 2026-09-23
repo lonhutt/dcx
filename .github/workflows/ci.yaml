@@ -16,63 +16,64 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # All six release targets must compile. Cross-compilation on ubuntu runners is
-  # far cheaper than native arm runners and asserts exactly what we need here:
-  # that the code builds everywhere we ship.
-  build:
-    name: build ${{ matrix.goos }}/${{ matrix.goarch }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { goos: linux, goarch: amd64 }
-          - { goos: linux, goarch: arm64 }
-          - { goos: darwin, goarch: amd64 }
-          - { goos: darwin, goarch: arm64 }
-          - { goos: windows, goarch: amd64 }
-          - { goos: windows, goarch: arm64 }
-    steps:
-      - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-
-      - name: Build
-      - run: bun ci
-      - run: bun run build
-
-  # Tests run natively. The race detector is restricted to linux/amd64: it needs
-  # cgo and a C toolchain, and running it on every leg buys no extra signal while
-  # costing minutes.
+  # Coverage is enabled by default via bunfig.toml (text + lcov reporters), so a plain
+  # `bun test` already produces both — no extra flag or third-party service needed.
   test:
     name: test ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 10
-    # Mapped here because the `secrets` context is not available in a
-    # step-level `if`, but `env` is.
-    env:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    timeout-minutes: 5
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - { os: ubuntu-latest, race: true }
-          - { os: macos-latest, race: false }
-          - { os: windows-latest, race: false }
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
+
       - uses: oven-sh/setup-bun@v2
-
-      - name: Format
-        run: bun run format:check
-
-      - name: Test
-        if: ${{ !matrix.race }}
-        run: bun test
-
-      - name: Coverage summary
-        if: ${{ matrix.race }}
-        uses: codecov/codecov-action@v3
         with:
-          file: ./coverage/lcov.info
-          fail_ci_if_error: true
+          bun-version: "1.4.2"
+
+      - run: bun install --frozen-lockfile
+
+      - run: bun test
+
+      # One copy is enough; the lcov content doesn't vary by OS.
+      - name: Upload coverage
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/lcov.info
+
+  # tsc is the correctness gate; prettier only checks formatting. Neither needs more
+  # than one OS.
+  check:
+    name: typecheck & format
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+
+      - run: bun install --frozen-lockfile
+      - run: bunx tsc --noEmit
+      - run: bun run format:check
+
+  # Proves the compile step itself doesn't break on every PR, without paying for the
+  # full 8-target release matrix (that's a separate, on-tag job).
+  build-smoke:
+    name: build smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+
+      - run: bun install --frozen-lockfile
+      - run: bun run build
