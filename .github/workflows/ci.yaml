@@ -38,8 +38,8 @@ jobs:
       - uses: oven-sh/setup-bun@v2
 
       - name: Build
-        run: bun ci
-        run: bun run build
+      - run: bun ci
+      - run: bun run build
 
   # Tests run natively. The race detector is restricted to linux/amd64: it needs
   # cgo and a C toolchain, and running it on every leg buys no extra signal while
