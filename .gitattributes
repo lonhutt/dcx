@@ -1,0 +1,3 @@
+# Position fixtures depend on their exact line terminators (\n, \r\n, lone \r);
+# stop autocrlf on Windows checkouts from normalising them.
+src/position/testdata/*.jsonc -text

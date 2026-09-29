@@ -27,7 +27,12 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
+      # schemas/ is a symlink into the devcontainer-spec submodule — without this,
+      # both tsc's text-import resolution and the schema tests' readdirSync see an
+      # empty/missing directory.
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -52,7 +57,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      # Same reason as the test job: tsc resolves schemas/*.schema.json through the
+      # devcontainer-spec submodule symlink.
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - uses: oven-sh/setup-bun@v2
         with:
