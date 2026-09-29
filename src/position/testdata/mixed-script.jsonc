@@ -1,0 +1,7 @@
+// mixed-script fixture for src/position — every width class on one page
+{
+	"name": "開発コンテナ 🐳",
+	"remoteUser": "rémy",	// combining acute: 0 columns
+	"features": {},		// two tabs mid-line	"postCreateCommand": "echo 👨‍👩‍👧 🇯🇵 中文",
+  "x": "ｱｲｳ half-width katakana"
+}

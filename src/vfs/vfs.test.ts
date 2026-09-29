@@ -12,7 +12,9 @@ import type { FileSystem } from "./vfs";
 // unreadable directory pin the difference between absence and a real failure.
 let root: string;
 // chmod cannot lock a directory against root, so the EACCES cases cannot run there.
-const canDenyAccess = process.getuid?.() !== 0;
+// Windows has no getuid and its chmod doesn't enforce POSIX-style access at all —
+// 0o000 only toggles the read-only attribute, so the directory stays readable.
+const canDenyAccess = process.platform !== "win32" && process.getuid?.() !== 0;
 beforeAll(() => {
   root = mkdtempSync(join(tmpdir(), "dcx-vfs-"));
   mkdirSync(join(root, "sub"));

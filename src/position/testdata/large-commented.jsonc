@@ -1,0 +1,1558 @@
+// ============================================================================
+// DevContainer — Ambiente de Desenvolvimento Controlado - v5.9.1
+// Projeto: chatgpt-docker-puppeteer
+//
+// Propósito:
+//   Definir um ambiente de desenvolvimento determinístico, auditável e
+//   arquiteturalmente neutro, no qual:
+//
+//   • A infraestrutura fornece CAPACIDADE (runtime, rede, volumes)
+//   • O sistema decide COMPORTAMENTO (topologia, browser, orquestração)
+//   • O editor (VS Code) não interfere em planos de controle internos
+//
+// Princípios:
+//   • Deny-by-default para portas
+//   • Puppeteer opera exclusivamente em modo "connect"
+//   • Chrome é externo ao container (host ou serviço dedicado)
+//   • Nenhuma decisão de topologia é hardcoded na infraestrutura
+//   • Debug e observabilidade são opt-in e não intrusivos
+//   • Documentação robusta (NUNCA reduzir)
+//
+// Escopo:
+//   • Ambiente DEV (não produção)
+//   • Suporte a Puppeteer, Node.js, PM2, Docker CLI (host socket)
+//   • Estabilidade e previsibilidade > conveniência automática
+//
+// Nota Arquitetural Importante:
+//   Portas de controle (ex.: Chrome Proxy / Debug) não são auto-expostas por
+//   inferência. Quando declaradas, são forwardadas explicitamente e com política
+//   de UX silenciosa/ignore. O acesso operacional continua decidido pelo runtime.
+//
+// CHANGELOG v5.9.1 (2026-08-18):
+// 🌐 NETWORK OBSERVABILITY + CONTROL-PLANE PATH SELF-HEALING
+// ✅ ALINHADO: Dockerfile v1.5.1; post-create v1.2.3; post-start v3.0.3.
+// ✅ ALINHADO: local-dns-cache v1.8.1; network-control-plane-state v1.1.1.
+// ✅ CORRIGIDO: caminho canônico do Network Control Plane sem o segmento `network/` espúrio.
+// ✅ CORRIGIDO: versões/labels ativos do DevContainer e da imagem, antes divergentes do Dockerfile canônico.
+// ✅ ENDURECIDO: hooks recuperam override runtime stale/ilegível usando o script canônico existente.
+// ✅ MANTIDO: DNS default-on fail-safe; proxy local opt-in; benchmarks longos fora do boot.
+//
+// CHANGELOG v5.9.0 (2026-05-20):
+// 🌐 DEFAULT-ON DNS + POST-START 3.0.2 + CONTROL PLANE STATE SYNC
+// ✅ ALINHADO: Dockerfile v1.4.2
+// ✅ ALINHADO: package.json v1.1.3
+// ✅ ALINHADO: Makefile v4.3.0
+// ✅ ALINHADO: post-create v1.2.2
+// ✅ ALINHADO: post-start v3.0.2
+// ✅ ALINHADO: post-attach v5.9.0
+// ✅ ALINHADO: healthcheck v3.0.0
+// ✅ ALINHADO: sync-local-auth v2.0.0
+// ✅ ALINHADO: network-control-plane-state v1.1.0
+// ✅ ALINHADO: github-api-route-fix v1.9.1
+// ✅ ALINHADO: local-dns-cache v1.8.0
+// ✅ ALINHADO: local-copilot-proxy v1.3.1
+// ✅ ALINHADO: github-copilot-network-manager v1.6.1
+// ✅ ALINHADO: copilot-route-advisor v1.1.0
+// ✅ ALINHADO: endpoints.github-copilot.tsv v1.2.0
+// ✅ CORRIGIDO: post-start agora usa action=start para o manager, gerando
+//                snapshot runtime bounded em vez de apenas recomendação stale.
+// ✅ CORRIGIDO: DNS local default-on com prova forte antes de governar resolv.conf.
+// ✅ ADICIONADO: knobs v1.8.0 para Docker embedded DNS split-horizon, warmup,
+//                ranking sem benchmark no boot, stale detection e probe forte.
+// ✅ ADICIONADO: network-control-plane-state como agregador passivo pós-start.
+// ✅ ADICIONADO: separação explícita entre summary runtime e action.summary.
+// ✅ MANTIDO: proxy local desligado por padrão; nenhum HTTP(S)_PROXY global.
+// ✅ MANTIDO: benchmark prolongado manual/opt-in; boot permanece bounded.
+// ✅ ATUALIZADO: labels runtime para devcontainer.version=5.9.0.
+//
+// CHANGELOG v5.8.0 (2026-05-19):
+// 🧭 CANONICAL PATH REALIGNMENT + CONTROL PLANE SYNC
+// ✅ ALINHADO: Dockerfile v1.4.2
+// ✅ ALINHADO: post-create v1.1.0
+// ✅ ALINHADO: post-start v2.8.1
+// ✅ ALINHADO: post-attach v5.7.1
+// ✅ ALINHADO: github-api-route-fix v1.8.6
+// ✅ ALINHADO: local-dns-cache v1.5.3
+// ✅ ALINHADO: local-copilot-proxy v1.2.3
+// ✅ ALINHADO: github-copilot-network-manager v1.5.3
+// ✅ ALINHADO: copilot-route-advisor v1.0.1
+// ✅ ALINHADO: nss-gatekeeper v2.1.2
+// ✅ CORRIGIDO: endpoint registry aponta para .devcontainer/scripts/network/
+// ✅ CORRIGIDO: aliases DEVCONTAINER_COPILOT_ENDPOINT_REGISTRY(_FILE)
+// ✅ CORRIGIDO: remoção do override DEVCONTAINER_COPILOT_PROBE_ENDPOINTS
+//                para permitir que o registry seja a fonte de verdade.
+// ✅ CORRIGIDO: knobs do local-copilot-proxy para nomes realmente consumidos
+//                pelo script v1.2.3.
+// ✅ ADICIONADO: metadados DEVCONTAINER_VERSION / CONTROL_PLANE_GENERATION.
+// ✅ ADICIONADO: limites explícitos de consumo do endpoint registry.
+// ✅ MANTIDO: benchmark prolongado manual/opt-in; boot permanece recommend/quick.
+// ✅ MANTIDO: proxy local desligado por padrão; sem HTTPS_PROXY/HTTP_PROXY global.
+// ✅ MANTIDO: DNS cache local em auto/ranked com fail-closed.
+// ✅ ATUALIZADO: labels runtime para devcontainer.version=5.8.0.
+//
+// // CHANGELOG v5.7.0 (2026-05-17):
+// 🧭 NETWORK CONTROL PLANE + SAFE BENCHMARK INTEGRATION
+// ✅ ALINHADO: Dockerfile v1.4.2
+// ✅ ALINHADO: package.json v1.1.0
+// ✅ ALINHADO: Makefile v4.2.0
+// ✅ ALINHADO: post-create v1.0.4
+// ✅ ALINHADO: post-start v2.8.0
+// ✅ ALINHADO: post-attach v5.7.0
+// ✅ ALINHADO: github-api-route-fix v1.8.4
+// ✅ ALINHADO: local-copilot-proxy v1.2.2
+// ✅ ALINHADO: github-copilot-network-manager v1.5.0
+// ✅ ADICIONADO: defaults formais para benchmark prolongado manual/opt-in
+// ✅ ADICIONADO: recommendation artifacts e policy bridge sem aplicação automática
+// ✅ ADICIONADO: endpoint registry oficial para GitHub/Copilot
+// ✅ ADICIONADO: superfície Copilot ampliada (origin-tracker + telemetry)
+// ✅ MANTIDO: proxy local desligado por padrão; sem HTTPS_PROXY/HTTP_PROXY global
+// ✅ MANTIDO: benchmark longo fora do boot; post-start apenas quick/recommend
+// ✅ ATUALIZADO: build.args.VERSION e labels para Dockerfile 1.4.2 / devcontainer 5.7.0
+//
+// CHANGELOG v5.6.0 (2026-05-16):
+// 🌐 DNS CACHE PROMOTION + NETWORK HARDENING
+// ✅ ALINHADO: Dockerfile v1.4.2
+// ✅ ALINHADO: post-start v2.8.0
+// ✅ ALINHADO: github-api-route-fix v1.8.4
+// ✅ ALINHADO: local-dns-cache v1.5.1
+// ✅ ALINHADO: local-copilot-proxy v1.2.2
+// ✅ ALINHADO: github-copilot-network-manager v1.5.0
+// ✅ PROMOVIDO: DNS cache local habilitado por padrão em modo auto/ranked
+// ✅ ADICIONADO: hardening de dnsmasq start/repair/ownership/port-check
+// ✅ ADICIONADO: thresholds e locks explícitos para GitHub/Copilot manager
+// ✅ ADICIONADO: verificação estrita de IP aplicado no route-fix
+// ✅ MANTIDO: proxy local desligado por padrão até teste controlado posterior
+// ✅ CORRIGIDO: DEVCONTAINER_MAKE_TIMEOUT=30, validado após PM2 warmup
+//
+// CHANGELOG v5.5.0 (2026-05-16):
+// 🌐 NETWORK ARCHITECTURE SYNC (GITHUB/COPILOT)
+// ✅ ALINHADO: Dockerfile v1.4.2
+// ✅ ALINHADO: post-start v2.8.0
+// ✅ ALINHADO: github-api-route-fix v1.8.4
+// ✅ ALINHADO: local-dns-cache v1.2.0
+// ✅ ALINHADO: local-copilot-proxy v1.2.2
+// ✅ ALINHADO: github-copilot-network-manager v1.5.0
+// ✅ ADICIONADO: Copilot Network Manager habilitado por padrão
+// ✅ ADICIONADO: DNS cache local e proxy local como infraestrutura opt-in
+// ✅ CORRIGIDO: CODEX_HOME aponta para ${containerWorkspaceFolder}/.codex
+// ✅ CORRIGIDO: lifecycle hooks quotados e chamados por bash explicitamente
+// ✅ CORRIGIDO: build.args.VERSION e labels para 1.4.0 / devcontainer 5.5.0
+//
+// CHANGELOG v5.4.0 (2026-05-15):
+// 🔧 DOCKERFILE/NSS SYNC (CANONICAL ALIGNMENT)
+// ✅ ALINHADO: Dockerfile.canonical.v1.3
+// ✅ ALINHADO: nss-gatekeeper canonical v2.0.0
+// ✅ ALINHADO: post-start v2.5.0
+// ✅ ALINHADO: post-attach v5.4.0
+// ✅ CORRIGIDO: build.args.VERSION 1.0 → 1.3
+// ✅ CORRIGIDO: LD_PRELOAD absoluto/canônico em containerEnv + remoteEnv
+// ✅ CORRIGIDO: portsAttributes wildcard → otherPortsAttributes oficial
+// ✅ ADICIONADO: GitHub.copilot explicitamente junto de GitHub.copilot-chat
+// ✅ ADICIONADO: overrideCommand=false para honrar CMD/ENTRYPOINT da imagem
+// ✅ ADICIONADO: labels runtime devcontainer.version e image.version
+//
+// CHANGELOG v5.3 (2026-02-03):
+// 🔧 SSH FORWARDING MIGRATION (BREAKING CHANGE - FIX CRÍTICO)
+// ❌ REMOVIDO: Mount manual de SSH socket (causava erro fatal)
+// ❌ REMOVIDO: SSH_AUTH_SOCK hardcoded em remoteEnv
+// ❌ REMOVIDO: DEVCONTAINER_SECRET_SURFACE_SSH (redundante)
+// ❌ REMOVIDO: DEVCONTAINER_SSH_AGENT_ALLOWED (containerEnv)
+// ✅ ADICIONADO: VS Code native SSH forwarding (automático)
+// ✅ ADICIONADO: Documentação completa da migração
+// ✅ RESOLVIDO: Container agora inicia COM ou SEM SSH agent
+//
+// REFERÊNCIAS:
+// • .devcontainer/MIGRATION_SSH_V5.3.md (documentação completa)
+// • .devcontainer/TROUBLESHOOTING_SSH.md (guia de debug)
+// • DEVCONTAINER_BUILD_ANALYSIS.md (análise técnica)
+//
+// CHANGELOG v5.2 (2026-02-02):
+// ✅ Sincronização de versão (3.4 → 5.2)
+// ✅ Features consolidadas (removidas duplicações)
+// ✅ Extensions agrupadas por categoria
+// ✅ Scrollback otimizado (20000 → 10000)
+// ✅ Documentação de segurança melhorada (--group-add=docker)
+// ✅ remoteEnv consolidado (removidas duplicações)
+// ============================================================================
+{
+  // ============================================================
+  // BUILD CONFIGURATION (v5.9.1 — Dockerfile v1.5.1 sync)
+  // ============================================================
+  "build": {
+    "args": {
+      "BUILD_DATE": "${localEnv:BUILD_DATE}",
+      "BUILD_ENV": "dev",
+      // 🔐 SINCRONIZAÇÃO DOCKER
+      "DOCKER_GID": "${localEnv:DOCKER_GID}",
+      "IMAGE_NAME": "chatgpt-docker-puppeteer",
+      "IMAGE_VENDOR": "Yuri",
+      "PROJECT_NAME": "${localWorkspaceFolderBasename}",
+      // --- O APERTO DE MÃO (Identidade) ---
+      // REMOTE_USER: Sincroniza remoteUser com Dockerfile (torna imagem dinâmica)
+      // Dockerfile usa: ENV USER_NAME=${REMOTE_USER}
+      // NOTA: ${containerUser} NÃO existe como variável built-in do DevContainers.
+      // Usar valor literal que corresponde ao remoteUser (linha ~998)
+      "REMOTE_USER": "node",
+      "VCS_REF": "${localEnv:GIT_COMMIT}",
+      // --- METADATA & VERSIONING ---
+      "VERSION": "1.5.1",
+      // --- NETWORK CONTROL PLANE DEFAULTS ---
+      // Usados apenas como defaults de imagem; benchmark longo permanece manual.
+      "NETWORK_BENCHMARK_DURATION_SECONDS": "${localEnv:NETWORK_BENCHMARK_DURATION_SECONDS:600}",
+      "NETWORK_BENCHMARK_INTERVAL_SECONDS": "${localEnv:NETWORK_BENCHMARK_INTERVAL_SECONDS:10}",
+      "NETWORK_RECOMMENDATION_TTL_SECONDS": "${localEnv:NETWORK_RECOMMENDATION_TTL_SECONDS:86400}"
+    },
+    "context": "..",
+    "dockerfile": "Dockerfile"
+  },
+  // ============================================================
+  // CONTAINER ENVIRONMENT VARIABLES (v5.9.1 — NSS/Dockerfile/network sync)
+  // ============================================================
+  "containerEnv": {
+    // canonical shell contract mirrored from /etc/profile.d/00-runtime.sh
+    // ensures non‑login terminals inherit the same semantic hints as
+    // interactive logins. purely informational, used by helpers and tests.
+    "SHELL_CANONICAL": "bash",
+    "CANONICAL_SHELL": "bash",
+    "INSTRUMENTAL_SHELLS": "pwsh",
+    "DEVCONTAINER_MAKE_TIMEOUT": "30",
+
+    "APP_ENV": "dev",
+    "APP_NAME": "chatgpt-docker-puppeteer",
+    "APP_ROLE": "agent",
+    "DEVCONTAINER_VERSION": "5.9.1",
+    "DEVCONTAINER_CONTROL_PLANE_GENERATION": "network-control-plane-v5.9.1",
+    "DEVCONTAINER_CANONICAL_ENDPOINT_REGISTRY": "${containerWorkspaceFolder}/.devcontainer/scripts/network/endpoints.github-copilot.tsv",
+    "DEVCONTAINER_POST_START_SCRIPT_VERSION_EXPECTED": "3.0.3",
+    "DEVCONTAINER_POST_ATTACH_SCRIPT_VERSION_EXPECTED": "5.9.1",
+    "DEVCONTAINER_HEALTHCHECK_SCRIPT_VERSION_EXPECTED": "3.0.1",
+    "DEVCONTAINER_NETWORK_CONTROL_PLANE_SCRIPT_VERSION_EXPECTED": "1.1.1",
+    "DEVCONTAINER_SYNC_LOCAL_AUTH_SCRIPT_VERSION_EXPECTED": "2.0.0",
+    // CHOKIDAR_USEPOLLING e CHOKIDAR_INTERVAL removidos em v5.4.0:
+    // O workspace é montado como ext4 (inotify nativo funciona).
+    // Vite já configura polling explicitamente em vite.config.js (watch.usePolling: true).
+    // Os watchers do servidor usam fs.watch() nativo — não dependem de chokidar.
+    // Referência: DEVCONTAINER_ARCHITECTURE.md [DEC-001]
+    "DEBUG": "puppeteer:*,agent:*",
+    "DEVCONTAINER_DOCKER_ENABLED": "true",
+    "DOCKER_BUILDKIT": "1",
+    "DOCKER_HOST_ACCESS": "true",
+    "DOCKER_SECURITY_LEVEL": "host-root-equivalent",
+    // Canonical NSS artifact directory.
+    // Used by profile.d + nss-gatekeeper; safe as plain metadata in containerEnv.
+    "DEVCONTAINER_NSS_DIR": "/tmp/devcontainer-nss",
+    // =========================================================
+    // NETWORK RESILIENCE — GitHub/Copilot route manager
+    // ---------------------------------------------------------
+    // Smart route selector for api.github.com, delegated by
+    // post-start.sh to .devcontainer/scripts/network/github-api-route-fix.sh.
+    // It repairs ISP/DNS edge failures without changing Windows/host network.
+    // =========================================================
+    "DEVCONTAINER_ENABLE_GITHUB_API_ROUTE_FIX": "true",
+    "DEVCONTAINER_GITHUB_API_HOST": "api.github.com",
+    "DEVCONTAINER_GITHUB_API_FUNCTIONALITY_PROFILE": "copilot",
+    "DEVCONTAINER_GITHUB_API_BENCHMARK_DURATION_SECONDS": "600",
+    "DEVCONTAINER_GITHUB_API_BENCHMARK_INTERVAL_SECONDS": "10",
+    "DEVCONTAINER_GITHUB_API_BENCHMARK_MAX_SAMPLES": "0",
+    "DEVCONTAINER_GITHUB_API_BENCHMARK_INCLUDE_CANDIDATES": "true",
+    "DEVCONTAINER_GITHUB_API_BENCHMARK_UPDATE_CACHE": "true",
+    "DEVCONTAINER_GITHUB_API_BENCHMARK_RECOMMEND_MIN_SAMPLES": "5",
+    "DEVCONTAINER_GITHUB_API_BENCHMARK_MAX_FAIL_RATE_PERCENT": "10",
+    "DEVCONTAINER_GITHUB_API_BENCHMARK_MIN_IMPROVEMENT_PERCENT": "25",
+    "DEVCONTAINER_GITHUB_API_BENCHMARK_RECOMMENDATION_TTL_SECONDS": "86400",
+    "DEVCONTAINER_GITHUB_API_ROUTE_PROXY_MODE": "auto",
+    "DEVCONTAINER_GITHUB_API_MIN_SCORE": "85",
+    "DEVCONTAINER_GITHUB_API_MAX_CANDIDATES": "16",
+    "DEVCONTAINER_GITHUB_API_PARALLEL_PROBES": "true",
+    "DEVCONTAINER_GITHUB_API_ROUTE_CACHE_ENABLED": "true",
+    "DEVCONTAINER_GITHUB_API_ENABLE_IPV6": "false",
+    "DEVCONTAINER_GITHUB_API_OPENSSL_PREFLIGHT": "false",
+    "DEVCONTAINER_GITHUB_API_STRICT_VERIFY_EXPECTED_IP": "true",
+    "DEVCONTAINER_GITHUB_API_CACHE_LOCK_WAIT_SECONDS": "10",
+    "DEVCONTAINER_GITHUB_API_HOSTS_LOCK_WAIT_SECONDS": "15",
+    "DEVCONTAINER_GITHUB_API_ROUTE_CACHE_MAX_ENTRIES": "128",
+    "DEVCONTAINER_GITHUB_API_ROUTE_CACHE_MAX_AGE_SECONDS": "86400",
+    "DEVCONTAINER_GITHUB_API_ACTION_UPDATE_RUNTIME_SUMMARY": "false",
+    "DEVCONTAINER_GITHUB_API_BENCHMARK_UPDATE_RUNTIME_SUMMARY": "false",
+    "DEVCONTAINER_GITHUB_API_ROUTE_CONNECT_TIMEOUT": "4",
+    "DEVCONTAINER_GITHUB_API_ROUTE_MAX_TIME": "12",
+    "DEVCONTAINER_GITHUB_API_VERSION": "2022-11-28",
+    "DEVCONTAINER_GITHUB_API_ROLLBACK_ON_VERIFY_FAILURE": "true",
+    "DEVCONTAINER_GITHUB_API_OPTIMIZE_WHEN_CURRENT_OK": "false",
+    "DEVCONTAINER_GITHUB_API_HYSTERESIS_SCORE_MARGIN": "5000",
+    "DEVCONTAINER_GITHUB_API_RECENT_FAILURE_HARD_BLOCK_SECONDS": "0",
+    "DEVCONTAINER_SKIP_GITHUB_API_PROBES_AFTER_ROUTE_FIX": "true",
+
+    // =========================================================
+    // NETWORK RESILIENCE — Modular GitHub/Copilot layer (v5.5.0)
+    // ---------------------------------------------------------
+    // Camada 1: github-api-route-fix.sh corrige ativamente apenas api.github.com.
+    // Camada 2: github-copilot-network-manager.sh agrega route-fix + probes.
+    // Camada 3: local-dns-cache.sh e local-copilot-proxy.sh existem como
+    //            infraestrutura opt-in, não ativada automaticamente.
+    //
+    // Política:
+    // • ativo por padrão: manager + route-fix de api.github.com;
+    // • opt-in: cache DNS local e proxy HTTP CONNECT local;
+    // • IPv6 para api.github.com permanece off até haver AAAA real funcional.
+    // =========================================================
+    "DEVCONTAINER_ENABLE_COPILOT_NETWORK_MANAGER": "true",
+    "DEVCONTAINER_COPILOT_NETWORK_MANAGER_MODE": "active",
+    "DEVCONTAINER_COPILOT_NETWORK_MANAGER_POST_START_ACTION": "start",
+    "DEVCONTAINER_COPILOT_TRANSPORT_PROFILE": "auto",
+    "DEVCONTAINER_POST_START_APPLY_TRANSPORT_RECOMMENDATION": "false",
+    "DEVCONTAINER_COPILOT_NETWORK_BENCHMARK_DURATION_SECONDS": "600",
+    "DEVCONTAINER_COPILOT_NETWORK_BENCHMARK_INTERVAL_SECONDS": "10",
+    "DEVCONTAINER_COPILOT_NETWORK_BENCHMARK_MAX_SAMPLES": "0",
+    "DEVCONTAINER_COPILOT_NETWORK_RECOMMENDATION_TTL_SECONDS": "86400",
+    // Endpoint registry canônico:
+    // • o arquivo vive junto dos scripts de rede em .devcontainer/scripts/network/
+    // • ambos os aliases são definidos porque post-start, post-attach,
+    //   github-copilot-network-manager e post-create aceitam nomes diferentes.
+    // • NÃO definir DEVCONTAINER_COPILOT_PROBE_ENDPOINTS aqui; quando presente,
+    //   ele sobrescreve o registry e impede que a allowlist TSV governe os probes.
+    "DEVCONTAINER_COPILOT_ENDPOINT_REGISTRY": "${containerWorkspaceFolder}/.devcontainer/scripts/network/endpoints.github-copilot.tsv",
+    "DEVCONTAINER_COPILOT_ENDPOINT_REGISTRY_FILE": "${containerWorkspaceFolder}/.devcontainer/scripts/network/endpoints.github-copilot.tsv",
+    "DEVCONTAINER_COPILOT_USE_ENDPOINT_REGISTRY": "true",
+    "DEVCONTAINER_POST_START_ENDPOINT_REGISTRY_MAX_ROWS": "64",
+    "DEVCONTAINER_COPILOT_MANAGER_MAX_ENDPOINTS": "64",
+    "DEVCONTAINER_COPILOT_MANAGER_RUN_API_ROUTE_FIX": "true",
+    "DEVCONTAINER_COPILOT_MANAGER_FAIL_ON_DEGRADED": "false",
+    "DEVCONTAINER_COPILOT_MANAGER_SUBSCRIPT_TIMEOUT_SECONDS": "90",
+    "DEVCONTAINER_COPILOT_WARN_TOTAL_MS": "1500",
+    "DEVCONTAINER_COPILOT_PROBE_CONNECT_TIMEOUT": "4",
+    "DEVCONTAINER_COPILOT_PROBE_MAX_TIME": "12",
+    "DEVCONTAINER_COPILOT_PROBE_IP_FAMILY": "4",
+    "DEVCONTAINER_COPILOT_PROBE_PROXY_MODE": "auto",
+    "DEVCONTAINER_COPILOT_PROBE_PARALLEL": "true",
+    "DEVCONTAINER_COPILOT_NETWORK_LOCK_WAIT_SECONDS": "30",
+    "DEVCONTAINER_COPILOT_NETWORK_HISTORY_LOCK_WAIT_SECONDS": "10",
+    "DEVCONTAINER_COPILOT_NETWORK_HISTORY_ENABLED": "true",
+    "DEVCONTAINER_COPILOT_NETWORK_HISTORY_MAX_LINES": "2000",
+    "DEVCONTAINER_COPILOT_NETWORK_HISTORY_WINDOW": "40",
+    "DEVCONTAINER_COPILOT_NETWORK_HISTORY_SLOW_THRESHOLD": "1500",
+    "DEVCONTAINER_COPILOT_NETWORK_HISTORY_FAIL_THRESHOLD": "3",
+    "DEVCONTAINER_COPILOT_MANAGER_PARALLEL_PROBES": "true",
+    "DEVCONTAINER_COPILOT_MANAGER_MARK_UNSTABLE_AS_DEGRADED": "true",
+    "DEVCONTAINER_COPILOT_MANAGER_FAIL_ON_UNSTABLE": "false",
+    "DEVCONTAINER_COPILOT_MANAGER_ALLOW_CUSTOM_ENDPOINTS": "false",
+    "DEVCONTAINER_COPILOT_MANAGER_ALLOW_CUSTOM_GITHUB_API_HOST": "false",
+    // DEVCONTAINER_COPILOT_PROBE_ENDPOINTS deliberadamente omitido.
+    // Fallbacks permanecem nos scripts; a fonte primária agora é o TSV canônico.
+
+    // DNS cache local: default-on em modo auto/ranked com local-dns-cache v1.8.0.
+    // O script só escreve /etc/resolv.conf depois de prova local forte
+    // (dig/drill/nslookup), preserva search/domain e mantém split-horizon
+    // para Docker embedded DNS quando 127.0.0.11 existir no runtime.
+    "DEVCONTAINER_ENABLE_LOCAL_DNS_CACHE": "true",
+    "DEVCONTAINER_LOCAL_DNS_CACHE_MODE": "auto",
+    "DEVCONTAINER_LOCAL_DNS_MODE": "auto",
+    "DEVCONTAINER_LOCAL_DNS_POST_START_ACTION": "start",
+    "DEVCONTAINER_LOCAL_DNS_CACHE_ACTION": "start",
+    "DEVCONTAINER_POST_START_DNS_BASELINE_ON_CACHE_OFF": "true",
+    "DEVCONTAINER_POST_START_DNS_BASELINE_ON_CACHE_FAILURE": "true",
+    "DEVCONTAINER_LOCAL_DNS_BIND_ADDRESS": "127.0.0.1",
+    "DEVCONTAINER_LOCAL_DNS_BIND_PORT": "53",
+    "DEVCONTAINER_LOCAL_DNS_UPSTREAM_SELECTION": "ranked",
+    "DEVCONTAINER_LOCAL_DNS_UPSTREAMS": "1.1.1.1 1.0.0.1 8.8.8.8 8.8.4.4 9.9.9.9 149.112.112.112",
+    "DEVCONTAINER_LOCAL_DNS_BENCHMARK_HOSTS": "api.github.com github.com copilot-proxy.githubusercontent.com api.githubcopilot.com",
+    "DEVCONTAINER_LOCAL_DNS_START_MODE": "auto",
+    "DEVCONTAINER_LOCAL_DNS_WRITE_RESOLV_CONF": "true",
+    "DEVCONTAINER_LOCAL_DNS_REPAIR_ON_PROBE_FAILURE": "true",
+    "DEVCONTAINER_LOCAL_DNS_VALIDATE_CONFIG": "true",
+    "DEVCONTAINER_LOCAL_DNS_STRICT_PORT_CHECK": "true",
+    "DEVCONTAINER_LOCAL_DNS_TAKEOVER_STALE_DNSMASQ": "true",
+    "DEVCONTAINER_LOCAL_DNS_STOP_BY_SOCKET_OWNER": "true",
+    "DEVCONTAINER_LOCAL_DNS_STOP_WAIT_MS": "2000",
+    "DEVCONTAINER_LOCAL_DNS_FORWARD_MAX": "150",
+    "DEVCONTAINER_LOCAL_DNS_CACHE_SIZE": "10000",
+    "DEVCONTAINER_LOCAL_DNS_MIN_CACHE_TTL": "0",
+    "DEVCONTAINER_LOCAL_DNS_MAX_CACHE_TTL": "300",
+    "DEVCONTAINER_LOCAL_DNS_NEG_TTL": "30",
+    "DEVCONTAINER_LOCAL_DNS_RESOLV_OPTIONS": "timeout:1 attempts:2 rotate",
+    "DEVCONTAINER_LOCAL_DNS_READ_ETC_HOSTS": "false",
+    "DEVCONTAINER_LOCAL_DNS_LOG_QUERIES": "false",
+    "DEVCONTAINER_LOCAL_DNS_ENABLE_IPV6_UPSTREAMS": "false",
+    "DEVCONTAINER_LOCAL_DNS_ALL_SERVERS": "false",
+    "DEVCONTAINER_LOCAL_DNS_STRICT_ORDER": "false",
+    "DEVCONTAINER_LOCAL_DNS_USE_STALE_CACHE": "false",
+    "DEVCONTAINER_LOCAL_DNS_USE_STALE_CACHE_TTL": "60",
+    "DEVCONTAINER_LOCAL_DNS_ACTION_UPDATE_RUNTIME_SUMMARY": "false",
+    "DEVCONTAINER_LOCAL_DNS_REQUIRE_PROVEN_LOCAL_PROBE_FOR_RESOLV_CONF": "true",
+    "DEVCONTAINER_LOCAL_DNS_ALLOW_PROCESS_ONLY_LOCAL_PROBE": "false",
+    "DEVCONTAINER_LOCAL_DNS_REPAIR_STALE_PIDFILE": "true",
+    "DEVCONTAINER_LOCAL_DNS_PRESERVE_RESOLV_SEARCH": "true",
+    "DEVCONTAINER_LOCAL_DNS_DOCKER_EMBEDDED_MODE": "auto",
+    "DEVCONTAINER_LOCAL_DNS_DOCKER_EMBEDDED_RESOLVER": "127.0.0.11",
+    "DEVCONTAINER_LOCAL_DNS_DOCKER_EMBEDDED_ROUTE_UNQUALIFIED": "true",
+    "DEVCONTAINER_LOCAL_DNS_DOCKER_EMBEDDED_ROUTE_SEARCH_DOMAINS": "true",
+    "DEVCONTAINER_LOCAL_DNS_REBIND_OK_DOCKER_DOMAINS": "true",
+    "DEVCONTAINER_LOCAL_DNS_RESTORE_RESOLV_CONF_ON_FAILURE": "true",
+    "DEVCONTAINER_LOCAL_DNS_RESTORE_RESOLV_CONF_ON_STOP": "true",
+    "DEVCONTAINER_LOCAL_DNS_WARMUP": "true",
+    "DEVCONTAINER_LOCAL_DNS_WARMUP_HOSTS": "api.github.com github.com copilot-proxy.githubusercontent.com api.githubcopilot.com default.exp-tas.com origin-tracker.githubusercontent.com",
+    "DEVCONTAINER_LOCAL_DNS_WARMUP_MAX_HOSTS": "8",
+    "DEVCONTAINER_LOCAL_DNS_WARMUP_RECORD_TYPES": "A",
+    "DEVCONTAINER_LOCAL_DNS_REBENCHMARK_ON_START": "false",
+    "DEVCONTAINER_LOCAL_DNS_FORCE_REBENCHMARK": "false",
+    "DEVCONTAINER_LOCAL_DNS_RANKING_MAX_AGE_SECONDS": "86400",
+    "DEVCONTAINER_LOCAL_DNS_REBENCHMARK_MIN_SECONDS": "900",
+    "DEVCONTAINER_LOCAL_DNS_RANKING_HYSTERESIS_SCORE_MARGIN": "5000",
+    "DEVCONTAINER_LOCAL_DNS_STATUS_STALE_MAX_SECONDS": "300",
+    "DEVCONTAINER_LOCAL_DNS_FAST_RETRY": "false",
+
+    // Proxy HTTP CONNECT local: disponível na imagem v1.5.1, mas desligado por padrão.
+    // Para habilitar de forma explícita: DEVCONTAINER_ENABLE_LOCAL_COPILOT_PROXY=true
+    // e DEVCONTAINER_COPILOT_PROXY_MODE=local.
+    "DEVCONTAINER_ENABLE_LOCAL_COPILOT_PROXY": "false",
+    "DEVCONTAINER_COPILOT_PROXY_MODE": "off",
+    "DEVCONTAINER_LOCAL_COPILOT_PROXY_MODE": "off",
+    "DEVCONTAINER_LOCAL_COPILOT_PROXY_HOST": "127.0.0.1",
+    "DEVCONTAINER_LOCAL_COPILOT_PROXY_PORT": "3128",
+    "DEVCONTAINER_LOCAL_COPILOT_PROXY_APPLY_PROFILE": "false",
+    "DEVCONTAINER_LOCAL_COPILOT_PROXY_STATUS_STRICT": "false",
+    "DEVCONTAINER_LOCAL_COPILOT_PROXY_USE_ENDPOINT_REGISTRY": "true",
+    "DEVCONTAINER_LOCAL_COPILOT_PROXY_ALLOW_CUSTOM_PROBE_URLS": "false",
+    "DEVCONTAINER_LOCAL_COPILOT_PROXY_ALLOW_NON_LOOPBACK": "false",
+    "DEVCONTAINER_LOCAL_COPILOT_PROXY_CONNECT_PORTS": "443",
+    "DEVCONTAINER_LOCAL_COPILOT_PROXY_REMOVE_PROFILE_ON_STOP": "true",
+    "DEVCONTAINER_POST_START_SOURCE_LOCAL_PROXY_ENV": "false",
+    "DEVCONTAINER_LOCAL_COPILOT_PROXY_BENCHMARK_DURATION_SECONDS": "600",
+    "DEVCONTAINER_LOCAL_COPILOT_PROXY_BENCHMARK_INTERVAL_SECONDS": "10",
+    "DEVCONTAINER_LOCAL_COPILOT_PROXY_BENCHMARK_MAX_SAMPLES": "0",
+    "DEVCONTAINER_LOCAL_COPILOT_PROXY_BENCHMARK_MIN_SAMPLES": "5",
+    "DEVCONTAINER_LOCAL_COPILOT_PROXY_BENCHMARK_MIN_IMPROVEMENT_PERCENT": "25",
+    "DEVCONTAINER_LOCAL_COPILOT_PROXY_BENCHMARK_MAX_FAIL_RATE_PERCENT": "10",
+    "DEVCONTAINER_LOCAL_COPILOT_PROXY_COMPARE_START_PROXY": "true",
+    "DEVCONTAINER_LOCAL_COPILOT_PROXY_COMPARE_KEEP_PROXY": "true",
+    "DEVCONTAINER_POST_START_OBSERVE_LOCAL_PROXY_STATUS": "true",
+
+    // Evita duplicar probes quando o manager v1.1+ já rodou com sucesso.
+    "DEVCONTAINER_POST_START_LEGACY_PROBES_AFTER_MANAGER": "false",
+    "DEVCONTAINER_POST_START_SUBSCRIPT_TIMEOUT_SECONDS": "90",
+    "DEVCONTAINER_ENABLE_NETWORK_CONTROL_PLANE_STATE": "true",
+    "DEVCONTAINER_NETWORK_CONTROL_PLANE_POST_START_ACTION": "summary",
+    "DEVCONTAINER_NETWORK_CONTROL_PLANE_TIMEOUT_SECONDS": "10",
+    "DEVCONTAINER_NETWORK_CONTROL_PLANE_SCRIPT": "${containerWorkspaceFolder}/.devcontainer/scripts/network-control-plane-state.sh",
+    "DEVCONTAINER_HEALTHCHECK_MIN_NODE_MAJOR": "24",
+    // Safe to globalize as long as NSS_WRAPPER_* points at files that always exist.
+    // This keeps base container processes (including VS Code bootstrap paths)
+    // on a safe, always-readable NSS baseline before profile hooks refine it.
+    "DEVCONTAINER_NSS_WRAPPER_LIB": "/usr/local/lib/devcontainer/libnss_wrapper.so",
+    "LD_PRELOAD": "/usr/local/lib/devcontainer/libnss_wrapper.so",
+    // Bootstrap fallback must point to stable files. /tmp artifacts are runtime
+    // only and may not exist yet when VS Code issues early exec/user commands.
+    // The gatekeeper/profile path can still override these to /tmp later.
+    "NSS_WRAPPER_PASSWD": "/etc/passwd",
+    "NSS_WRAPPER_GROUP": "/etc/group",
+    // Canonical tooling metadata exported by the image for wrappers/checkers.
+    "JSONC_PARSER_MODULE_PATH": "/usr/local/share/npm-global/lib/node_modules/jsonc-parser",
+    // =========================================================
+    // SSH VARIABLES (v5.3 - CLEANUP)
+    // ---------------------------------------------------------
+    // REMOVIDO: "DEVCONTAINER_SSH_AGENT_ALLOWED": "true"
+    // REMOVIDO: "SSH_AUTH_SOCK": "/ssh-agent"
+    //
+    // JUSTIFICATIVA:
+    // • Variáveis eram usadas com mount manual (removido)
+    // • VS Code native forwarding não requer essas variáveis
+    // • Simplificação da configuração
+    // =========================================================
+    // Nota estrutural:
+    // • `containerEnv` deve complementar a imagem, não duplicar defaults
+    //   já fixados no Dockerfile (ex.: NODE_ENV, LOG_LEVEL, LANG).
+    // • `FORCE_COLOR` NÃO deve ser global aqui: vários shells exportam
+    //   `NO_COLOR`, e a combinação gera warning no startup do Node.
+    // • Forçar cor deve ficar em env por processo (PM2, testes, helpers).
+    // ------------------------------------------------------------
+    "NPM_CONFIG_CACHE": "/home/node/.npm",
+    // ------------------------------------------------------------
+    // RUNTIME TUNING (Performance & Noise)
+    // ------------------------------------------------------------
+    // NOTA: NODE_OPTIONS removido - cada configuração de launch
+    // define seu próprio --max-old-space-size em runtimeArgs
+    // para evitar duplicação e conflitos com o debugger
+    "PM2_HOME": "/home/node/.pm2",
+    // Hint semântico (documental, não funcional)
+    // • Indica que há uma camada proxy entre container e browser
+    "PUPPETEER_ARCHITECTURE": "external-browser-via-proxy",
+    // Timeout de conexão CDP (milissegundos)
+    // • Protege contra stalls de rede
+    // • NÃO implica que Chrome deva estar ativo
+    "PUPPETEER_CONNECT_TIMEOUT": "30000",
+    // ------------------------------------------------------------
+    // PUPPETEER & CHROME — INTEGRAÇÃO EXTERNA (CONTRATO CANÔNICO)
+    // ------------------------------------------------------------
+    //
+    // MODELO FÍSICO REAL (IMPORTANTE):
+    //
+    // • Windows Host
+    //     - Chrome REAL (backend de automação)
+    //     - Expõe Chrome DevTools Protocol (CDP) na porta 9225
+    //     - Bind: 0.0.0.0 (acessível via host.docker.internal)
+    //     - NUNCA é acessado diretamente pelo Puppeteer
+    //
+    // • DevContainer
+    //     - Chrome Proxy Service roda AQUI (gerenciado por PM2)
+    //     - Escuta: localhost:9224 (frontend canônico para Puppeteer)
+    //     - Encaminha: host.docker.internal:9225 (backend para Chrome Windows)
+    //     - Puppeteer conecta SEMPRE em localhost:9224
+    //
+    // CONSEQUÊNCIAS DO CONTRATO:
+    //
+    // • Puppeteer conecta EXCLUSIVAMENTE em localhost:9224
+    // • Proxy encaminha para host.docker.internal:9225 (Chrome no Windows)
+    // • Isolamento completo: Puppeteer NÃO conhece o host nem a porta 9225
+    // • Chrome externo é FUNDAMENTAL para operações LLM via Puppeteer
+    // • A ausência de Chrome durante build/attach é ESTADO VÁLIDO
+    // • Chrome será iniciado sob demanda quando operações LLM forem acionadas
+    // • Nenhum componente de infraestrutura inicia Chrome automaticamente
+    //
+    // ------------------------------------------------------------
+    "PUPPETEER_MODE": "connect",
+    // Puppeteer NUNCA deve baixar Chromium automaticamente
+    // • Chrome externo é primário
+    // • Chromium local é fallback técnico (imagem-level)
+    "PUPPETEER_SKIP_DOWNLOAD": "true",
+    "PUPPETEER_SKIP_CHROMIUM_DOWNLOAD": "true",
+    "PUPPETEER_EXECUTABLE_PATH": "/usr/bin/chromium",
+    // ------------------------------------------------------------
+    // PUPPETEER — ENDPOINT CANÔNICO (CONTRATO DE FRONTEIRA)
+    // ------------------------------------------------------------
+    //
+    // TOPOLOGIA FÍSICA REAL:
+    // ------------------------------------------------------------
+    //
+    //   ┌─────────────────────────────────────┐
+    //   │ DevContainer (Docker)               │
+    //   │                                     │
+    //   │  ┌──────────────────────────────┐   │
+    //   │  │ Puppeteer / Node.js          │   │
+    //   │  │ (conecta localhost:9224)     │   │
+    //   │  └────────────┬─────────────────┘   │
+    //   │               │                     │
+    //   │  ┌────────────▼─────────────────┐   │
+    //   │  │ Chrome Proxy Service (PM2)   │   │
+    //   │  │ (bind 0.0.0.0:9224)          │   │
+    //   │  │ • Reescreve Host: headers    │   │
+    //   │  │ • Reescreve WebSocket URLs   │   │
+    //   │  └────────────┬─────────────────┘   │
+    //   │               │ host.docker.internal│
+    //   └───────────────┼─────────────────────┘
+    //                   │
+    //   ┌───────────────▼─────────────────────┐
+    //   │ Windows Host                        │
+    //   │                                     │
+    //   │  ┌──────────────────────────────┐   │
+    //   │  │ Chrome (9225, bind 0.0.0.0)  │   │
+    //   │  │ --remote-debugging-port=9225 │   │
+    //   │  └──────────────────────────────┘   │
+    //   │                                     │
+    //   └─────────────────────────────────────┘
+    //
+    // VISÃO DO PUPPETEER:
+    // ------------------------------------------------------------
+    // • Conecta SEMPRE em localhost:9224 (proxy no mesmo container)
+    // • NÃO conhece a porta 9225
+    // • NÃO conhece o Windows Host
+    // • NÃO sabe que há um proxy intermediário
+    //
+    // VISÃO DO CHROME PROXY:
+    // ------------------------------------------------------------
+    // • Escuta em 0.0.0.0:9224 (acessível dentro do container)
+    // • Encaminha para host.docker.internal:9225 (Chrome no Windows)
+    // • Reescreve URLs para tornar conexão transparente
+    //
+    // CONTRATO (INVIOLÁVEL):
+    // ------------------------------------------------------------
+    // • Puppeteer → localhost:9224 (mesma máquina)
+    // • Proxy → host.docker.internal:9225 (máquina remota)
+    // • Violação quebra isolamento arquitetural
+    // ------------------------------------------------------------
+    "PUPPETEER_WS_ENDPOINT": "http://localhost:9224",
+    // ============================================================
+    // LOCALE & DOCKER ENGINE
+    // ============================================================
+    // Variáveis de instrumentação (estabilidade de telemetria do servidor)
+    "VSCODE_INSTRUMENTATION": "true",
+    "VSCODE_SERVER_EXPECTED": "true",
+    "VSCODE_SERVER_ROLE": "instrumentation",
+    // ============================================================
+    // LSP LOCAL (legado preservado, sempre desligado por padrão)
+    // ============================================================
+    // O editor usa o TSServer/LSP nativo do TypeScript 7. O daemon MCP local
+    // só pode ser habilitado explicitamente em um processo isolado.
+    "LSP_ENABLED": "false",
+    "LSP_MUTATIONS_ENABLED": "false",
+    // Timeout por operação LSP (ms). O daemon usa este valor como fallback;
+    // cada chamada pode sobrescrever via options.timeoutMs.
+    "LSP_TOOL_TIMEOUT_MS": "15000",
+    // Número máximo de resultados retornados por operações de busca (references,
+    // workspace_symbols, diagnostics, completion). Reduzir melhora latência
+    // em projetos grandes; aumentar melhora completude de busca.
+    "LSP_MAX_RESULTS": "200"
+    // ============================================================
+    // FILE WATCHING & VS CODE INTERNALS
+    // ============================================================
+    // WATCHPACK_POLLING removido em v5.4.0:
+    // Projeto usa Vite (não webpack). Variável não tem efeito detectável no projeto.
+    // Referência: DEVCONTAINER_ARCHITECTURE.md [DEC-002]
+  },
+  // ============================================================
+  // VS CODE CUSTOMIZATIONS
+  // ============================================================
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "TypeScriptTeam.native-preview",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-azuretools.vscode-containers",
+        "ms-vscode.makefile-tools",
+        "timonwong.shellcheck",
+        "redhat.vscode-yaml",
+        "EditorConfig.EditorConfig",
+        "Vue.volar",
+        "github.vscode-github-actions",
+        "DavidAnson.vscode-markdownlint"
+      ],
+      "settings": {
+        // TypeScript 7.0.x is GA. VS Code 1.134 still ships the legacy Node/tsserver.js client, so the external
+        // official LSP client remains required for now under its historical Marketplace ID `TypeScriptTeam.native-preview`.
+        // Its bundled server is stable TS7 (`tsc --lsp`). Remove the external client once the same client is bundled by VS Code.
+        // Toggle this flag to false only for a deliberate fallback to the built-in Node/tsserver.js service.
+        "js/ts.experimental.useTsgo": true,
+        // O cliente TS7 nativo é Go: esta é a chave efetiva de GOMEMLIMIT. O antigo `js/ts.tsserver.maxMemory`
+        // configura apenas o fallback Node/tsserver e não limita `tsc --lsp`.
+        "js/ts.server.goMemLimit": "1024MiB",
+        // O cliente LSP externo atual (ID histórico `native-preview`) tem trace LSP verboso por default; desabilitamos para não reter tráfego no
+        // Extension Host nem pagar serialização/logging em toda interação JS/TS.
+        "js/ts.trace.server": "off",
+        // In DevContainer, Codex must run in-container instead of being redirected to host-side WSL.
+        "chatgpt.runCodexInWindowsSubsystemForLinux": false,
+        "debug.javascript.autoAttachFilter": "onlyWithFlag",
+        "editor.bracketPairColorization.enabled": true,
+        //"editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.codeActionsOnSave": {
+          "source.fixAll.eslint": "explicit",
+          "source.organizeImports": "explicit"
+        },
+        // ========================================================
+        // EDITOR & FORMATTING (controle humano explícito)
+        // ========================================================
+        "editor.formatOnSave": true,
+        "editor.guides.indentation": true,
+        "editor.minimap.enabled": true,
+        "editor.minimap.maxColumn": 80,
+        "editor.minimap.renderCharacters": false,
+        "editor.renderWhitespace": "boundary",
+        "editor.smoothScrolling": true,
+        // ========================================================
+        // EDITOR UX (Acessibilidade do Código)
+        // ========================================================
+        "editor.stickyScroll.enabled": true, // Facilita navegar em classes longas do KERNEL
+        "eslint.alwaysShowStatus": true,
+        //"[javascript]": {
+        //   "editor.defaultFormatter": "esbenp.prettier-vscode"
+        //},
+        // ========================================================
+        // ESLINT (fonte de verdade para qualidade)
+        // ========================================================
+        "eslint.validate": ["javascript", "javascriptreact"],
+        "eslint.workingDirectories": [
+          {
+            "mode": "auto"
+          }
+        ],
+        "files.associations": {
+          "*.env*": "dotenv",
+          "Makefile": "makefile"
+        },
+        "files.autoSave": "onFocusChange",
+        "files.insertFinalNewline": true,
+        "files.trimTrailingWhitespace": true,
+        // ========================================================
+        // FILE SYSTEM & SEARCH (A Blindagem)
+        // ========================================================
+        "files.watcherExclude": {
+          "**/.cache/**": true, // NOVO: Protege contra cache do Puppeteer/NPM
+          "**/.claude/**": true, // NOVO: Evita indexar estados pesados da IA
+          "**/.git/objects/**": true,
+          "**/.git/refs/**": true,
+          "**/.git/logs/**": true,
+          "**/backups/**": true, // v5.4.0: exclui backups do watcher
+          "**/artifacts/**": true, // v5.4.0: arquivos gerados
+          "**/monitoring/**": true,
+          "**/dist/**": true,
+          "**/logs/**": true,
+          "**/node_modules/**": true,
+          "**/node-history/**": true, // NOVO: O histórico é para o shell, não para o editor
+          "**/profile/**": true,
+          "**/respostas/**": true,
+          "**/tmp/**": true
+        },
+        // ========================================================
+        // EXTENSION HOST — ESTABILIDADE DE MEMÓRIA (v5.4.0)
+        // O extension host com 55+ extensões pode consumir 1.7+ GB.
+        // Reduzir auto-save frequency e desabilitar código desnecessário
+        // alivia o GC do extension host e reduz chances de crash/restart.
+        // ========================================================
+        // Reduz frequência de auto-fetch Git (causa wake-ups do extension host)
+        "git.autofetch": false, // v5.4.0: desativado (era true) — causa I/O periódico
+        "git.autofetchPeriod": 1800, // v5.4.0: se reativado, 30 min mínimo
+        "git.confirmSync": false,
+        "git.decorations.enabled": true,
+        "git.enableSmartCommit": true,
+        "github.copilot.editor.enableAutoCompletions": true,
+        "github.copilot.editor.iterativeFixing": true,
+        // ========================================================
+        // GITHUB COPILOT — CONFIGURAÇÕES OTIMIZADAS
+        // ========================================================
+        "github.copilot.enable": {
+          "*": true,
+          "jsonc": true,
+          "markdown": true,
+          "plaintext": true,
+          "yaml": true
+        },
+        // ========================================================
+        // JAVASCRIPT / NODE.JS (infra + backend)
+        // ========================================================
+        "javascript.preferences.importModuleSpecifier": "relative",
+        "javascript.updateImportsOnFileMove.enabled": "always",
+        "jest.autoRun": "off",
+        "jest.runMode": "on-demand",
+        "json.validate.enable": true,
+        // ========================================================
+        // MARKDOWN & DOCUMENTATION
+        // ========================================================
+        "markdown.preview.breaks": true,
+        "markdown.preview.scrollPreviewWithEditor": true,
+        // ========================================================
+        // REFERENCES & NAVIGATION
+        // ========================================================
+        "references.preferredLocation": "peek",
+        "remote.SSH.enableAgentForwarding": true,
+        "remote.SSH.loglevel": "info",
+        "remote.SSH.useLocalServer": true,
+        // ========================================================
+        // EXTENSÕES — ESTABILIDADE DE SESSÃO
+        // Previne atualizações automáticas de extensões durante sessões ativas.
+        // Atualizações mid-session podem causar incompatibilidade de API proposals
+        // (ex.: chatParticipantPrivate no Copilot Chat) e reinício do extension host.
+        // Para atualizar extensões, faça manualmente após encerrar a sessão.
+        // ========================================================
+        "extensions.autoUpdate": false,
+        "extensions.autoCheckUpdates": false,
+        "search.exclude": {
+          "**/.cache": true,
+          "**/.claude": true,
+          "**/logs": true,
+          "**/node_modules": true,
+          "**/profile": true,
+          "**/respostas": true
+        },
+        // ========================================================
+        // WORKSPACE TRUST & SECURITY
+        // ========================================================
+        "security.workspace.trust.enabled": true,
+        "shellcheck.enable": true,
+        // ========================================================
+        // TELEMETRY & NOISE REDUCTION
+        // ========================================================
+        "telemetry.telemetryLevel": "off",
+        "terminal.integrated.copyOnSelection": true,
+        "terminal.integrated.cursorBlinking": true,
+        // ========================================================
+        // TERMINAL (UX & Performance)
+        // Bash = canônico | PowerShell = instrumental / IA-friendly
+        // ========================================================
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.detectLocale": "off",
+        // "terminal.integrated.drawBoldTextInInvertedColors" removido: setting deprecado no VS Code 1.100+
+        "terminal.integrated.enableMultiLinePasteWarning": "never",
+        // canvas: renderização estável em containers Linux (sem WebGL/GPU real).
+        // Consistente com .vscode/settings.json que também define "canvas".
+        "terminal.integrated.gpuAcceleration": "canvas",
+        "terminal.integrated.inheritEnv": true,
+        "terminal.integrated.profiles.linux": {
+          // ----------------------------------------------------
+          // Bash — SHELL CANÔNICO (infra, automação, build)
+          // ----------------------------------------------------
+          "bash": {
+            // "-l" (login shell): garante que /etc/profile.d/*.sh seja carregado
+            // em cada terminal integrado. Crítico para:
+            //   • 10-gatekeeper-nss.sh → LD_PRELOAD com caminho absoluto
+            //     (evita erros de linker em spawns intensivos de subprocesso)
+            //   • 00-restore-env.sh → PATH correto com nvm/npm-global
+            // Sem -l, profile.d não recanonicaliza/refina NSS_WRAPPER_* nem
+            // reforça o LD_PRELOAD canônico para shells interativos.
+            "args": ["-l"],
+            "icon": "terminal-bash",
+            "path": "/bin/bash"
+          },
+          // ----------------------------------------------------
+          // PowerShell — INSTRUMENTAL / SEMÂNTICO / IA-FRIENDLY
+          //
+          // • Não é default
+          // • Não governa automação
+          // • Carrega contrato global automaticamente
+          // ----------------------------------------------------
+          "pwsh": {
+            "args": ["-NoLogo"],
+            "icon": "terminal-powershell",
+            "path": "/usr/bin/pwsh"
+          }
+        },
+        // --------------------------------------------------------
+        // COMPORTAMENTO GERAL DO TERMINAL
+        // --------------------------------------------------------
+        // ============================================================
+        // TERMINAL — OPTIMIZED SETTINGS (v5.2)
+        // ============================================================
+        // Scrollback buffer otimizado para ambiente DevContainer:
+        // • 10,000 linhas = ~2MB memória (scrollback típico)
+        // • Suficiente para debug sessions (tail -f logs, PM2, etc)
+        // • Redução de 50% vs. v3.4 (20,000 → 10,000)
+        // • Previne memory bloat em long-running containers
+        //
+        // Context: Em DevContainers, scrollback persiste enquanto o
+        // terminal está aberto. Com 4-5 terminais simultâneos,
+        // 20,000 linhas/terminal = ~40MB overhead (10,000 = ~20MB).
+        //
+        // Se precisar de mais:
+        // • Use 'make logs-follow' (arquivos em logs/)
+        // • Configure PM2 logs (ecosystem.config.js)
+        // • Use Docker logs (docker logs -f <container>)
+        // ============================================================
+        "terminal.integrated.scrollback": 10000,
+        // ========================================================
+        // PRETTIER (somente com configuração explícita)
+        // ========================================================
+        // "prettier.requireConfig": true,
+        // ========================================================
+        // TESTING (Jest + Test Explorer)
+        // ========================================================
+        "testExplorer.useNativeTesting": false,
+        // ========================================================
+        // YAML / JSON / SHELL (infra, contratos, scripts)
+        // ========================================================
+        "yaml.validate": true
+      }
+    }
+  },
+  // ============================================================
+  // FEATURES
+  // ============================================================
+  // Deliberadamente omitidas. O bloco vazio `"features": {}` faz o Dev Containers
+  // gerar um Dockerfile intermediário desnecessário e pode disparar warnings do
+  // builder sobre `ARG BASE_IMAGE` sem default. O tooling é instalado manualmente
+  // no Dockerfile para manter controle e evitar duplicações.
+  // ===========================================================
+  // PORT FORWARDING — CONTRATO FINAL (DENY BY DEFAULT)
+  // ===========================================================
+  //
+  // Este bloco NÃO é apenas configuração.
+  // Ele é um DOCUMENTO ARQUITETURAL VIVO.
+  //
+  // ---------------------------------------------------------------------------
+  // PRINCÍPIO FUNDAMENTAL
+  // ---------------------------------------------------------------------------
+  // • Política global: DENY-BY-DEFAULT
+  // • Nenhuma porta é exposta por acidente
+  // • Nenhuma inferência automática é aceitável
+  // • Toda porta exposta deve ter:
+  //     - Justificativa funcional
+  //     - Público-alvo explícito
+  //     - Comportamento de forward declarado
+  //
+  // ---------------------------------------------------------------------------
+  // TOPOLOGIA FÍSICA (3 CAMADAS)
+  // ---------------------------------------------------------------------------
+  //
+  // WINDOWS HOST (Máquina Física)
+  // ├── Chrome Windows (chrome.exe, porta 9225)
+  // │   • Inicia: START-CHROME-SIMPLE.bat
+  // │   • Função: LLM Automation (ChatGPT, Gemini via Puppeteer)
+  // │   • Protocolo: Chrome DevTools Protocol (CDP)
+  // │   • Ontologia: Windows gerencia, Container conecta
+  // │
+  // └── WSL2 (Virtual Machine Linux)
+  //     └── Docker Desktop (Container Engine)
+  //         └── DevContainer (Node.js Runtime)
+  //             └── PM2 (Process Manager - 3 processos):
+  //                 │
+  //                 ├── agente-gpt (Main Process)
+  //                 │   • Script: index.js → src/main.js
+  //                 │   • Função: Kernel + Drivers + Orchestration + NERV
+  //                 │   • Porta: NENHUMA (IPC via NERV)
+  //                 │   • Depende: Chrome Proxy (9224)
+  //                 │
+  //                 ├── dashboard-web (Server Process)
+  //                 │   • Script: src/server/main.js
+  //                 │   • Função: HTTP + Socket.io + API REST + Telemetry
+  //                 │   • Porta: 3008 (HTTP + WebSocket)
+  //                 │   • Browser: ANY (Chrome, Firefox, Edge, Safari)
+  //                 │   • Dependências: ZERO (autônomo)
+  //                 │
+  //                 └── chrome-proxy (Proxy Service)
+  //                     • Script: scripts/chrome-proxy-service.js
+  //                     • Função: Transparent Proxy (HTTP + WebSocket)
+  //                     • Porta IN: 9224 (container)
+  //                     • Porta OUT: 9225 (host Windows via host.docker.internal)
+  //                     • Fluxo: Puppeteer → localhost:9224 → Chrome (9225)
+  //
+  // ---------------------------------------------------------------------------
+  // ARQUITETURA POR PLANOS FUNCIONAIS
+  // ---------------------------------------------------------------------------
+  //
+  // ┌──────────────────────────────────────────────────────────┐
+  // │ UI HUMANA (Interfaces interativas)                        │
+  // │                                                          │
+  // │ 3008 → Dashboard Principal (Mission Control)             │
+  // │        • Processo: dashboard-web (PM2)                   │
+  // │        • Browser: ANY (Chrome, Firefox, Edge, Safari)    │
+  // │        • HTTP + Socket.io + API REST                     │
+  // │        • Dependências: ZERO (autônomo)                   │
+  // │                                                          │
+  // │ • Auto-forward com notificação                           │
+  // └──────────────────────────────────────────────────────────┘
+  //
+  // ┌──────────────────────────────────────────────────────────┐
+  // │ INFRAESTRUTURA (Fronteiras Arquiteturais)                │
+  // │                                                          │
+  // │ 9224 → Chrome Proxy Service (Container → Windows)        │
+  // │        • Processo: chrome-proxy (PM2)                    │
+  // │        • Função: Proxy transparente HTTP + WebSocket     │
+  // │        • IN: localhost:9224 (Puppeteer conecta aqui)     │
+  // │        • OUT: host.docker.internal:9225 (Chrome)         │
+  // │                                                          │
+  // │ 9225 → Chrome Real (Windows Host)                        │
+  // │        • Processo: chrome.exe (Windows)                  │
+  // │        • Inicia: START-CHROME-SIMPLE.bat                 │
+  // │        • Função: Chrome DevTools Protocol (CDP)          │
+  // │        • Acesso: NUNCA direto, sempre via proxy 9224     │
+  // │                                                          │
+  // │ • NÃO são UI humana                                      │
+  // │ • NÃO sofrem auto-forward                                │
+  // │ • Representam FRONTEIRAS LÓGICAS                          │
+  // └──────────────────────────────────────────────────────────┘
+  //
+  // ┌──────────────────────────────────────────────────────────┐
+  // │ DEBUG (OPT-IN — NUNCA NOTIFICA POR PADRÃO)               │
+  // │                                                          │
+  // │ 9229 → Node.js Debug (Primary - agente-gpt)              │
+  // │ 9230 → Node.js Debug (Fallback - dashboard-web)          │
+  // │                                                          │
+  // │ • Exposição silenciosa                                   │
+  // │ • Uso deliberado (--inspect flag)                        │
+  // │ • Não notifica o operador                                │
+  // └──────────────────────────────────────────────────────────┘
+  //
+  // ---------------------------------------------------------------------------
+  // NOTAS NORMATIVAS IMPORTANTES
+  // ---------------------------------------------------------------------------
+  //
+  // PM2 (Process Manager):
+  // • Organizador geral de processos Node.js
+  // • Gerencia 3 processos: agente-gpt, dashboard-web, chrome-proxy
+  // • NÃO tem porta própria (daemon interno)
+  // • Web dashboard opcional (porta 9615) NÃO configurado por padrão
+  //
+  // Chrome Dual Purpose (2 usos INDEPENDENTES):
+  // 1. Dashboard (porta 3008):
+  //    • Humano → ANY Browser → http://localhost:3008 → dashboard-web
+  //    • ZERO dependência de Puppeteer
+  //    • ZERO dependência de Chrome Windows (porta 9225)
+  //
+  // 2. LLM Automation (porta 9225):
+  //    • agente-gpt → Puppeteer → localhost:9224 → proxy → Chrome (9225)
+  //    • Puppeteer required
+  //    • Chrome Windows required
+  //
+  // Fluxo de Dados LLM Automation:
+  //    Puppeteer → localhost:9224 (proxy) → host.docker.internal:9225 (Chrome)
+  //
+  // O sistema possui Chromium local como fallback técnico de imagem, mas o fluxo
+  // normal de automação LLM exige Chrome externo via Chrome Proxy. O fallback local
+  // só deve ser ativado por decisão explícita do runtime.
+  //
+  // ===========================================================
+  // ============================================================================
+  // PORT POLICY — SCOPE & NON-GOALS (CRITICAL)
+  // ----------------------------------------------------------------------------
+  // Este DevContainer governa APENAS portas abertas pelo próprio container.
+  //
+  // Portas pertencentes ao HOST (Windows) — ex.: Chrome DevTools (9225) —
+  // estão FORA do escopo técnico deste arquivo e:
+  //
+  // • NÃO podem ser forwardadas pelo VS Code
+  // • NÃO devem ser declaradas em forwardPorts
+  // • NÃO devem aparecer em portsAttributes
+  // • NÃO devem ser inferidas ou "protegidas" aqui
+  //
+  // A porta 9225 (Chrome Real, Windows Host):
+  // • É deliberadamente EXCLUÍDA deste contrato
+  // • Só é acessível via Chrome Proxy Service (9224)
+  // • Qualquer tentativa de acesso direto é violação arquitetural
+  // ============================================================================
+  "forwardPorts": [
+    3008, // Dashboard Principal — Mission Control (HTTP + Socket.io + API)
+    5173, // Vite Dev Server — Vue Dashboard (dev only)
+    9224, // Chrome Proxy Service (Container → Windows Host)
+    9229, // Node.js Debug — Primary (agente-gpt --inspect)
+    9230 // Node.js Debug — Fallback (dashboard-web --inspect)
+  ],
+  // ============================================================
+  // RESOURCE LIMITS (Proteção do Host)
+  // ============================================================
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "8gb",
+    "storage": "40gb"
+  },
+  "mounts": [
+    // ============================================================================
+    // NOTA NORMATIVA — MOUNTS VS VARIÁVEIS (CONTRATO DE FASE)
+    // ----------------------------------------------------------------------------
+    // Esta seção opera no PLANO INFRAESTRUTURAL do Docker.
+    //
+    // Regras não negociáveis:
+    // • O Docker resolve mounts ANTES da inicialização do container
+    // • O campo `target=` (container side) DEVE ser caminho literal
+    //   - Docker NÃO expande variáveis (ex.: ${containerUserHome}, $USER)
+    //   - Docker processamento ocorre ANTES do container existir
+    // • O campo `source=` (host side) PODE usar variáveis VS Code
+    //   - VS Code expande ${localEnv:*}, ${localWorkspaceFolder} ANTES de chamar docker
+    //   - Exemplo válido: "source=${localEnv:HOME}/data,target=/data,type=bind"
+    //
+    // Implicação arquitetural:
+    // • `mounts` materializam decisões já tomadas (infraestrutura concreta)
+    // • `containerEnv` expressa semântica dinâmica (comportamento do sistema)
+    //
+    // Portanto:
+    // • ✅ VÁLIDO: source=${localWorkspaceFolder}/data,target=/app/data
+    // • ❌ INVÁLIDO: source=/data,target=${containerWorkspaceFolder}/data
+    // • Usar caminhos literais em `target=` coerentes com `remoteUser: "node"`
+    // • Centralizar abstrações dinâmicas exclusivamente em `containerEnv`
+    //
+    // Violação deste contrato resulta em erro fatal no `docker run`.
+    // Referência: Docker CLI docs (--mount flag), VS Code DevContainers Variables
+    // ============================================================================
+    // =====================================================================
+    // CORE — CACHE & PERFORMANCE (XDG_CACHE_HOME)
+    // ---------------------------------------------------------------------
+    // • Cache genérico de ferramentas, linguagens e utilitários
+    // • Acelera rebuilds e reduz reindexação
+    // • Seguro para purge eventual
+    // =====================================================================
+    "source=devcontainer-cache,target=/home/node/.cache,type=volume",
+    // Cache específico e pesado do Puppeteer (isolado por motivo técnico)
+    // • Evita downloads repetidos
+    // • Não deve ser compartilhado com outros caches
+    "source=devcontainer-puppeteer-cache,target=/home/node/.cache/puppeteer,type=volume",
+    // Cache dedicado do TypeScript / JavaScript Language Server
+    // • Melhora IntelliSense e Copilot em projetos grandes
+    // • Reduz reindexação após rebuild
+    "source=devcontainer-ts-cache,target=/home/node/.cache/typescript,type=volume",
+    // =====================================================================
+    // NODE / PACKAGE ECOSYSTEM
+    // ---------------------------------------------------------------------
+    // • Persistência correta do ecossistema Node
+    // • NÃO persiste node_modules (por design)
+    // =====================================================================
+    // npm cache (respeita NPM_CONFIG_CACHE)
+    "source=devcontainer-npm-cache,target=/home/node/.npm,type=volume",
+    // npm-global (bins globais, se utilizados)
+    "source=devcontainer-npm-global,target=/home/node/.npm-global,type=volume",
+    // =====================================================================
+    // PROCESS & RUNTIME STATE
+    // ---------------------------------------------------------------------
+    // • Estado de processos gerenciados (PM2)
+    // • Logs, dumps e PIDs
+    // =====================================================================
+    "source=devcontainer-pm2-state,target=/home/node/.pm2,type=volume",
+    // =====================================================================
+    // USER CONFIGURATION (XDG — CONFIG / SHARE / STATE)
+    // ---------------------------------------------------------------------
+    // • Fonte de verdade para preferências do usuário
+    // • Inclui GitHub Copilot, Copilot Chat e extensões
+    // =====================================================================
+    // XDG_CONFIG_HOME
+    "source=devcontainer-user-config,target=/home/node/.config,type=volume",
+    // XDG_DATA_HOME
+    "source=devcontainer-local-share,target=/home/node/.local/share,type=volume",
+    // XDG_STATE_HOME
+    // • Estado transitório de ferramentas, incluindo Copilot Chat
+    "source=devcontainer-local-state,target=/home/node/.local/state,type=volume",
+    // =====================================================================
+    // AI / AGENT STATE
+    // ---------------------------------------------------------------------
+    // • Estado persistente de agentes locais (Claude, etc.)
+    // • NÃO inclui memória semântica remota (server-side)
+    // =====================================================================
+    "source=devcontainer-claude-state,target=/home/node/.claude,type=volume",
+    // =====================================================================
+    // IDENTITY & SECRETS (STRICT, NÃO COPIAR)
+    // ---------------------------------------------------------------------
+    // • Chaves NUNCA são persistidas como volume
+    // • Apenas forwarding seguro via agent
+    // =====================================================================
+    // =========================================================
+    // SSH AGENT FORWARDING — VS CODE NATIVE (v5.3+)
+    // ---------------------------------------------------------
+    // HISTÓRICO:
+    // v5.2: Mount manual "source=${localEnv:SSH_AUTH_SOCK},target=/ssh-agent"
+    // v5.3: REMOVIDO - Causava erro fatal de type mismatch
+    //
+    // ERRO ANTERIOR:
+    //   error mounting ... to rootfs at "/ssh-agent": not a directory:
+    //   Are you trying to mount a directory onto a file (or vice-versa)?
+    //
+    // CAUSA:
+    //   SSH_AUTH_SOCK é um socket UNIX (arquivo especial)
+    //   Docker tentava montar como diretório
+    //   Type mismatch → container não iniciava
+    //
+    // SOLUÇÃO:
+    //   VS Code Remote Containers fornece SSH forwarding NATIVO
+    //   Não requer mount manual
+    //   Funciona automaticamente quando SSH agent está presente no host
+    //
+    // BENEFÍCIOS:
+    //   ✅ Container inicia com ou sem SSH agent
+    //   ✅ Zero configuração manual
+    //   ✅ Fail-safe por design
+    //   ✅ Cross-platform (Windows/Linux/macOS)
+    //
+    // VALIDAÇÃO:
+    //   Dentro do container:
+    //   $ echo $SSH_AUTH_SOCK     # Deve mostrar path se agent disponível
+    //   $ ssh-add -l              # Lista chaves (se agent presente)
+    //   $ ssh -T git@github.com   # Testa autenticação GitHub
+    // =========================================================
+    // GnuPG keyring (persistente, mas isolado)
+    "source=devcontainer-gpg-cache,target=/home/node/.gnupg,type=volume",
+    // =====================================================================
+    // VS CODE SERVER (PERFORMANCE CRÍTICO)
+    // ---------------------------------------------------------------------
+    // • Binário do VS Code Server
+    // • Extensões (incluindo Copilot)
+    // • Estado de autenticação e UX
+    //
+    // ⚠️ Volume sensível — purge apenas se necessário.
+    // Geração TS7 v1: inicia o servidor remoto sem extensões herdadas do volume pré-migração.
+    // O volume `devcontainer-vscode-server` anterior permanece intacto para rollback/forense.
+    // =====================================================================
+    "source=devcontainer-vscode-server-ts7-v1,target=/home/node/.vscode-server,type=volume",
+    // =====================================================================
+    // UX — HISTÓRICO DE SHELL (FORA DO $HOME POR DESIGN)
+    // ---------------------------------------------------------------------
+    // • Histórico persistente entre rebuilds
+    // • Não polui o $HOME
+    // =====================================================================
+    "source=devcontainer-bash-history,target=/home/node-history,type=volume",
+    // =====================================================================
+    // INFRASTRUCTURE (DEV ONLY — ALTO PRIVILÉGIO)
+    // ---------------------------------------------------------------------
+    // • Docker CLI usa o socket do host
+    // • Equivale a root no host
+    // • NUNCA usar em produção
+    // =====================================================================
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ],
+  "name": "ChatGPT Docker Puppeteer - Dev Container",
+  // Default oficial para portas não declaradas explicitamente.
+  // Use otherPortsAttributes em vez de wildcard "*" dentro de portsAttributes.
+  "otherPortsAttributes": {
+    "onAutoForward": "ignore"
+  },
+  "portsAttributes": {
+    // ----------------------------------------------------------
+    // Política global: DENY-BY-DEFAULT
+    // ----------------------------------------------------------
+    // • Qualquer porta NÃO declarada explicitamente é ignorada
+    // • Nenhuma inferência automática é permitida
+    // ----------------------------------------------------------
+    // ================== UI HUMANA ==============================
+    "3008": {
+      "label": "Dashboard Principal — Mission Control (HTTP + Socket.io + API)",
+      "onAutoForward": "notify",
+      "protocol": "http",
+      "webRoot": "${containerWorkspaceFolder}/src/server"
+    },
+    "5173": {
+      "label": "Vite Dev Server — Vue Dashboard (dev only)",
+      "onAutoForward": "notify",
+      "protocol": "http",
+      "webRoot": "${containerWorkspaceFolder}/src/dashboard-ui"
+      // NOTA: HMR (Hot Module Reload) configurado no vite.config.js
+      // - port: 5173 (HTTP + WebSocket na MESMA porta)
+      // - hmr.clientPort: 5173 (WebSocket fixado)
+      // - hmr.host: 'localhost' (Windows acesso via port forwarding)
+      // - watch.usePolling: true (Docker volumes file watching)
+      // ✅ WebSocket HMR usa a MESMA porta 5173 (não precisa forward adicional)
+    },
+    // ================== INFRAESTRUTURA =========================
+    "9224": {
+      "label": "Chrome Proxy Service (Container → Windows Host)",
+      "onAutoForward": "ignore",
+      "protocol": "http"
+      // NOTA ARQUITETURAL:
+      // • Esta porta ESTÁ em forwardPorts (sempre disponível)
+      // • onAutoForward: "ignore" = não notifica o usuário (porta interna)
+      // • Reconciliação conceitual: forward != auto-forward
+      //   - forwardPorts: política de DISPONIBILIDADE (sempre expor)
+      //   - onAutoForward: política de UX (notificar humano ou não)
+      //
+      // FUNÇÃO:
+      // • Proxy transparente HTTP + WebSocket (CDP)
+      // • Puppeteer → localhost:9224 → host.docker.internal:9225
+      // • ÚNICA fronteira autorizada para Chrome externo
+      // • Porta 9225 (Chrome Real, Windows) NUNCA acessada diretamente
+    },
+    // ================== DEBUG ==================================
+    "9229": {
+      "label": "Node.js Debug — Primary (agente-gpt)",
+      "onAutoForward": "silent",
+      "protocol": "http"
+      // NOTA: Node Inspector expõe endpoints HTTP (/json/list, /json/version)
+      // Não é HTTP REST típico, mas protocol: "http" evita interpretações erradas
+      // ⚠️  Só funciona se processo rodar com: --inspect=0.0.0.0:9229
+    },
+    "9230": {
+      "label": "Node.js Debug — Fallback (dashboard-web)",
+      "onAutoForward": "silent",
+      "protocol": "http"
+      // ⚠️  Só funciona se processo rodar com: --inspect=0.0.0.0:9230
+    }
+  },
+  // ============================================================
+  // LIFECYCLE HOOKS - Sincronia de Inicialização
+  // ============================================================
+  // Chamamos bash explicitamente dentro do login shell.
+  // Motivo:
+  //   bash -lc '<script>' exige que o arquivo tenha bit executável.
+  //   bash -lc 'bash <script>' executa o arquivo como input do bash e evita
+  //   falha por chmod ausente no workspace montado.
+  //
+  // Ainda assim, os scripts devem permanecer versionados como 100755.
+  "postCreateCommand": "bash -lc 'bash \"${containerWorkspaceFolder}/.devcontainer/scripts/post-create.sh\"'",
+
+  // Roda toda vez que o container sobe (não-bloqueante por contrato).
+  // O script v3.0.2 é fail-safe, default-on para DNS e chama o control-plane passivo.
+  "postStartCommand": "bash -lc 'bash \"${containerWorkspaceFolder}/.devcontainer/scripts/post-start.sh\"'",
+
+  // Roda a cada attach do VS Code ao container
+  "postAttachCommand": "bash -lc 'bash \"${containerWorkspaceFolder}/.devcontainer/scripts/post-attach.sh\"'",
+  //
+  "privileged": false,
+  // Honra o contrato ENTRYPOINT/CMD da imagem:
+  //   ENTRYPOINT ["dumb-init", "--", "/usr/local/bin/nss-gatekeeper"]
+  //   CMD ["sleep", "infinity"]
+  // O default do Dev Containers para Dockerfile é overrideCommand=true; aqui
+  // desabilitamos para manter o handoff canônico da imagem.
+  "overrideCommand": false,
+  // ===========================================================
+  // RUNTIME ENVIRONMENT VARIABLES
+  // ===========================================================
+  //
+  // Integração com sistema ENV (150+ variáveis)
+  //
+  // Papel desta camada:
+  // • `remoteEnv` é a ponte host -> VS Code remoto -> processos do editor.
+  // • Ele é ideal para credenciais e overrides que extensões/LLMs precisam.
+  // • Ele NÃO substitui o bootstrap do app em `.env*`, que ainda pode
+  //   sobrescrever chaves repetidas em runtime.
+  //
+  // Ordem prática:
+  // 1. Dockerfile ENV + containerEnv + runArgs --env-file
+  // 2. remoteEnv (processos geridos pelo VS Code)
+  // 3. bootstrap da app: .env -> .env.$NODE_ENV -> .env.local -> .env.$NODE_ENV.local
+  // 4. config.json (para a superfície coberta pelo ConfigurationManager)
+  // 5. Fallbacks hardcoded
+  //
+  // Documentação: DOCUMENTAÇÃO/REFERENCIA/ENV_VARIABLES_GUIDE.md
+  // ===========================================================
+  "remoteEnv": {
+    // ============================================================
+    // AUTH / TOKENS
+    // ============================================================
+    // Estratégia estrutural:
+    // • `remoteEnv` é a única forma confiável de expor segredos do HOST
+    //   para TODOS os processos geridos pelo VS Code no container
+    //   (extensões, assistentes, shells, language servers).
+    // • `.env.local` continua suportado e é sincronizado por hook para
+    //   shells/login shells e bootstrap do `gh`.
+    // • Nunca commitar valores aqui: apenas referências `${localEnv:*}`.
+    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
+    "AWS_ACCESS_KEY_ID": "${localEnv:AWS_ACCESS_KEY_ID}",
+    "AWS_DEFAULT_REGION": "${localEnv:AWS_DEFAULT_REGION}",
+    "AWS_REGION": "${localEnv:AWS_REGION}",
+    "AWS_SECRET_ACCESS_KEY": "${localEnv:AWS_SECRET_ACCESS_KEY}",
+    "AWS_SESSION_TOKEN": "${localEnv:AWS_SESSION_TOKEN}",
+    // Browser (contrato estrutural)
+    "BROWSER_MODE": "${localEnv:BROWSER_MODE:wsEndpoint}",
+    "CLAUDE_API_KEY": "${localEnv:CLAUDE_API_KEY}",
+    "CHROME_HOST": "${localEnv:CHROME_HOST:host.docker.internal}",
+    "CHROME_PORT": "${localEnv:CHROME_PORT:9225}",
+    "CHROME_PROXY_BIND": "${localEnv:CHROME_PROXY_BIND:0.0.0.0}",
+    // Canonical NSS wrapper bootstrap.
+    // LD_PRELOAD must be absolute. A relative "libnss_wrapper.so" can be visible
+    // to non-login VS Code/bootstrap subprocesses before /etc/profile.d runs,
+    // producing ld.so preload warnings.
+    // NSS_WRAPPER_PASSWD/GROUP intentionally start on stable system files;
+    // entrypoint/profile hooks may refine them to /tmp/devcontainer-nss artifacts
+    // after those files are materialized.
+    "DEVCONTAINER_NSS_DIR": "${containerEnv:DEVCONTAINER_NSS_DIR}",
+    "DEVCONTAINER_NSS_WRAPPER_LIB": "${containerEnv:DEVCONTAINER_NSS_WRAPPER_LIB}",
+    "LD_PRELOAD": "${containerEnv:LD_PRELOAD}",
+    "NSS_WRAPPER_PASSWD": "${containerEnv:NSS_WRAPPER_PASSWD}",
+    "NSS_WRAPPER_GROUP": "${containerEnv:NSS_WRAPPER_GROUP}",
+    // NODE_EXTRA_CA_CERTS: expõe o bundle de CAs do sistema ao extension host e
+    // terminais geridos pelo VS Code. Node.js usa apenas seu bundle compilado por
+    // padrão — CAs corporativos ou auto-assinados instalados via
+    // update-ca-certificates seriam silenciosamente ignorados sem esta variável.
+    // Referência: https://nodejs.org/api/cli.html#node_extra_ca_certsfile
+    "NODE_EXTRA_CA_CERTS": "/etc/ssl/certs/ca-certificates.crt",
+    // Keep Codex state consistent across terminal + extension processes in-container.
+    // Contract: this overrides the Dockerfile fallback and must match
+    // .vscode/settings.json terminal.integrated.env.linux.CODEX_HOME.
+    "CODEX_HOME": "${containerWorkspaceFolder}/.codex",
+    "COPILOT_GITHUB_TOKEN": "${localEnv:COPILOT_GITHUB_TOKEN}",
+    "DEEPSEEK_API_KEY": "${localEnv:DEEPSEEK_API_KEY}",
+    // PORT deprecated v6.0: Use apenas SERVER_PORT
+    "CHROME_PROXY_PORT": "${localEnv:CHROME_PROXY_PORT:9224}",
+    "GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}",
+    // State & lifecycle
+    "ENABLE_STATE_FILE": "${localEnv:ENABLE_STATE_FILE:true}",
+    "GH_TOKEN": "${localEnv:GH_TOKEN}",
+    "GITHUB_PERSONAL_ACCESS_TOKEN": "${localEnv:GITHUB_PERSONAL_ACCESS_TOKEN}",
+    "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}",
+    "GOOGLE_API_KEY": "${localEnv:GOOGLE_API_KEY}",
+    "GOOGLE_GENERATIVE_AI_API_KEY": "${localEnv:GOOGLE_GENERATIVE_AI_API_KEY}",
+    "GROQ_API_KEY": "${localEnv:GROQ_API_KEY}",
+    "HOST": "${localEnv:HOST:0.0.0.0}",
+    // Logging
+    "LOG_LEVEL": "${localEnv:LOG_LEVEL:debug}",
+    "MISTRAL_API_KEY": "${localEnv:MISTRAL_API_KEY}",
+    // Ambiente
+    "NODE_ENV": "${localEnv:NODE_ENV:development}",
+    "OLLAMA_CLOUD_API_KEY": "${localEnv:OLLAMA_CLOUD_API_KEY}",
+    "OLLAMA_CLOUD_BASE_URL": "${localEnv:OLLAMA_CLOUD_BASE_URL}",
+    "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",
+    "OPENROUTER_API_KEY": "${localEnv:OPENROUTER_API_KEY}",
+    "PERPLEXITY_API_KEY": "${localEnv:PERPLEXITY_API_KEY}",
+    "REEXECUTE_POST_CREATE": "${localEnv:REEXECUTE_POST_CREATE:false}",
+    // ============================================================
+    // SSH AGENT FORWARDING
+    // ============================================================
+    // NOTA v5.3: SSH forwarding agora é NATIVO do VS Code.
+    //
+    // MUDANÇA ARQUITETURAL (v5.2 → v5.3):
+    // - REMOVIDO: Mount manual de socket (/ssh-agent)
+    // - REMOVIDO: SSH_AUTH_SOCK hardcoded
+    // - ADICIONADO: VS Code native SSH forwarding (automático)
+    //
+    // JUSTIFICATIVA:
+    // • Mount manual causava type mismatch (socket vs directory)
+    // • Container não iniciava se SSH agent não estivesse disponível
+    // • Configuração manual conflitava com política "opt-in" do post-create.sh
+    //
+    // NOVO COMPORTAMENTO:
+    // • VS Code detecta SSH_AUTH_SOCK no host automaticamente
+    // • Se disponível: forwarding transparente para o container
+    // • Se ausente: container inicia normalmente (git via HTTPS)
+    // • Zero configuração manual necessária
+    //
+    // COMPATIBILIDADE:
+    // • ✅ Windows + WSL2 + Docker Desktop
+    // • ✅ Linux nativo + Docker
+    // • ✅ macOS + Docker Desktop
+    //
+    // REFERÊNCIAS:
+    // • https://code.visualstudio.com/remote/advancedcontainers/sharing-git-credentials
+    // • post-create.sh Section 7 (SSH Contract - observacional)
+    // • DEVCONTAINER_BUILD_ANALYSIS.md (Solução 3)
+    // ============================================================
+    "SERVER_AUTHORITY": "standalone",
+    "SERVER_MODE": "split",
+    // Portas (fonte única: SERVER_PORT)
+    "SERVER_PORT": "${localEnv:SERVER_PORT:3008}",
+    "TOGETHER_API_KEY": "${localEnv:TOGETHER_API_KEY}",
+    "VERTEX_AI_LOCATION": "${localEnv:VERTEX_AI_LOCATION}",
+    "VERTEX_AI_PROJECT_ID": "${localEnv:VERTEX_AI_PROJECT_ID}",
+    "XAI_API_KEY": "${localEnv:XAI_API_KEY}",
+    "AZURE_OPENAI_API_KEY": "${localEnv:AZURE_OPENAI_API_KEY}",
+    "AZURE_OPENAI_ENDPOINT": "${localEnv:AZURE_OPENAI_ENDPOINT}"
+  },
+  // ============================================================
+  // SECURITY & USER CONFIGURATION
+  // ============================================================
+  // "node" é passado para Dockerfile via build.args.REMOTE_USER
+  "remoteUser": "node",
+  // ============================================================
+  // RUNTIME ARGS - Docker runtime configuration (v5.2)
+  // ============================================================
+  "runArgs": [
+    // ENV FILE: Carrega variáveis do .env.development
+    "--env-file",
+    "${localWorkspaceFolder}/.env.development",
+    // NETWORKING: Acesso ao Chrome do Windows (Host) via CDP
+    "--add-host=host.docker.internal:host-gateway",
+    // PERFORMANCE: Essencial para Puppeteer não "crashar" em sites pesados
+    "--shm-size=4g",
+    // STABILITY: Evita erro de "Too many open files" no VS Code/Node
+    "--ulimit",
+    "nofile=262144:262144",
+    // DNS: Estratégia em duas camadas para garantir resolução confiável.
+    //
+    // Camada 1 — Docker runtime (aqui):
+    //   --dns configura os nameservers do resolver interno do Docker Desktop.
+    //   Em Docker Desktop (macOS/Windows), o resolv.conf do container ainda
+    //   aponta para 192.168.65.7 (resolver interno), que encaminha para os
+    //   servidores abaixo. O arquivo em si não é modificado pelos --dns flags.
+    //
+    // Camada 2 — post-start.sh:
+    //   fix_dns() reescreve o conteúdo de /etc/resolv.conf via tee a cada
+    //   container start, preservando o inode quando o arquivo é gerenciado
+    //   pelo Docker. Isso garante acesso direto a 1.1.1.1 e 8.8.8.8
+    //   independente do comportamento do Docker Desktop.
+    //
+    // Referência: https://docs.docker.com/reference/cli/docker/container/run/#dns
+    "--dns=1.1.1.1",
+    "--dns=8.8.8.8",
+    // --dns-opt repassa as opções de query para o resolv.conf inicial gerado
+    // pelo Docker (antes do post-start.sh sobrescrever o arquivo).
+    // timeout:1  → 1 segundo por query (padrão: 5s)
+    // attempts:2 → 2 tentativas por servidor (padrão: 2)
+    // rotate     → alterna entre servidores a cada query
+    "--dns-opt=timeout:1",
+    "--dns-opt=attempts:2",
+    "--dns-opt=rotate",
+    // ============================================================================
+    // IDENTITY & SECURITY: Docker CLI Access
+    // ============================================================================
+    // ⚠️  SECURITY NOTICE (CRITICAL):
+    //
+    // --group-add=docker fornece acesso ao Docker daemon do HOST.
+    // Isso é EQUIVALENTE A ROOT NO HOST (full privilege escalation).
+    //
+    // IMPLICAÇÕES:
+    // • Container pode criar/deletar/manipular QUALQUER container/imagem no host
+    // • Container pode montar QUALQUER volume do host
+    // • Container pode ler/escrever no filesystem do host (via bind mounts)
+    // • Container pode executar comandos privilegiados no host
+    //
+    // JUSTIFICATIVA (Ambiente DEV):
+    // • Necessário para docker-compose, docker build, docker run dentro do container
+    // • Facilita workflows de desenvolvimento (testcontainers, builds locais)
+    // • VS Code DevContainers requer isso para certas funcionalidades
+    //
+    // PROTEÇÕES:
+    // • Uso EXCLUSIVO em ambiente de desenvolvimento LOCAL
+    // • NUNCA usar em CI/CD, staging ou produção
+    // • Host deve ser trusted (sua máquina pessoal)
+    // • Container não deve processar input de fontes não confiáveis
+    //
+    // ALTERNATIVAS (se não precisar de Docker-in-Docker):
+    // • Remover --group-add=docker
+    // • Usar Docker externo via API remota (docker -H tcp://...)
+    // • Usar podman (rootless containers)
+    //
+    // DECISÃO DO PROJETO:
+    // Manter --group-add=docker porque:
+    // 1. Facilita workflows de desenvolvimento (docker-compose local)
+    // 2. Projeto é ambiente DEV (não prod)
+    // 3. Documentação clara de riscos (este bloco)
+    // ============================================================================
+    "--group-add=docker",
+    // ====================================================================
+    // TCP KEEPALIVE — DETECÇÃO RÁPIDA DE CONEXÕES MORTAS (v5.4.0)
+    // ====================================================================
+    // Por padrão o kernel Linux usa tcp_keepalive_time=7200 (2 horas).
+    // Isso significa que conexões idle não são sondadas por 2 HORAS antes
+    // de serem declaradas mortas — causando reconnects silenciosos no
+    // VS Code que geram novos session_ids sem disparar sessionStart.
+    //
+    // Reduzimos para valores agressivos mas seguros:
+    // • tcp_keepalive_time=120: começa a sondar após 2 min de idle
+    // • tcp_keepalive_intvl=15: intervalo entre sondas
+    // • tcp_keepalive_probes=3: 3 falhas → conexão declarada morta
+    // Efeito total: conexão morta detectada em ~2min45s (vs 2h15min atual)
+    //
+    // ⚠️ REQUER RECRIAÇÃO DO CONTAINER para entrar em vigor
+    //    (Rebuild/Reopen Container; alteração de runArgs não se aplica a container já vivo).
+    // Sysctls net.ipv4.tcp_* são namespace-específicos no Linux 5.15+
+    // (WSL2 6.6 suporta). Testado: `sysctl -w` dentro sem --privileged
+    // retorna EPERM; via --sysctl no docker run funciona sem privilégios.
+    //
+    // Referência: DOCUMENTAÇÃO/HOOKS/ANALISE-SESSOES-ABRUPTAS.md §5.3
+    // ====================================================================
+    "--sysctl",
+    "net.ipv4.tcp_keepalive_time=120",
+    "--sysctl",
+    "net.ipv4.tcp_keepalive_intvl=15",
+    "--sysctl",
+    "net.ipv4.tcp_keepalive_probes=3",
+    "--sysctl",
+    "net.ipv4.tcp_fin_timeout=30",
+    "--network=bridge",
+    // METADATA: sincronizado com Dockerfile v1.5.1 e devcontainer v5.9.1
+    "--label",
+    "project=chatgpt-docker-puppeteer",
+    "--label",
+    "role=devcontainer",
+    "--label",
+    "version=1.5.1",
+    "--label",
+    "image.version=1.5.1",
+    "--label",
+    "devcontainer.version=5.9.1"
+  ],
+  // ============================================================
+  // LIFECYCLE FINALIZATION
+  // ============================================================
+  // "none": container keeps running when VS Code closes/disconnects.
+  // • VS Code reconnects reattach to the SAME running container (faster, stateful)
+  // • PM2, logs e hooks continuam vivos durante desconexão
+  // • Elimina cold-start após reconexão temporária
+  // • Tradeoff: container deve ser parado manualmente (docker stop / make clean)
+  // Referência: DOCUMENTAÇÃO/HOOKS/ANALISE-SESSOES-ABRUPTAS.md §5.2
+  "shutdownAction": "none",
+  // IMPORTANT: some hosts may run the container using an arbitrary UID that
+  // does not match the fixed ‘node’ entry baked into the image (UID 1000).
+  // When this happens the user ID has no corresponding name in /etc/passwd
+  // and interactive shells display «Eu não tenho nome» / «I have no name».
+  // Setting updateRemoteUserUID:true instructs the devcontainer extension to
+  // rewrite the /etc/passwd entry at startup so that the active UID is
+  // always resolvable.  See .devcontainer/USER_ID_ASSIGNMENT_INVESTIGATION.md
+  // for a full analysis.
+  "updateRemoteUserUID": true,
+  // ============================================================
+  // USER ENV PROBE — loginInteractiveShell (explícito)
+  // ============================================================
+  // "loginInteractiveShell" (default do VS Code) executa:
+  //   /bin/bash --login --interactive
+  //
+  // VANTAGENS sobre loginShell:
+  // • Captura variáveis de ambiente que dependem de shell interativo
+  // • Garante que PATH, completions e aliases estejam completos
+  // • Compatível com shell integration do VS Code (decorations, history)
+  //
+  // MITIGAÇÃO DE LENTIDÃO (problema original: 10s+ de delay):
+  // • Causa: scripts /etc/update-motd.d/ fazem calls de rede (50-motd-news,
+  //   91-contract-ua-esm-status, 50-landscape-sysinfo)
+  // • Solução no CONTAINER: ~/.hushlogin para o user node (Dockerfile, SECTION 8)
+  //   → update-motd.sh checa `[ ! -e "$HOME/.hushlogin" ]` antes de rodar
+  // • Solução no WSL HOST: ~/.hushlogin para o user ilenburg (já criado)
+  //
+  // Scripts do projeto em /etc/profile.d/ NÃO são afetados:
+  //   00-runtime.sh, 10-gatekeeper-nss.sh, 20-devcontainer-ux.sh
+  //   → Todos checam `case "$-" in *i*) ;;` ou são idempotentes
+  // ============================================================
+  "userEnvProbe": "loginInteractiveShell",
+  "waitFor": "postCreateCommand",
+  // Workspace dinâmico: herda o nome da pasta no seu Windows/Host
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}"
+}
