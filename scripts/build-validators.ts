@@ -9,8 +9,8 @@ import devcontainerFeatureSchema from "../schemas/devContainerFeature.schema.jso
 
 /**
  * Compiles standalone Ajv validator modules from `schemas/*.schema.json` into
- * `src/schema/generated/`, at build time rather than via `new Function` at startup
- * (DCL-10). Output is committed — it's a build-time input, not a runtime artefact.
+ * `src/schema/generated/`, at build time rather than via `new Function` at startup.
+ * Output is committed; it's a build-time input, not a runtime artifact.
  *
  * Two Ajv instances, not one: `devContainer.base.schema.json` declares
  * `$schema: .../draft/2019-09/schema` and `devContainerFeature.schema.json` declares
@@ -42,11 +42,10 @@ export async function buildValidators(): Promise<void> {
   const base = ajv2019.compile(baseSchema);
   const feature = ajv07.compile(devcontainerFeatureSchema);
 
-  // TODO(DCL-10): both schemas use `format: "uri"` — confirmed by the
-  // `unknown format "uri" ignored` warning Ajv prints at compile time, since
-  // `ajv-formats` isn't installed. Format keywords are currently no-ops. Decide
-  // whether to add `ajv-formats` (see the work item's implementation notes) before
-  // relying on format validation.
+  // TODO: both schemas use `format: "uri"`, and without `ajv-formats` Ajv ignores it
+  // (it warns `unknown format "uri" ignored` at compile time). Adding it would be a
+  // fourth runtime dependency past jsonc-parser, ajv and yaml; decide before relying
+  // on format validation.
 
   const outDir = path.join(import.meta.dir, "..", "src", "schema", "generated");
   await Bun.write(

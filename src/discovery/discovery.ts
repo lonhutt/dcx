@@ -5,8 +5,8 @@ import type { FileSystem } from "../vfs/vfs";
  * The result of resolving a `dcx check` target.
  *
  * `searched` lists every devcontainer.json candidate path discovery actually checked,
- * in the order tried, so the exit-2 message ([[DCL-26 CLI flags, wiring and exit codes]])
- * can name what it looked at when `targets` comes back empty.
+ * in the order tried, so the CLI's exit-2 message can name what it looked at when
+ * `targets` comes back empty.
  */
 export interface DiscoveryResult {
   readonly targets: readonly string[];
@@ -15,7 +15,7 @@ export interface DiscoveryResult {
 
 /**
  * Resolves a `dcx check` target to the devcontainer.json file(s) to lint, in the
- * spec's discovery order (DESIGN §3.1, §7.2).
+ * discovery order from the Dev Container spec.
  *
  * A file target is returned as-is. A directory is searched for
  * `.devcontainer/devcontainer.json`, then `.devcontainer.json`, and the first
@@ -23,11 +23,11 @@ export interface DiscoveryResult {
  * exactly one level deep is returned.
  *
  * Absence is a normal result, not an exception: the CLI turns an empty `targets`
- * into exit 2, using `searched` to name what it looked at (DESIGN §7.4). I/O errors
+ * into exit 2, using `searched` to name what it looked at. I/O errors
  * other than a missing path still throw.
  *
  * @param fs Injected rather than constructed, so the LSP discovers through its
- *   own `OverlayFS` and sees unsaved buffers (DESIGN §4.2 invariant 2, §5.3).
+ *   own `OverlayFS` and sees unsaved buffers.
  * @param target File or directory, absolute or relative to the working directory.
  * @returns `targets` sorted, empty when no config is found; `searched` is every
  *   candidate path checked along the way.
