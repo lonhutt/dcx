@@ -13,8 +13,9 @@ const validateFeature = validateFeatureRaw as unknown as ValidateFunction;
 
 // One directory up from src/schema/ is src/, two is the repo root.
 const repoRoot = path.join(import.meta.dir, "..", "..");
-const schemasDir = path.join(repoRoot, "schemas");
 const submoduleDir = path.join(repoRoot, "devcontainer-spec");
+// not the `schemas/` symlink; Git for Windows checks symlinks out as plain files
+const schemasDir = path.join(submoduleDir, "schemas");
 
 test("every generated validator compiles and validates a known-good fixture", () => {
   expect(validateBase({ image: "mcr.microsoft.com/devcontainers/base:ubuntu" })).toBe(true);
@@ -33,10 +34,9 @@ test("provenance() has one entry per vendored schema, each with a url, commit an
   }
 });
 
-// schemas/ is a symlink into the pinned devcontainer-spec submodule, so there is no
-// file to diff against upstream — the thing that can actually drift is the pin. A
-// fresh clone without `--recurse-submodules` leaves devcontainer-spec/ present but
-// empty (no `.git`), which is when this degrades to skipped rather than failed.
+// the schemas come straight from the pinned submodule, so there's no file to diff; the
+// pin is what drifts. A clone without `--recurse-submodules` leaves devcontainer-spec/
+// empty (no `.git`), so this skips instead of failing.
 test.skipIf(!existsSync(path.join(submoduleDir, ".git")))(
   "the submodule's pinned commit matches provenance.json's commit field for every schema",
   async () => {
@@ -49,10 +49,9 @@ test.skipIf(!existsSync(path.join(submoduleDir, ".git")))(
   },
 );
 
-test("offline determinism — same input, identical output, no network reachable", () => {
-  // The generated validators are pure synchronous functions over their input — there
-  // is no fetch anywhere on this path — so running the same input twice must produce
-  // byte-identical results, valid or not.
+test("offline determinism; same input, same output, no network", () => {
+  // the generated validators are pure sync functions (no fetch anywhere), so the same
+  // input twice has to give identical results, valid or not
   const valid = { image: "mcr.microsoft.com/devcontainers/base:ubuntu" };
   const invalid = { image: "mcr.microsoft.com/devcontainers/base:ubuntu", notAKnownProperty: true };
 
@@ -68,8 +67,8 @@ test("offline determinism — same input, identical output, no network reachable
 });
 
 test("unevaluatedProperties is genuinely enforced by the generated validator", () => {
-  // Catches importing the wrong Ajv entrypoint (ajv/dist/2019 vs. the draft-07
-  // default) — the wrong one accepts this fixture silently instead of rejecting it.
+  // catches the wrong Ajv entrypoint (ajv/dist/2019 vs the draft-07 default); the wrong
+  // one quietly accepts this fixture
   const valid = validateBase({
     image: "mcr.microsoft.com/devcontainers/base:ubuntu",
     notAKnownProperty: true,

@@ -1,13 +1,13 @@
 # position test fixtures
 
-`large-commented.jsonc` — a real `devcontainer.json` from
-`Ilenburg1993/chatgpt-docker-puppeteer`, retrieved 2026-09-04. The widest gap between
-bytes and characters found in a survey of public dev container configs: 1,885 non-ASCII
-characters and 9 astral-plane emoji across 1,558 lines. The p100 tail; the median
-real-world `devcontainer.json` is about 1.7 KB.
+`large-commented.jsonc` is a real `devcontainer.json` from
+`Ilenburg1993/chatgpt-docker-puppeteer` (retrieved 2026-09-04). It had the widest gap
+between bytes and characters in a survey of public configs; 1,885 non-ASCII
+characters and 9 astral emoji across 1,558 lines. The median is about 1.7 KB, so this is
+the far tail.
 
-`mixed-script.jsonc` — hand-built to put every width class and every line terminator
-on one page: CJK (2 columns), half-width katakana (1), a combining mark (0), tabs at
-line start and mid-line, an astral emoji, a ZWJ family (one 2-column glyph from 8 code
-units), a flag, and `\n`, `\r\n` and a lone `\r`. Its exact bytes matter — do not let
-an editor normalise its line endings.
+`mixed-script.jsonc` is hand-built to cover every width class and line terminator in one
+file: CJK (2 columns), half-width katakana (1), a combining mark (0), tabs at the start
+and middle of a line, an emoji, a ZWJ family (8 code units, 2 columns), a flag, and
+`\n`, `\r\n` and a lone `\r`. The exact bytes matter; don't let an editor normalize the
+line endings.

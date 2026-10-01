@@ -15,7 +15,7 @@ describe("line structure", () => {
   ])("%s", (_, text, lines) => {
     const ix = new LineIndex(text);
     expect(ix.lineCount).toBe(lines);
-    // EOF must always be addressable: every node's end offset can land there.
+    // EOF has to be addressable; any node's end offset can land there
     expect(ix.lineAt(text.length)).toBe(lines - 1);
   });
 
@@ -63,10 +63,9 @@ describe("positionAt", () => {
   });
 });
 
-// A character past the end of a line defaults back to the line length, where "length"
-// is the visible text. Bounding the scan by the end of the *document* instead walks an
-// overlong character on into the following lines — and incremental didChange (§9.2)
-// turns that result straight into a splice point.
+// A character past the end of a line falls back to the visible length. Clamping to the
+// end of the document instead lets it walk into the next line, and an LSP incremental
+// didChange would splice there.
 describe("offsetAt clamps character to the line's visible end", () => {
   test.each<[string, string, number, number, number]>([
     ["past end of line stops at visible end", "a\nbbbb\n", 0, 3, 1],
@@ -85,9 +84,8 @@ describe("offsetAt clamps character to the line's visible end", () => {
   });
 });
 
-// A position between "\r" and "\n" lies past the line's visible end. It snaps back to
-// the "\r", and the position it yields converts back to that snapped offset rather
-// than to a character its own inverse would reject.
+// An offset between "\r" and "\n" isn't a real position; it snaps back to the "\r", and
+// the result round-trips to that snapped offset.
 describe("an offset inside a CRLF pair snaps to the CR", () => {
   test.each<[string, string, number, number, number, number]>([
     ["between cr and lf", "a\r\nb", 2, 0, 1, 1],
@@ -103,8 +101,8 @@ describe("an offset inside a CRLF pair snaps to the CR", () => {
   });
 });
 
-// Invariant 1: nothing throws. An offset from a stale parse can outlive the edit that
-// shortened the document, and an LSP client can send any line it likes.
+// nothing throws; a stale offset can outlive the edit that shortened the document, and
+// an LSP client can send any line it wants
 describe("out-of-range input clamps instead of throwing", () => {
   const ix = new LineIndex("a\nbb\n"); // 3 lines: "a", "bb", ""
 
@@ -127,9 +125,8 @@ describe("out-of-range input clamps instead of throwing", () => {
   });
 });
 
-// Three different lengths for one emoji: "😀".length === 2 (code units), one code point,
-// and Bun.stringWidth("😀") === 2 columns. The first and third agreeing is a coincidence
-// of this emoji — the ZWJ family below is 8 units, 5 code points and still 2 columns.
+// "😀" is 2 code units, 1 code point and 2 columns. Units matching columns is a
+// coincidence; the ZWJ family below is 8 units, 5 code points and still 2 columns.
 describe("terminalPositionAt measures display width", () => {
   test.each<[string, string, number, number]>([
     ["ascii", "abc", 2, 3],
@@ -177,7 +174,7 @@ describe("assertNoSplitSurrogate", () => {
     ["end inside the pair", { start: 0, end: 2 }],
     ["empty range inside the pair", { start: 2, end: 2 }],
   ])("rejects %s", (_, range) => {
-    // Match the message, so that any other throw (a stub's included) doesn't pass.
+    // match the message; otherwise any throw passes (a stub's included)
     expect(() => assertNoSplitSurrogate(text, range)).toThrow(/surrogate/i);
   });
 

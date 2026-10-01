@@ -11,7 +11,7 @@ export interface DirEntry extends Stats {
 }
 
 /**
- * The only way core code touches the filesystem (DESIGN §4.2 invariant 2, §5.3).
+ * The only way core code touches the filesystem.
  * An editor holds unsaved buffers that do not exist on disk, so rules and
  * discovery read through this interface rather than `Bun.file` or `node:fs`,
  * and the LSP swaps in an `OverlayFS`.

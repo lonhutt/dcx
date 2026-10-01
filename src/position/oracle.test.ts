@@ -2,19 +2,15 @@ import { describe, expect, test } from "bun:test";
 import { join } from "node:path";
 import { LineIndex, type Position, type TerminalPosition } from "./position";
 
-// This file is the reference implementation LineIndex is tested against.
+// Reference implementation LineIndex is checked against. It's slow on purpose (linear
+// scan for the line, subtraction for the character, split on tabs for the column) so
+// that when the two disagree, the bug is in LineIndex. Keep it dumb.
 //
-// Everything here is deliberately the slowest, most obviously correct code that could
-// work: a linear scan for the line, a subtraction for the character, and a split on
-// tabs for the column. Nothing in it should ever be made clever. Its only job is to be
-// so simple that when it disagrees with LineIndex, the bug is in LineIndex.
+// Line starts are computed once per document, not per call; otherwise the large fixture
+// is O(n²).
 //
-// The one concession is that line starts are computed once per document rather than
-// per call — without it the large fixture is O(n²) in splitting alone.
-//
-// Bun.stringWidth is trusted for everything except tabs (it reports a tab as 0
-// columns). The oracle only has to get the tab-stop walk obviously right; per-glyph
-// width rules are the library's job, not ours.
+// Bun.stringWidth is trusted for everything but tabs (it says a tab is 0 wide); glyph
+// widths are the library's problem, not ours.
 
 class Oracle {
   readonly starts: number[] = [0];
@@ -26,7 +22,7 @@ class Oracle {
     }
   }
 
-  /** The offset LineIndex must treat `offset` as: clamped, and snapped out of a CRLF. */
+  /** What LineIndex should treat `offset` as; clamped and snapped out of a CRLF. */
   canonical(offset: number): number {
     const o = Math.min(Math.max(offset, 0), this.text.length);
     return this.text[o - 1] === "\r" && this.text[o] === "\n" ? o - 1 : o;
@@ -53,9 +49,9 @@ class Oracle {
 }
 
 /**
- * Diffs LineIndex against the oracle at every code-unit offset in `text`, and checks the
- * round trip. Returns the first disagreement, or undefined — so a failure prints the
- * input that caused it rather than a bare `expected true`.
+ * Diffs LineIndex against the oracle at every offset in `text`, round trip included.
+ * Returns the first mismatch (or undefined) so a failure shows the input, not just
+ * `expected true`.
  */
 function firstMismatch(text: string, tabWidth = 8) {
   const ix = new LineIndex(text);
@@ -106,10 +102,9 @@ describe("LineIndex agrees with the oracle at every offset", () => {
   });
 });
 
-// No coverage-guided fuzzer exists for Bun (Design §11), so this is a seeded loop over
-// generated documents. The generator is weighted toward the inputs that break position
-// code — terminators, tabs, surrogate pairs, zero- and double-width glyphs — rather than
-// uniform over Unicode, where almost everything would be an unremarkable BMP letter.
+// Bun has no coverage-guided fuzzer, so this is a seeded loop instead. The
+// pieces are weighted toward what breaks position code (terminators, tabs, surrogates,
+// zero and double width glyphs); uniform Unicode would be almost all plain letters.
 describe("property: random documents", () => {
   const pieces = [
     "a",
@@ -127,10 +122,10 @@ describe("property: random documents", () => {
     "😀",
     "👨‍👩‍👧",
     "🇯🇵",
-    "\uD83D", // a lone surrogate: malformed, but a string can hold it and so can a file
+    "\uD83D", // lone surrogate; malformed, but a string (or a file) can still hold one
   ];
 
-  /** mulberry32: a tiny seeded PRNG, so a failure reproduces from its seed alone. */
+  /** mulberry32; a tiny seeded PRNG, so a failure reproduces from the seed. */
   function rng(seed: number) {
     return () => {
       seed = (seed + 0x6d2b79f5) | 0;

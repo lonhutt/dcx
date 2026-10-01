@@ -4,9 +4,9 @@ import { join } from "node:path";
 import { readdir } from "node:fs/promises";
 
 /**
- * The on-disk {@link FileSystem} the CLI uses (DESIGN §5.3). `src/vfs` is one of
- * the few places core code may call Bun or `node:fs` directly (DESIGN §14,
- * decision 10).
+ * The on-disk {@link FileSystem} the CLI uses. Bun-only APIs (`Bun.file` etc.) stay in
+ * `src/vfs`, `src/cli` and `src/position`; the published package also has to run on
+ * Node 22+, so everything else stays runtime-agnostic.
  */
 export class BunFS implements FileSystem {
   async readFile(path: string): Promise<string> {

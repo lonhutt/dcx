@@ -4,7 +4,7 @@ import { resolve, parse } from "node:path";
 
 /**
  * A {@link FileSystem} that serves in-memory buffers in place of the files
- * beneath them (DESIGN §5.3, §9.2). The LSP keeps one buffer per open document,
+ * beneath them. The LSP keeps one buffer per open document,
  * updated from `textDocument/didChange`, so analysis sees what the user is typing
  * rather than what was last saved.
  *
