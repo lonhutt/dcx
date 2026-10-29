@@ -1,23 +1,6 @@
 #!/usr/bin/env bun
+import { run } from "./src/cli/cli";
 
-const args = Bun.argv.slice(2);
-
-if (args.length === 0 || args.includes("--help") || args.includes("-h")) {
-  console.log(`
-🚀 My Custom Bun CLI
-
-Usage:
-  dcx <name>        Greets a user by name
-  dcx --version, -v Shows current version
-  dcx --help, -h    Shows this help menu
-  `);
-  process.exit(0);
-}
-
-if (args.includes("--version") || args.includes("-v")) {
-  console.log("1.0.0");
-  process.exit(0);
-}
-
-const name = args[0];
-console.log(`✨ Hello, ${name}! Welcome to your Bun-powered CLI.`);
+// .then, not top-level await: `--bytecode` compiles to CommonJS, which has none.
+// exitCode, not process.exit(): exiting outright can cut off output still being flushed.
+run(Bun.argv.slice(2)).then((code) => (process.exitCode = code));
