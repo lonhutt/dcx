@@ -85,3 +85,9 @@ test("suggest only offers a close match", () => {
   expect(suggest("imag", ["image", "name"])).toBe("image");
   expect(suggest("colour", ["image", "name"])).toBeUndefined();
 });
+
+test("a key that only exists nested, like a mount's target, isn't a scenario conflict at the top", () => {
+  expect(check('{"image": "x", "target": "/w"}')).toEqual([
+    'schema/unknown-property @ "target": Unknown property "target"',
+  ]);
+});

@@ -56,6 +56,30 @@ export async function buildValidators(): Promise<void> {
   ajv2019.addSchema(scenario("composeContainer"), "compose");
   const feature = ajv07.compile(devcontainerFeatureSchema);
 
+  // emitted beside the validators so nothing at runtime reads schemas/, which is a
+  // submodule symlink: missing without the submodule, a plain file on Windows
+  interface JsonSchema {
+    properties?: Record<string, unknown>;
+    oneOf?: JsonSchema[];
+    allOf?: JsonSchema[];
+  }
+  const keysOf = (s: JsonSchema): string[] => [
+    ...Object.keys(s.properties ?? {}),
+    ...[...(s.oneOf ?? []), ...(s.allOf ?? [])].flatMap(keysOf),
+  ];
+  const definitions = baseSchema.definitions as Record<string, JsonSchema>;
+  const rootKeys = [
+    ...new Set(
+      [
+        "devContainerCommon",
+        "nonComposeBase",
+        "imageContainer",
+        "dockerfileContainer",
+        "composeContainer",
+      ].flatMap((name) => keysOf(definitions[name]!)),
+    ),
+  ].sort();
+
   // TODO: both schemas use `format: "uri"`, and without `ajv-formats` Ajv ignores it
   // (it warns `unknown format "uri" ignored` at compile time). Adding it would be a
   // fourth runtime dependency past jsonc-parser, ajv and yaml; decide before relying
@@ -68,7 +92,8 @@ export async function buildValidators(): Promise<void> {
   );
   await Bun.write(
     path.join(outDir, "devContainer.scenarios.validator.js"),
-    standaloneCode(ajv2019, { image: "image", dockerfile: "dockerfile", compose: "compose" }),
+    standaloneCode(ajv2019, { image: "image", dockerfile: "dockerfile", compose: "compose" }) +
+      `\n/** Every top-level property any scenario accepts. */\nexport const rootKeys = ${JSON.stringify(rootKeys)};\n`,
   );
   await Bun.write(
     path.join(outDir, "devContainerFeature.validator.js"),

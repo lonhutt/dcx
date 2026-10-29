@@ -1,5 +1,4 @@
 import type { ErrorObject, ValidateFunction } from "ajv";
-import schema from "../../schemas/devContainer.base.schema.json" with { type: "json" };
 import * as validators from "../schema/generated/devContainer.scenarios.validator.js";
 import {
   findNodeAtLocation,
@@ -27,21 +26,7 @@ const SCENARIO_LABEL: Record<Scenario, string> = {
   compose: "a Docker Compose config",
 };
 
-interface JsonSchema {
-  properties?: Record<string, unknown>;
-  oneOf?: JsonSchema[];
-  allOf?: JsonSchema[];
-}
-
-const keysOf = (s: JsonSchema): string[] => [
-  ...Object.keys(s.properties ?? {}),
-  ...[...(s.oneOf ?? []), ...(s.allOf ?? [])].flatMap(keysOf),
-];
-
-/** Every top-level property any scenario accepts. */
-const ROOT_KEYS = new Set(
-  Object.values(schema.definitions as Record<string, JsonSchema>).flatMap(keysOf),
-);
+const ROOT_KEYS = new Set(validators.rootKeys);
 
 /**
  * Lints a parsed devcontainer.json. Syntax errors come back on their own, since schema
@@ -99,7 +84,7 @@ function schemaErrors(root: Node): Diagnostic[] {
       : "build" in value || "dockerFile" in value
         ? "dockerfile"
         : "image";
-  const validate = (validators as Record<Scenario, ValidateFunction>)[scenario];
+  const validate = (validators as unknown as Record<Scenario, ValidateFunction>)[scenario];
   if (validate(value)) return [];
   return relevant(validate.errors!, "build" in value).map((e) => translate(e, root, scenario));
 }
