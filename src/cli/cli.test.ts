@@ -18,7 +18,12 @@ beforeAll(() => {
 afterAll(() => rmSync(root, { recursive: true, force: true }));
 
 async function dcx(...args: string[]) {
-  const proc = Bun.spawn(["bun", entry, ...args], { cwd: root, stdout: "pipe", stderr: "pipe" });
+  // execPath, not "bun": the binary running the tests, whatever PATH holds
+  const proc = Bun.spawn([process.execPath, entry, ...args], {
+    cwd: root,
+    stdout: "pipe",
+    stderr: "pipe",
+  });
   const [stdout, stderr, code] = await Promise.all([
     new Response(proc.stdout).text(),
     new Response(proc.stderr).text(),
@@ -36,7 +41,9 @@ test.each<[string, string[], number]>([
   ["unknown flag", ["check", "--nope"], 2],
   ["help", ["--help"], 0],
 ])("%s exits %d", async (_, args, code) => {
-  expect((await dcx(...args)).code).toBe(code);
+  const result = await dcx(...args);
+  // stderr in the failure message; a crash on startup is otherwise just "Received: 1"
+  expect(result.code, `exit ${result.code}, stderr:\n${result.stderr}`).toBe(code);
 });
 
 test("a problem prints as file:line:col with the column in display width", async () => {

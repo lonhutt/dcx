@@ -45,8 +45,8 @@ jobs:
           fi
           echo "pinned $pinned, upstream $upstream"
 
-      # one open issue at a time; if it's still open, upstream moving again doesn't
-      # change what has to be done
+      # one open issue at a time; if upstream moves while it's open, rewrite its body so
+      # the bump steps name the current commit
       - name: Open an issue
         if: steps.drift.outputs.drifted == 'true'
         env:
@@ -56,8 +56,8 @@ jobs:
           TITLE: devcontainer-spec pin is behind upstream
         run: |
           existing="$(gh issue list --state open --search "in:title \"$TITLE\"" --json number --jq '.[0].number')"
-          if [ -n "$existing" ]; then
-            echo "issue #$existing is already open"
+          if [ -n "$existing" ] && gh issue view "$existing" --json body --jq .body | grep -qF "$UPSTREAM"; then
+            echo "issue #$existing already tracks $UPSTREAM"
             exit 0
           fi
           cat > body.md <<EOF
@@ -77,4 +77,8 @@ jobs:
 
           Look over the schema diff (\`git -C devcontainer-spec diff $PINNED $UPSTREAM -- schemas\`) before merging.
           EOF
-          gh issue create --title "$TITLE" --body-file body.md
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --body-file body.md
+          else
+            gh issue create --title "$TITLE" --body-file body.md
+          fi
