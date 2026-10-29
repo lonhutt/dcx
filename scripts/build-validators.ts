@@ -30,6 +30,11 @@ import devcontainerFeatureSchema from "../schemas/devContainerFeature.schema.jso
  * never vendored into `schemas/` at all. Making it compile means either vendoring those
  * two files or deciding to drop them from the wrapper — a real scope decision, not
  * something to paper over here with a permissive ref loader.
+ *
+ * The scenarios module compiles one validator per scenario (image, Dockerfile, Compose)
+ * from the base schema's definitions. Validating against the whole base schema reports
+ * every failed `oneOf` branch, so one typo comes back as a dozen errors about branches the
+ * config was never trying to match.
  */
 export async function buildValidators(): Promise<void> {
   const ajv2019 = new Ajv2019({
@@ -40,7 +45,40 @@ export async function buildValidators(): Promise<void> {
   const ajv07 = new Ajv({ code: { source: true, esm: true }, allErrors: true, strict: false });
 
   const base = ajv2019.compile(baseSchema);
+  ajv2019.addSchema(baseSchema, "base");
+  const def = (name: string) => ({ $ref: `base#/definitions/${name}` });
+  const scenario = (...parts: string[]) => ({
+    allOf: [...parts, "devContainerCommon"].map(def),
+    unevaluatedProperties: false,
+  });
+  ajv2019.addSchema(scenario("imageContainer", "nonComposeBase"), "image");
+  ajv2019.addSchema(scenario("dockerfileContainer", "nonComposeBase"), "dockerfile");
+  ajv2019.addSchema(scenario("composeContainer"), "compose");
   const feature = ajv07.compile(devcontainerFeatureSchema);
+
+  // emitted beside the validators so nothing at runtime reads schemas/, which is a
+  // submodule symlink: missing without the submodule, a plain file on Windows
+  interface JsonSchema {
+    properties?: Record<string, unknown>;
+    oneOf?: JsonSchema[];
+    allOf?: JsonSchema[];
+  }
+  const keysOf = (s: JsonSchema): string[] => [
+    ...Object.keys(s.properties ?? {}),
+    ...[...(s.oneOf ?? []), ...(s.allOf ?? [])].flatMap(keysOf),
+  ];
+  const definitions = baseSchema.definitions as Record<string, JsonSchema>;
+  const rootKeys = [
+    ...new Set(
+      [
+        "devContainerCommon",
+        "nonComposeBase",
+        "imageContainer",
+        "dockerfileContainer",
+        "composeContainer",
+      ].flatMap((name) => keysOf(definitions[name]!)),
+    ),
+  ].sort();
 
   // TODO: both schemas use `format: "uri"`, and without `ajv-formats` Ajv ignores it
   // (it warns `unknown format "uri" ignored` at compile time). Adding it would be a
@@ -51,6 +89,11 @@ export async function buildValidators(): Promise<void> {
   await Bun.write(
     path.join(outDir, "devContainer.base.validator.js"),
     standaloneCode(ajv2019, base),
+  );
+  await Bun.write(
+    path.join(outDir, "devContainer.scenarios.validator.js"),
+    standaloneCode(ajv2019, { image: "image", dockerfile: "dockerfile", compose: "compose" }) +
+      `\n/** Every top-level property any scenario accepts. */\nexport const rootKeys = ${JSON.stringify(rootKeys)};\n`,
   );
   await Bun.write(
     path.join(outDir, "devContainerFeature.validator.js"),
