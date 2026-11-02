@@ -1,0 +1,26 @@
+{
+  "name": "dcx",
+  "displayName": "dcx: devcontainer.json linter",
+  "description": "Lints devcontainer.json as you type: typos, invalid values, and settings that don't fit the config's setup.",
+  "version": "0.1.0",
+  "publisher": "lonhutt",
+  "license": "MIT",
+  "repository": "https://github.com/lonhutt/dcx",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Linters"
+  ],
+  "activationEvents": [
+    "onLanguage:json",
+    "onLanguage:jsonc",
+    "workspaceContains:**/.devcontainer/**/devcontainer.json",
+    "workspaceContains:**/.devcontainer.json"
+  ],
+  "main": "dist/extension.js",
+  "scripts": {
+    "build": "bun build src/extension.ts --target=node --format=cjs --external vscode --minify --outfile dist/extension.js",
+    "package": "bun run build && bunx @vscode/vsce@4.0.0 package --no-dependencies --skip-license"
+  }
+}
