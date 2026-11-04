@@ -187,7 +187,7 @@ describe("truncated input never throws, and spans stay in bounds", () => {
 // through the codebase. Mentions in comments are fine, imports aren't.
 test("nothing outside src/jsonc imports jsonc-parser", async () => {
   const src = join(import.meta.dir, "..");
-  const importsParser = /(?:from|import)\s*\(?\s*["']jsonc-parser["']/;
+  const importsParser = /(?:from|import)\s*\(?\s*["']jsonc-parser(?:\/[^"']*)?["']/;
   const offenders: string[] = [];
   for await (const path of new Bun.Glob("**/*.ts").scan({ cwd: src, absolute: true })) {
     if (relative(src, path).startsWith("jsonc")) continue;

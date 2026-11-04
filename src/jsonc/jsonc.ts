@@ -6,7 +6,9 @@
  * as {@link Range}; no conversion needed.
  */
 
-import { parseTree, type Node, type ParseError } from "jsonc-parser";
+// The ESM build, not the package's default UMD one: UMD loads its own files with runtime
+// require() calls a bundler can't follow, so a Node-target bundle breaks on load.
+import { parseTree, type Node, type ParseError } from "jsonc-parser/lib/esm/main.js";
 import { LineIndex, type Range } from "../position/position";
 
 export type { Node, ParseError };
@@ -17,7 +19,7 @@ export {
   getNodeValue,
   modify,
   printParseErrorCode,
-} from "jsonc-parser";
+} from "jsonc-parser/lib/esm/main.js";
 
 /** A parsed devcontainer.json; frozen, built once per text. */
 export interface Document {
