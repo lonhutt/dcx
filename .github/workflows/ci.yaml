@@ -86,3 +86,6 @@ jobs:
 
       - run: bun install --frozen-lockfile
       - run: bun run build
+
+      # dog-food: lint our own devcontainer.json with the binary just built
+      - run: ./dist/dcx check

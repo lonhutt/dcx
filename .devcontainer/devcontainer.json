@@ -1,0 +1,12 @@
+{
+  "name": "dcx",
+  "build": { "dockerfile": "Dockerfile" },
+  "remoteUser": "bun",
+  // schemas/ is a symlink into the submodule; a clone-in-volume won't have it yet
+  "postCreateCommand": "git submodule update --init && bun install --frozen-lockfile",
+  "customizations": {
+    "vscode": {
+      "extensions": ["esbenp.prettier-vscode", "oven.bun-vscode"]
+    }
+  }
+}
