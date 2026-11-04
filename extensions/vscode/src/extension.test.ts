@@ -60,4 +60,4 @@ test("the bundled extension lints open devcontainer.json files under Node", asyn
     ],
     errors: [],
   });
-});
+}, 30_000); // a build plus a cold node start; windows runners blow through the 5s default
