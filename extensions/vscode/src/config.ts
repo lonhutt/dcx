@@ -1,4 +1,4 @@
-import * as vscode from "vscode";
+import { type ConfigurationScope, workspace } from "vscode";
 
 /** The extension's settings, as `dcx.*` in settings.json. */
 export interface DcxConfig {
@@ -17,8 +17,8 @@ export interface DcxConfig {
 /** Settings that only apply after a reload; changing one says so instead of half-applying. */
 export const NEEDS_RELOAD: readonly (keyof DcxConfig)[] = ["path"];
 
-export function readConfig(scope?: vscode.ConfigurationScope): DcxConfig {
-  const c = vscode.workspace.getConfiguration("dcx", scope);
+export function readConfig(scope?: ConfigurationScope): DcxConfig {
+  const c = workspace.getConfiguration("dcx", scope);
   return {
     enable: c.get("enable", true),
     path: c.get("path", ""),

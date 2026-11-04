@@ -1,6 +1,15 @@
 import { homedir } from "node:os";
 import { dirname, isAbsolute, join } from "node:path";
-import * as vscode from "vscode";
+import {
+  commands,
+  type ExtensionContext,
+  languages,
+  Range,
+  type TextDocument,
+  window,
+  workspace,
+  WorkspaceEdit,
+} from "vscode";
 import { parse } from "../../../src/jsonc/jsonc";
 import { analyze } from "../../../src/lint/analyze";
 import { fixDocument } from "../../../src/lint/fix";
@@ -11,15 +20,14 @@ import { NodeFS } from "../../../src/vfs/nodefs";
 import { NEEDS_RELOAD, readConfig, type DcxConfig } from "./config";
 import { toDiagnostics } from "./diagnostics";
 
-const isDevcontainer = (doc: vscode.TextDocument) =>
-  /(^|[\\/])\.?devcontainer\.json$/.test(doc.fileName);
+const isDevcontainer = (doc: TextDocument) => /(^|[\\/])\.?devcontainer\.json$/.test(doc.fileName);
 
 const TYPING_DELAY_MS = 300;
 
 /** Lints devcontainer.json files on open, and on save or as you type. */
-export function activate(context: vscode.ExtensionContext): void {
-  const collection = vscode.languages.createDiagnosticCollection("dcx");
-  const output = vscode.window.createOutputChannel("dcx");
+export function activate(context: ExtensionContext): void {
+  const collection = languages.createDiagnosticCollection("dcx");
+  const output = window.createOutputChannel("dcx");
   const fs = new NodeFS();
   let config = readConfig();
   let resolver = newResolver(config);
@@ -33,7 +41,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const warned = new Set<string>();
 
   function newResolver(c: DcxConfig) {
-    const folder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    const folder = workspace.workspaceFolders?.[0]?.uri.fsPath;
     const configPath =
       c.configPath &&
       (isAbsolute(c.configPath) || !folder ? c.configPath : join(folder, c.configPath));
@@ -46,7 +54,7 @@ export function activate(context: vscode.ExtensionContext): void {
     });
   }
 
-  async function lint(doc: vscode.TextDocument): Promise<void> {
+  async function lint(doc: TextDocument): Promise<void> {
     if (!isDevcontainer(doc) || doc.uri.scheme !== "file") return;
     const uri = doc.uri.toString();
     if (!config.enable) return void collection.delete(doc.uri);
@@ -74,20 +82,20 @@ export function activate(context: vscode.ExtensionContext): void {
     } catch (err) {
       if (ac.signal.aborted) return;
       collection.delete(doc.uri);
-      const name = vscode.workspace.asRelativePath(doc.uri);
+      const name = workspace.asRelativePath(doc.uri);
       const message =
         err instanceof ConfigError ? `invalid config ${err.message}` : (err as Error).message;
       output.appendLine(`couldn't lint ${name}: ${(err as Error)?.stack ?? message}`);
       if (!failing.has(uri)) {
         failing.add(uri);
-        void vscode.window.showErrorMessage(`dcx couldn't lint ${name}: ${message}`);
+        void window.showErrorMessage(`dcx couldn't lint ${name}: ${message}`);
       }
     } finally {
       if (running.get(uri) === ac) running.delete(uri);
     }
   }
 
-  function onType(doc: vscode.TextDocument) {
+  function onType(doc: TextDocument) {
     if (config.run !== "onType" || !isDevcontainer(doc)) return;
     const uri = doc.uri.toString();
     clearTimeout(timers.get(uri));
@@ -97,20 +105,20 @@ export function activate(context: vscode.ExtensionContext): void {
     );
   }
 
-  const lintOpen = () => Promise.all(vscode.workspace.textDocuments.map(lint));
+  const lintOpen = () => Promise.all(workspace.textDocuments.map(lint));
 
   async function lintWorkspace() {
-    const files = await vscode.workspace.findFiles(
+    const files = await workspace.findFiles(
       "{**/.devcontainer/**/devcontainer.json,**/.devcontainer.json}",
       "**/node_modules/**",
     );
-    for (const file of files) await lint(await vscode.workspace.openTextDocument(file));
+    for (const file of files) await lint(await workspace.openTextDocument(file));
   }
 
   async function fixAll() {
-    const doc = vscode.window.activeTextEditor?.document;
+    const doc = window.activeTextEditor?.document;
     if (!doc || !isDevcontainer(doc))
-      return void vscode.window.showInformationMessage("dcx: open a devcontainer.json to fix");
+      return void window.showInformationMessage("dcx: open a devcontainer.json to fix");
     const path = doc.uri.fsPath;
     const settings = await resolver.for(dirname(path));
     const extra = await services.forConfig(settings);
@@ -120,15 +128,10 @@ export function activate(context: vscode.ExtensionContext): void {
       path,
       async (d) => (await analyze(d, path, { fs, config: settings, ...extra })).diagnostics,
     );
-    if (fixed.text === before)
-      return void vscode.window.showInformationMessage("dcx: nothing to fix");
-    const edit = new vscode.WorkspaceEdit();
-    edit.replace(
-      doc.uri,
-      new vscode.Range(doc.positionAt(0), doc.positionAt(before.length)),
-      fixed.text,
-    );
-    await vscode.workspace.applyEdit(edit);
+    if (fixed.text === before) return void window.showInformationMessage("dcx: nothing to fix");
+    const edit = new WorkspaceEdit();
+    edit.replace(doc.uri, new Range(doc.positionAt(0), doc.positionAt(before.length)), fixed.text);
+    await workspace.applyEdit(edit);
   }
 
   function restart() {
@@ -144,10 +147,10 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     collection,
     output,
-    vscode.workspace.onDidOpenTextDocument(lint),
-    vscode.workspace.onDidSaveTextDocument(lint),
-    vscode.workspace.onDidChangeTextDocument((e) => onType(e.document)),
-    vscode.workspace.onDidCloseTextDocument((doc) => {
+    workspace.onDidOpenTextDocument(lint),
+    workspace.onDidSaveTextDocument(lint),
+    workspace.onDidChangeTextDocument((e) => onType(e.document)),
+    workspace.onDidCloseTextDocument((doc) => {
       const uri = doc.uri.toString();
       running.get(uri)?.abort();
       clearTimeout(timers.get(uri));
@@ -155,23 +158,23 @@ export function activate(context: vscode.ExtensionContext): void {
       failing.delete(uri);
     }),
     // an edited .dcx.yaml changes every result; the resolver caches what it read
-    vscode.workspace.onDidSaveTextDocument((doc) => {
+    workspace.onDidSaveTextDocument((doc) => {
       if (/(^|[\\/])\.dcx\.(ya?ml|json)$/.test(doc.fileName)) void restart();
     }),
-    vscode.workspace.onDidChangeConfiguration((e) => {
+    workspace.onDidChangeConfiguration((e) => {
       if (!e.affectsConfiguration("dcx")) return;
       const before = config;
       config = readConfig();
       if (NEEDS_RELOAD.some((k) => before[k] !== config[k]))
-        void vscode.window.showInformationMessage(
+        void window.showInformationMessage(
           "dcx: reload the window for the new dcx.path to take effect",
         );
       void restart();
     }),
-    vscode.commands.registerCommand("dcx.lintWorkspace", lintWorkspace),
-    vscode.commands.registerCommand("dcx.fixAll", fixAll),
-    vscode.commands.registerCommand("dcx.restartServer", restart),
-    vscode.commands.registerCommand("dcx.showOutput", () => output.show()),
+    commands.registerCommand("dcx.lintWorkspace", lintWorkspace),
+    commands.registerCommand("dcx.fixAll", fixAll),
+    commands.registerCommand("dcx.restartServer", restart),
+    commands.registerCommand("dcx.showOutput", () => output.show()),
   );
 }
 

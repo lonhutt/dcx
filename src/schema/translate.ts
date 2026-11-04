@@ -1,5 +1,11 @@
 import type { ErrorObject, ValidateFunction } from "ajv";
-import * as validators from "./generated/devContainer.scenarios.validator.js";
+import {
+  compose,
+  definitionKeys,
+  dockerfile,
+  image,
+  rootKeys,
+} from "./generated/devContainer.scenarios.validator.js";
 import { findNodeAtLocation, rangeOf, type Node } from "../jsonc/jsonc";
 import type { DevContainer } from "../model/model";
 import type { Range } from "../position/position";
@@ -30,8 +36,8 @@ const LABEL: Record<Validator, string> = {
   compose: "a Docker Compose config",
 };
 
-const { definitionKeys } = validators;
-const ROOT_KEYS = new Set(validators.rootKeys);
+const VALIDATORS = { image, dockerfile, compose } as unknown as Record<Validator, ValidateFunction>;
+const ROOT_KEYS = new Set(rootKeys);
 const SOURCE_KEYS = new Set(["image", "build", "dockerFile", "dockerComposeFile"]);
 const NON_COMPOSE_ONLY = new Set(
   definitionKeys.nonCompose.filter((k) => !definitionKeys.compose.includes(k)),
@@ -59,7 +65,7 @@ export function schemaErrors(model: DevContainer): TranslatedError[] {
   const root = model.doc.root;
   if (root?.type !== "object") return [];
   const scenario = validatorFor(model);
-  const validate = (validators as unknown as Record<Validator, ValidateFunction>)[scenario];
+  const validate = VALIDATORS[scenario];
   const value = Object.fromEntries([...model.properties].map(([k, f]) => [k, f.value]));
   if (validate(value)) return [];
   return relevant(validate.errors!, model.properties.has("build"))
