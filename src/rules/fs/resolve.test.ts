@@ -53,7 +53,8 @@ describe("resolveRef with real symlinks", () => {
   let outside: string;
   let canLink = true;
   beforeAll(() => {
-    const base = realpathSync(mkdtempSync(join(tmpdir(), "dcx-resolve-")));
+    // native: the JS realpath keeps Windows 8.3 names (RUNNER~1), BunFS.realpath expands them
+    const base = realpathSync.native(mkdtempSync(join(tmpdir(), "dcx-resolve-")));
     root = join(base, "repo");
     outside = join(base, "outside");
     mkdirSync(join(root, ".devcontainer"), { recursive: true });
