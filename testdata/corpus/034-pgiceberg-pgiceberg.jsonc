@@ -1,0 +1,66 @@
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+{
+    "build": {
+        "dockerfile": "Dockerfile",
+        "options": [
+            "--network=host"
+        ],
+    },
+    "runArgs": [
+        "--network=host",
+        "--ulimit=core=-1",
+        "--cap-add=SYS_ADMIN",
+        "--cap-add=SYS_PTRACE",
+        "--cap-add=PERFMON",
+        "--cap-add=SYS_NICE",   // allow NUMA page inquiry
+        "--security-opt",
+        "seccomp=unconfined",
+        "--privileged"
+    ],
+    "forwardPorts": [
+        5432
+    ],
+    "postCreateCommand": "bash ${containerWorkspaceFolder}/.devcontainer/post-create.sh",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "eamodio.gitlens",
+                "github.vscode-github-actions",
+                "GitHub.copilot",
+                "llvm-vs-code-extensions.vscode-clangd",
+                "ms-vscode.cmake-tools",
+                "ms-vscode.cpptools",
+                "ms-vscode.cpptools-themes",
+                "ms-vscode.hexeditor",
+                "ms-vscode.makefile-tools",
+                "ms-vsliveshare.vsliveshare",
+                "rioj7.command-variable",
+                "ash-blade.postgresql-hacker-helper"
+            ],
+            "settings": {
+                "C_Cpp.intelliSenseEngine": "disabled",
+                "clangd.arguments": [
+                    "--background-index",
+                    "--header-insertion=never",
+                    "--completion-style=detailed",
+                    "--query-driver=/usr/bin/g++-14,/usr/bin/gcc-14,/usr/lib/ccache/*,/usr/bin/c++,/usr/bin/g++"
+                ],
+                "files.exclude": {
+                    "**/*.o": true,
+                    "**/.deps/": true
+                },
+            }
+        }
+    },
+}

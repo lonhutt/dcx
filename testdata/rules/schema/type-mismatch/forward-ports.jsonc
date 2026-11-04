@@ -1,0 +1,5 @@
+{
+  "image": "node:22",
+  "forwardPorts": "3000", // want: error: "forwardPorts" must be an array
+  "postCreateCommand": 1 // want: error: "postCreateCommand" must be a string or array or object
+}

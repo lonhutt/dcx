@@ -1,0 +1,9 @@
+{
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "NODE_VERSION": "${localEnv:NODE_VERSION}", // want: info: Build arg "NODE_VERSION" comes from the host environment, so it can differ per machine
+      "VARIANT": "bookworm"
+    }
+  }
+}

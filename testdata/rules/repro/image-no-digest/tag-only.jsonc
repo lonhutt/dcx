@@ -1,0 +1,3 @@
+{
+  "image": "node:22" // want: warning: Image "node:22" isn't pinned by digest
+}

@@ -1,0 +1,60 @@
+{
+  "name": "Azure Terraform Development",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "azure-dev",
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "stopCompose",
+  
+  // Set the user context for VS Code
+  "remoteUser": "admin",
+  
+  // Configure VS Code settings
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.profiles.linux": {
+          "bash": {
+            "path": "/bin/bash"
+          }
+        }
+      },
+      
+      // Recommended extensions for Azure/Terraform development
+      "extensions": [
+        "ms-vscode.azure-account",
+        "ms-azuretools.vscode-azureresourcegroups",
+        "ms-azuretools.vscode-azurestorage",
+        "ms-azuretools.vscode-azurefunctions",
+        "ms-azuretools.vscode-azuretools",
+        "hashicorp.terraform",
+        "ms-vscode.powershell",
+        "GitLab.gitlab-workflow"
+      ]
+    }
+  },
+  
+  // Forward ports (add any specific ports you need)
+  "forwardPorts": [],
+  
+  // Use 'postCreateCommand' to run commands after the container is created
+  "postCreateCommand": "sudo chown -R admin:admin /home/admin/.azure 2>/dev/null || true && echo 'Dev container ready! Azure CLI and Terraform are installed.'",
+  
+  // Mount additional volumes if needed
+  "mounts": [
+    "source=${localEnv:USERPROFILE}${localEnv:HOME}/.azure,target=/home/admin/.azure,type=bind,consistency=cached"
+  ],
+  
+  // Environment variables
+  "containerEnv": {
+    "TERM": "xterm-256color"
+  },
+  // Features to install
+  "features": {},
+
+  // Init flag to fix potential startup issues
+  "init": true,
+
+  // Privileged flag if needed for Docker-in-Docker
+  "privileged": false
+}

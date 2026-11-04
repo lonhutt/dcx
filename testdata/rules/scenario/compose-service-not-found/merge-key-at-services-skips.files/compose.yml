@@ -1,0 +1,4 @@
+x-base: &base
+  app: { image: node:22 }
+services:
+  <<: *base

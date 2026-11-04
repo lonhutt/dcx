@@ -1,0 +1,5 @@
+{
+  "image": "node:22",
+  // dcx-disable-next-line security/privileged -- docker-in-docker needs it
+  "privileged": true
+}

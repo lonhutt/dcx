@@ -1,0 +1,31 @@
+{
+    "name": "PlatformIO C++ Embedded Development",
+    
+    // 1. NEU: Basis-Image, das nur die nötigsten Tools enthält (optional, kann beibehalten werden)
+    "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+
+    // 2. NEU: Fügt Python und pip über ein Dev Container Feature hinzu
+    "features": {
+        "ghcr.io/devcontainers/features/python:1": {
+            // Installiert eine stabile Python-Version (z.B. 3.11) und die Tools
+            "version": "3.11", 
+            "installTools": true 
+        }
+    },
+    
+    // 3. BEIBEHALTEN: Wird erst ausgeführt, nachdem Python installiert wurde
+    "postCreateCommand": "pip install platformio",
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "platformio.platformio-ide", 
+                "ms-vscode.cpptools",
+                "ms-python.python",
+                "eamodio.gitlens"
+            ]
+        }
+    },
+
+    "remoteUser": "root" 
+}

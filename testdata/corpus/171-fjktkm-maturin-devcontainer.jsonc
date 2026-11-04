@@ -1,0 +1,37 @@
+{
+	"name": "maturin",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	"mounts": [
+		{
+			"source": "uv",
+			"target": "/home/vscode/.cache/uv",
+			"type": "volume"
+		},
+		{
+			"source": "venv-${devcontainerId}",
+			"target": "${containerWorkspaceFolder}/.venv",
+			"type": "volume"
+		},
+		{
+			"source": "target-${devcontainerId}",
+			"target": "${containerWorkspaceFolder}/target",
+			"type": "volume"
+		}
+	],
+	"containerEnv": {
+		"UV_LINK_MODE": "copy"
+	},
+	"onCreateCommand": "sudo chown -R vscode:vscode /home/vscode/.cache/uv .venv target",
+	"postCreateCommand": "uv sync",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.vscode-python-envs",
+				"rust-lang.rust-analyzer",
+				"tamasfe.even-better-toml"
+			]
+		}
+	}
+}

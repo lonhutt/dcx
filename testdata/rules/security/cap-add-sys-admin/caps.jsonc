@@ -1,0 +1,7 @@
+{
+  "image": "node:22",
+  "capAdd": [
+    "SYS_PTRACE",
+    "cap_sys_admin" // want: warning: SYS_ADMIN is close to full privilege
+  ]
+}

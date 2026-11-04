@@ -1,0 +1,8 @@
+extension-sources:
+  - id: org
+    kind: policy
+    allowed:
+      "*": false
+      ms-python: true
+      microsoft: true
+      ms-vscode.cpptools: false

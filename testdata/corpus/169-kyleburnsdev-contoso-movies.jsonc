@@ -1,0 +1,46 @@
+{
+    "name": "C# (.NET)",
+    "image": "mcr.microsoft.com/devcontainers/dotnet:0-7.0",
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:1": {
+            "installZsh": true,
+            "installOhMyZsh": true,
+            "upgradePackages": true,
+            "username": "vscode",
+            "uid": "1000",
+            "gid": "1000"
+        },
+        "ghcr.io/devcontainers/features/azure-cli:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "lts",
+            "nodeGypDependencies": true,
+            "nvmInstallPath": "/usr/local/share/nvm"
+        }
+    },
+    "forwardPorts": [
+        7071,
+        5000, 5001,
+        4280
+    ],
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                    "ms-dotnettools.csharp",
+                    "ms-vscode.vscode-node-azure-pack",
+                    "ms-azuretools.vscode-bicep",
+                    "ms-azuretools.vscode-azurefunctions",
+                    "ms-vscode.azure-account",
+                    "ms-azuretools.vscode-azureresourcegroups",
+                    "azurite.azurite"
+                ]
+        }
+    },
+    "postCreateCommand": "/bin/bash ./.devcontainer/post-create.sh > ~/post-create.log",
+    "remoteUser": "vscode",
+    "containerEnv": {
+        "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+        "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated"
+    }
+}

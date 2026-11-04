@@ -1,0 +1,5 @@
+{
+  "image": "node:22",
+  "extensions": ["dbaeumer.vscode-eslint", "golang.go"], // want: warning: Top-level "extensions" is deprecated; use "customizations.vscode.extensions"
+  "customizations": { "vscode": { "extensions": ["golang.go"] } }
+}

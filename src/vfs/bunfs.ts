@@ -1,7 +1,7 @@
 import type { DirEntry, FileSystem, FileType, Stats } from "./vfs";
 import { byName } from "./vfs";
 import { join } from "node:path";
-import { readdir } from "node:fs/promises";
+import { readdir, realpath, stat } from "node:fs/promises";
 
 /**
  * The on-disk {@link FileSystem} the CLI uses. Bun-only APIs (`Bun.file` etc.) stay in
@@ -37,6 +37,15 @@ export class BunFS implements FileSystem {
 
     return entries.sort(byName);
   }
+
+  async realpath(path: string): Promise<string | undefined> {
+    try {
+      return await realpath(path);
+    } catch (err) {
+      if (isMissing(err)) return undefined;
+      throw err;
+    }
+  }
 }
 
 /**
@@ -44,7 +53,7 @@ export class BunFS implements FileSystem {
  * from a real I/O failure such as `EACCES` or `ELOOP`, which it rejects with.
  * `ENOTDIR` counts as absence: nothing is at a path below a file.
  */
-function isMissing(err: unknown): boolean {
+export function isMissing(err: unknown): boolean {
   const code = (err as NodeJS.ErrnoException)?.code;
   return code === "ENOENT" || code === "ENOTDIR";
 }
@@ -58,13 +67,13 @@ function isMissing(err: unknown): boolean {
  */
 async function targetKind(path: string): Promise<FileType> {
   try {
-    return getFileType(await Bun.file(path).stat());
+    return getFileType(await stat(path));
   } catch {
     return "other";
   }
 }
 
 /** Accepts both a `Stats` and a `Dirent`, which agree on these two predicates. */
-function getFileType(entry: { isFile(): boolean; isDirectory(): boolean }): FileType {
+export function getFileType(entry: { isFile(): boolean; isDirectory(): boolean }): FileType {
   return entry.isFile() ? "file" : entry.isDirectory() ? "directory" : "other";
 }

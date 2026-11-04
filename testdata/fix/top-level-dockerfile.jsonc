@@ -1,0 +1,8 @@
+{
+  // the dev image
+  "name": "api",
+  "dockerFile": "Dockerfile", // relative to .devcontainer
+  "context": "..",
+  /* keep me */
+  "remoteUser": "node"
+}

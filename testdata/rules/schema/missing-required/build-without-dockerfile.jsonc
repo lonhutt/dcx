@@ -1,0 +1,3 @@
+{
+  "build": { "dockerfle": "Dockerfile" } // want: error: "build" is missing required property "dockerfile"
+}

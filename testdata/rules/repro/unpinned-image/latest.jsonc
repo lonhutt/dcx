@@ -1,0 +1,4 @@
+{
+  "name": "x",
+  "image": "mcr.microsoft.com/devcontainers/base:latest" // want: warning: Image "mcr.microsoft.com/devcontainers/base:latest" uses ":latest", which moves
+}

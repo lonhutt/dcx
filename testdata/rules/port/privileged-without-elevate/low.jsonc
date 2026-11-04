@@ -1,0 +1,9 @@
+{
+  "image": "node:22",
+  "forwardPorts": [
+    80, // want: info: Port 80 is privileged; forwarding it locally needs "elevateIfNeeded"
+    443,
+    8080
+  ],
+  "portsAttributes": { "443": { "elevateIfNeeded": true } }
+}

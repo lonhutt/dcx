@@ -1,0 +1,6 @@
+{
+  "image": "x",
+  "shutdownAction": "no",
+  "waitFor": "postCreate",
+  "userEnvProbe": "bash"
+}

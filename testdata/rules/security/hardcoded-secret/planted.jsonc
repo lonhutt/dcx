@@ -1,0 +1,20 @@
+{
+  "image": "node:22",
+  "containerEnv": {
+    "AWS_ACCESS_KEY_ID": "AKIAIOSFODNN7EXAMPLE", // want: error: "containerEnv.AWS_ACCESS_KEY_ID" looks like an AWS access key ID, committed in plain text
+    "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}",
+    "NODE_ENV": "development"
+  },
+  "remoteEnv": {
+    "API_TOKEN": "q8Rk2Lm9Xw4Vt7Pb", // want: error: "remoteEnv.API_TOKEN" looks like a credential-shaped value for "API_TOKEN", committed in plain text
+    "PATH": "${containerEnv:PATH}:/opt/bin"
+  },
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "SECRET": "Zq8Rk2Lm9Xw4Vt7Pb3Nc6Hy1Js5Gd0FaQe8Ur2Wo", // want: error: "build.args.SECRET" looks like a credential-shaped value for "SECRET", committed in plain text
+      "PASSWORD": "vscode",
+      "VARIANT": "3.12-bookworm"
+    }
+  }
+}

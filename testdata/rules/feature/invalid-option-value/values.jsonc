@@ -1,0 +1,11 @@
+{
+  "image": "python:3.12",
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.13",
+      "installTools": "yes", // want: error: "installTools" is a boolean option; use true or false
+      "toolsToInstall": 3, // want: error: "toolsToInstall" is a string option
+      "optimize": "max" // want: error: "optimize" must be one of "none", "speed"
+    }
+  }
+}

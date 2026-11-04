@@ -1,0 +1,13 @@
+{
+  "image": "node:22",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python@2024.1.0",
+        "ms-python.debugpy@1.0.0", // want: warning: The "org" policy doesn't allow version 1.0.0 of "ms-python.debugpy" (allowed: 2024.2.0)
+        "ms-python.vscode-pylance", // want: warning: The "org" policy only allows "ms-python.vscode-pylance" at 2024.3.0, and this asks for the latest
+        "golang.go"
+      ]
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "image": "node:22",
+  "postCreateCommand": "echo ${HOME} ${PATH:-/usr/bin}",
+  "remoteEnv": { "PATH": "${containerEnv:PATH}:/opt/bin", "W": "${containerWorkspaceFolderBasename}" }
+}

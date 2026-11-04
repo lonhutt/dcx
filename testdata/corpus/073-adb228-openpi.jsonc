@@ -1,0 +1,19 @@
+{
+  "name": "OpenPI GPU Development (Simplified)",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  "features": {},
+  "hostRequirements": {
+    "gpu": true
+  },
+  "runArgs": ["--gpus", "all"],
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.pylance"
+      ]
+    }
+  },
+  "remoteUser": "vscode"
+}

@@ -1,0 +1,1802 @@
+[
+  {
+    "file": "001-parcel-bundler-parcel.jsonc",
+    "repo": "parcel-bundler/parcel",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "0256839dee32fcca0a0cfd72f48e70ab757fa8ec",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "002-alibaba-loongcollector.jsonc",
+    "repo": "alibaba/loongcollector",
+    "path": ".devcontainer/devcontainer.json.lldb",
+    "commit": "b1f36c610fe77de015b5e625c26b517724879e1a",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "003-keras-team-keras-tuner.jsonc",
+    "repo": "keras-team/keras-tuner",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "48f671490201f6b873e4d27dee8df6f406256ca4",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "004-zenstackhq-zenstack.jsonc",
+    "repo": "zenstackhq/zenstack",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "d44e489ee3923e5d0ff86bf9dc598764c6802e09",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "005-nvim-java-nvim-java.jsonc",
+    "repo": "nvim-java/nvim-java",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "db5536b4cb3da153084e50016596fd0e3a319aae",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "006-catusf-tudien.jsonc",
+    "repo": "catusf/tudien",
+    "path": ".devcontainer/devcontainer.json.old",
+    "commit": "a7dd918ecc67de8c2d15034f885d919b9295eba4",
+    "licence": "CC0-1.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "007-epinio-epinio.jsonc",
+    "repo": "epinio/epinio",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "c93aa63e43844be68f3f396687537beb26b19864",
+    "licence": "Apache-2.0",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "008-danielfernau-unifi-protect-video-downloader.jsonc",
+    "repo": "danielfernau/unifi-protect-video-downloader",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "3513691b034628350750671d2cda0b58344c76f8",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "009-netbrain-zwift.jsonc",
+    "repo": "netbrain/zwift",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "445efbdd36cd82ea75cbc75a52e790c4811de734",
+    "licence": "Unlicense",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "010-shugo-textbringer.jsonc",
+    "repo": "shugo/textbringer",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "c0cb89f37c1cc85e07e7dc97d410eb8d4c9a9d86",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "011-kbialek-deye-inverter-mqtt.jsonc",
+    "repo": "kbialek/deye-inverter-mqtt",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "d555fe046152208c5cb2e223d23fe644b5b17b80",
+    "licence": "Apache-2.0",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "012-billchurch-bhyve-mqtt.jsonc",
+    "repo": "billchurch/bhyve-mqtt",
+    "path": ".devcontainer/devcontainer.json.bak",
+    "commit": "ac76e9cdc0b4dd232ff1e2c380599208e8e08441",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "013-proffesor-for-testing-agentic-qe.jsonc",
+    "repo": "proffesor-for-testing/agentic-qe",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "a24153a3a55ed65fe908bcb199871cfb8d1c0f82",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "014-kernel-kernel-images.jsonc",
+    "repo": "kernel/kernel-images",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "06f5f9f591380977d632efaaa9b075025e79de96",
+    "licence": "Apache-2.0",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "015-gia-uh-autogoal.jsonc",
+    "repo": "gia-uh/autogoal",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "118a5be1bab926981f48c2d19b487ec859426fca",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "016-green-software-foundation-if.jsonc",
+    "repo": "Green-Software-Foundation/if",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "97ebcd2090e1f60205cc23679c61902af5c598f1",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "017-gilesknap-mciwb.jsonc",
+    "repo": "gilesknap/mciwb",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "694358fa687eb578bc363e84d5ba010ff7244f80",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "018-pjedge-longshot.jsonc",
+    "repo": "pjedge/longshot",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "99ace95bada7b360dc338deae65073590d6dc35d",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "019-contentful-contentful-java.jsonc",
+    "repo": "contentful/contentful.java",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "e0d2cc15d325cfd13bc6886fe32e80142d447fa5",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "020-googlecloudplatform-accelerated-platforms.jsonc",
+    "repo": "GoogleCloudPlatform/accelerated-platforms",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "c24cf2093e185e788f81fd321392d361b52c1adc",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "021-coder3101-protols.jsonc",
+    "repo": "coder3101/protols",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "534670179a83316b7a25cbfc5fb1a5796f8d45da",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "022-kyriosdata-rnds.jsonc",
+    "repo": "kyriosdata/rnds",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "32737e333c1983f33f3295c9916233e923fd7946",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "023-yoshimi-i-lab-template.jsonc",
+    "repo": "yoshimi-I/lab_template",
+    "path": ".devcontainer/devcontainer.json.bak",
+    "commit": "1fa110076a261c60edfc5deb808a67d53ccfa52b",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "024-yuenm18-ooxml-viewer-vscode.jsonc",
+    "repo": "yuenm18/ooxml-viewer-vscode",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "82947f0fce6512e8226b383a40b6cfa07b1208b6",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "025-yanndebray-matlab-with-python-book.jsonc",
+    "repo": "yanndebray/matlab-with-python-book",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "02f6334bcb279cf8b091c7cd181e25a30ceb4486",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "026-lsc-sde-lsc-sde.jsonc",
+    "repo": "lsc-sde/lsc-sde",
+    "path": ".devcontainer/devcontainer.json~",
+    "commit": "0bf0478b0c6cf1737f23bbb33cf07eb6107027da",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "027-testcontainers-testcontainers-elixir.jsonc",
+    "repo": "testcontainers/testcontainers-elixir",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "5ed40540001f20be31473cfdd62cbe398ee63540",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "028-dialpad-dialtone.jsonc",
+    "repo": "dialpad/dialtone",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "b0f6007d037e2e53486f013385ab7ce498682c71",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "029-mesosphere-konvoy-image-builder.jsonc",
+    "repo": "mesosphere/konvoy-image-builder",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "ea411620975819a240cd088d4a66d9ff37e8ecf0",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "030-komoju-komoju-woocommerce.jsonc",
+    "repo": "komoju/komoju-woocommerce",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "88be1e70dfdd739af4387b936f139a777b56d317",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "031-fplaunchpad-sal.jsonc",
+    "repo": "fplaunchpad/sal",
+    "path": ".devcontainer/devcontainer.json.bak",
+    "commit": "223d4976b28d7df249c6c9d91475557ff9f1d196",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "032-tylerleonhardt-secretmanagement-lastpass.jsonc",
+    "repo": "TylerLeonhardt/SecretManagement.LastPass",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "074beaff7c3b139ce3dc7141e02c05656046d2d9",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "033-c2siorg-b0bot.jsonc",
+    "repo": "c2siorg/b0bot",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "7be52f1e10ea43f4f85b26dcce73bb2313f9d070",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "034-pgiceberg-pgiceberg.jsonc",
+    "repo": "pgiceberg/pgiceberg",
+    "path": ".devcontainer/devcontainer.json.template",
+    "commit": "4e604340a008f1ab962584fba9360dcc3fb41f5e",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "035-nonebot-adapter-telegram.jsonc",
+    "repo": "nonebot/adapter-telegram",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "6e04ada83674f6409dcf5bc3f9e86530b9f1de6c",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "036-radswn-t2r2.jsonc",
+    "repo": "radswn/t2r2",
+    "path": ".devcontainer/devcontainer.json.template",
+    "commit": "1c0a46060161af69b7d3585b1af035de6ae05a9f",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "037-thisismydesign-json-streamer.jsonc",
+    "repo": "thisismydesign/json-streamer",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "827859c1f162b297be1fb183b54dbbc0f2b825c0",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "038-uho-docker-forth.jsonc",
+    "repo": "uho/docker-forth",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "ea8a70000de1a729479ff180c5c179219fbbd2bc",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "039-fzi-forschungszentrum-informatik-ros-communicati.jsonc",
+    "repo": "fzi-forschungszentrum-informatik/ros_communication_devcontainer",
+    "path": ".devcontainer/devcontainer.json.template",
+    "commit": "a4303c2dd748bda28cf381d50f4cf9dcb477baef",
+    "licence": "BSD-3-Clause",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "040-chuchodavids-epgo.jsonc",
+    "repo": "Chuchodavids/EpGo",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "36c326276d513cd60b6c68f6fe8ca7ed62013233",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "041-fl550-simple-dwd-weatherforecast.jsonc",
+    "repo": "FL550/simple_dwd_weatherforecast",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "cef567399571eabc7b6fcb6d8bb9ed5155a3d6d0",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "042-thejsway-thejsway-code.jsonc",
+    "repo": "thejsway/thejsway-code",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "a4b8f28ee15e8e6f7cd51f67a7514156532b6b31",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "043-bemanproject-scope.jsonc",
+    "repo": "bemanproject/scope",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "d21f7e357dca3d795d45ff8f9b21fc20bef26b0a",
+    "licence": "Apache-2.0",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "044-qnimbus-node-red-contrib-openhab-v2.jsonc",
+    "repo": "qnimbus/node-red-contrib-openhab-v2",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "2e83a5ed9af4ca34637a4417dda6a60d7cfac649",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "045-ncar-micm.jsonc",
+    "repo": "NCAR/micm",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "e15898ce482a979594397144c76258e1ada6b79d",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "046-obarads-obarads-github-io.jsonc",
+    "repo": "Obarads/obarads.github.io",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "9ed35357d2734e6a44f1cbec6984cdad7767039e",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "047-meta-hermes.jsonc",
+    "repo": "meta/hermes",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "402777313ab33c96426efe4cc52da271460ab32d",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "048-flwrlabs-flower.jsonc",
+    "repo": "flwrlabs/flower",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "91e6c680b07b07b1193bbcc7755f21e8bd63eea4",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "049-devcontainers-features.jsonc",
+    "repo": "devcontainers/features",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "e56f59fa411304fa7ce9e76f88c7e3fefd2e41f1",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "050-thibautbaissac-super-admin.jsonc",
+    "repo": "ThibautBaissac/super_admin",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "197ec466b5cec68120c587225d980433a44fffd0",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "051-krumeto-oss-nlp-tools-demos.jsonc",
+    "repo": "krumeto/oss_nlp_tools_demos",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "5d212e4d37d8d58ce9eda978c861a653624d0dab",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "052-brog45-prologwebscanner.jsonc",
+    "repo": "brog45/prologWebScanner",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "086e5121a3e898121d98073971c39a0d892768ce",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "053-animmouse-socks5-proxy-codespaces.jsonc",
+    "repo": "AnimMouse/SOCKS5-Proxy-Codespaces",
+    "path": ".devcontainer/cloudflared/devcontainer.json",
+    "commit": "8b6c2c32d7a8eea4e7c5def041274cadde13cb27",
+    "licence": "MPL-2.0",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "054-gorse-io-pygorse.jsonc",
+    "repo": "gorse-io/PyGorse",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "1ba827a62b6aa78263372f334423e4f71c800c6a",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "055-hyperdemocracy-hyperdemocracy-workshop-2023-06.jsonc",
+    "repo": "hyperdemocracy/hyperdemocracy-workshop-2023-06",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "58f98bc2ef5ee91f26caa859a877a397feea7b2f",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "056-briandenicola-password-vault.jsonc",
+    "repo": "briandenicola/password-vault",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "14c16d8274112425136eea1d48038e228a6e58d3",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "057-mtanda-cloudwatch-read-adapter.jsonc",
+    "repo": "mtanda/cloudwatch_read_adapter",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "49ba736ebb973a3ea8544e4fe46838b04b334d4b",
+    "licence": "Apache-2.0",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "058-ncstudios-nctools.jsonc",
+    "repo": "NcStudios/NcTools",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "a90127614d67036d1c89bf559f682cd10a82819a",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "059-tidylabs-homebrew-cask.jsonc",
+    "repo": "tidylabs/homebrew-cask",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "e81e083060ac10b7a04a370632101d248bdbbaef",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "060-peter-murray-semver-data-action.jsonc",
+    "repo": "peter-murray/semver-data-action",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "096534327266864e217e0fb65903cb71df38aa20",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "061-sektek-synaptik-amqp.jsonc",
+    "repo": "sektek/synaptik-amqp",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "f9a857e772a0dae0a7b3e26049ad2b9d6667f036",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "062-emsilva-devcontainer.jsonc",
+    "repo": "emsilva/devcontainer",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "936db9373773156a39e321c40d3e16c0a94a3117",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "063-patrickmatthiesen-cantaro.jsonc",
+    "repo": "PatrickMatthiesen/Cantaro",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "9795402ea2143ee462069da3678e90dcf9cc8287",
+    "licence": "Apache-2.0",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "064-hanna-cirilla-poshlog-sinks-elasticsearch.jsonc",
+    "repo": "hanna-cirilla/PoShLog.Sinks.Elasticsearch",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "70cf2eea0fa734d5a5ff8de23e36c4467a1fc6bd",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "065-lodeval-forum-chomeur.jsonc",
+    "repo": "lodeval/forum_chomeur",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "ae82ce5c816d491b84a4b8cda608239695e897ca",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "066-majikmate-devcontainer-base.jsonc",
+    "repo": "majikmate/devcontainer-base",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "99fcf10082b0d7e45425695ae4f6bf886a4e3240",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "067-wwt-pure-ansible-demo.jsonc",
+    "repo": "wwt/pure-ansible-demo",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "72f1b75a25c4899cb09d1edffdb71dd5fe52fc3a",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "068-thetanil-hbf-examplecpp.jsonc",
+    "repo": "thetanil/hbf-examplecpp",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "6172bbf5daa76e268b9606e8cfd9729019ae31df",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "069-noahsmiths-server-subdomain-panel.jsonc",
+    "repo": "noahsmiths/server-subdomain-panel",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "69e28378f3e8a7e42981bc9c3fb4e21692829a50",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "070-youssefsabr-skills-code-with-codespaces.jsonc",
+    "repo": "youssefsabr/skills-code-with-codespaces",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "4410065fa5fa73196f305cc9fcdcf298854d26e0",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "071-mihadmohamed-ai-builder-os.jsonc",
+    "repo": "mihadmohamed/ai-builder-os",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "9fc36e4c77bfcbb79b70ab7ad5eec516ab556e1d",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "072-kenedythorne-copilotdemo.jsonc",
+    "repo": "kenedythorne/CopilotDEMO",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "00be43e508ec23dfea193c5193615dfaab541280",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "073-adb228-openpi.jsonc",
+    "repo": "adb228/openpi",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "c27c89e6f6d30ea8238353372ed22f25a653fd18",
+    "licence": "Apache-2.0",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "074-nereumattar-ep.jsonc",
+    "repo": "nereumattar/ep",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "d2443f2ef0348f8f59750d8a94dba424392a7648",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "075-daturasol-truebuilt-ml-engineer-test.jsonc",
+    "repo": "DaturaSol/truebuilt-ml-engineer-test",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "a8651822156ab8dccece86402d57159f1e91b900",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "076-phibreoptik-enablement-openpipeline-segments-iam.jsonc",
+    "repo": "phibreoptik/enablement-openpipeline-segments-iam",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "d0aff1e186f58edd090bf209e94831d44c7142fa",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "077-elenabli-wasm-search-widget.jsonc",
+    "repo": "elenabli/wasm-search-widget",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "acfa39b2171745d747b9774a925a81e45e0dbdc9",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "078-li-yaosong-lysine-os.jsonc",
+    "repo": "Li-Yaosong/lysine-os",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "bfc7ca8cc422f344829dc54d53b10fdc6b064b48",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "079-fe-alves777-skills-code-with-codespaces.jsonc",
+    "repo": "Fe-alves777/skills-code-with-codespaces",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "559e38f7d3fd71bb2ab88dc6e96047e065416890",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "080-rkwap-presidio.jsonc",
+    "repo": "rkwap/presidio",
+    "path": ".devcontainer/presidio-analyzer/devcontainer.json",
+    "commit": "b1e501bcf5bf5e98c28bf31906e29925b6460e50",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "081-cartography-cncf-cartography.jsonc",
+    "repo": "cartography-cncf/cartography",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "989ee0f45d5853ed108aa40a261cf6fbc341904f",
+    "licence": "Apache-2.0",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "082-cheriot-platform-cheriot-rtos.jsonc",
+    "repo": "CHERIoT-Platform/cheriot-rtos",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "d0684c41a379560c5d9065539795e2664c8e6f27",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "083-nogibjj-pooja-kabber-individual-project-2.jsonc",
+    "repo": "nogibjj/Pooja_Kabber_Individual_Project_2",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "f1c73a538d4f391aaabf03fc880ab03371ff83c6",
+    "licence": "CC0-1.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "084-ragrag-envoy.jsonc",
+    "repo": "ragrag/envoy",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "8de752adc2c0fcafd2f02497d2fe99407ebede66",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "085-zeiss-terraform-provider-openfga.jsonc",
+    "repo": "ZEISS/terraform-provider-openfga",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "c637bf17944a7e60b5fb0ab205e85c65570e1701",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "086-zapolab-rcc-drive-lib.jsonc",
+    "repo": "zapolab/rcc-drive-lib",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "7f363fc2f41f0510ac4d7a67122a7def752bba49",
+    "licence": "CC0-1.0",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "087-aire-one-deno-lint-curly.jsonc",
+    "repo": "Aire-One/deno-lint-curly",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "28c9e2d5b0d6efead4ea2695b46c101e36b4d46f",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "088-lvce-editor-git.jsonc",
+    "repo": "lvce-editor/git",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "eb824df2efcb39d226777f4e860fdcae3171459a",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "089-protonyx-game-manager.jsonc",
+    "repo": "protonyx/game-manager",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "6b965b4dea2f4afd08049f4754a6aea780497cd4",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "090-poshaj-cafesharp.jsonc",
+    "repo": "poshAJ/CAFESharp",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "036fb56fa6cc73ca4a211e29d09cb4c9d6f1a81b",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "091-ale-cas-pypaca.jsonc",
+    "repo": "Ale-Cas/pypaca",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "f559a3e78ff8edced8b933c6827aa8b69aafbee6",
+    "licence": "Apache-2.0",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "092-nanlabs-nan-data-engineering-labs.jsonc",
+    "repo": "nanlabs/nan-data-engineering-labs",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "1751de573f50e805dad8d8a78886f6ec71b381a4",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "093-reinhud-deep-learning-template.jsonc",
+    "repo": "reinhud/deep-learning-template",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "b3e7d764f3bdc8c84cdfc8a15402d2eccc3cf350",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "094-ghewaredevopsai-github-kind.jsonc",
+    "repo": "ghewaredevopsai/github-kind",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "dc5df925e7149bf486f56d8f6e2403e29199a801",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "095-ahmad4376-interviewprepapp.jsonc",
+    "repo": "ahmad4376/InterviewPrepApp",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "4116aa1d914f1104db299671bb724608089913a6",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "096-erauner12-kagent-detached.jsonc",
+    "repo": "erauner12/kagent-detached",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "67431ef673a8128ffed4d60317b93ed39c64e5e8",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "097-daelmaselli-mqtt-switchd.jsonc",
+    "repo": "daelmaselli/mqtt-switchd",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "fcd90d07ceaac7ca9fdc3a955018b5e370444027",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "098-callenlin-2027ct-mywebsitetask-callen-l.jsonc",
+    "repo": "CallenLin/2027CT_myWebsiteTask_Callen.L",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "402cedad6843414853d3e97fa2aec18dd8137588",
+    "licence": "Apache-2.0",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "099-gmacario-sample-python-webapp.jsonc",
+    "repo": "gmacario/sample-python-webapp",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "f192cffb623d428709a4e621a7b40a892bad19de",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "100-thesmuks-pike-ai-kb.jsonc",
+    "repo": "TheSmuks/pike-ai-kb",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "f0726768bebeffef9fee30fe51f273b1c24c6d09",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "101-elliott-farrall-rofi-plugins.jsonc",
+    "repo": "elliott-farrall/rofi-plugins",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "429989a18f02cbcd04a5d3236a99469322500077",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "102-ensody-ssh-agent-inject.jsonc",
+    "repo": "ensody/ssh-agent-inject",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "d1568eff887213916b193aeef45db9ab477fa603",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "103-aliyun-alibabacloud-servicemesh-api.jsonc",
+    "repo": "aliyun/alibabacloud-servicemesh-api",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "bb32454df71b3b322ade98ef8e34e41c34086a74",
+    "licence": "Apache-2.0",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "104-alexanderyw-adonis-drive-azure-storage.jsonc",
+    "repo": "AlexanderYW/Adonis-Drive-Azure-Storage",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "0e40095c47bbbee7f88cddf346c94c56799ec613",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "105-irere123-lemma.jsonc",
+    "repo": "Irere123/lemma",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "417411a33444191229f08aa86ed494af831686c2",
+    "licence": "Apache-2.0",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "106-halon-extras-file-pickup.jsonc",
+    "repo": "halon-extras/file-pickup",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "753f43837d1bde7f6220e8ccdb4ff5f674ef14b4",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "107-pelicanplatform-xrdhttp-pelican.jsonc",
+    "repo": "PelicanPlatform/xrdhttp-pelican",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "2f5f2842a8d6a483c07367129ba55fb1aef1df74",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "108-nickdala-azure-experiments.jsonc",
+    "repo": "nickdala/azure-experiments",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "56e93c76d9e040f037a6168b55edc4a6f5e7a504",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "109-akefirad-dotfiles.jsonc",
+    "repo": "akefirad/dotfiles",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "e3553a2b65e4a9b258357dd3d5214fa63dbcf69c",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "110-piizei-rusty-runner.jsonc",
+    "repo": "piizei/rusty-runner",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "360af32b85d3bbb6991f2f1c4291320118186a0f",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "111-fhiel-vehicle-control-unit-vcu-electric-vehicle.jsonc",
+    "repo": "Fhiel/Vehicle-Control-Unit-VCU-Electric-Vehicle",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "ce64a8088c11c82cca89ee3c0d0bfc983f4f124b",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "112-zonistefano-fastapi-nuxt.jsonc",
+    "repo": "zonistefano/fastapi-nuxt",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "6dcb6bb3b8963ec7fee1e87069aa3e533ea2b213",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "113-pierrebrunelle-pixeltable-lab-accession.jsonc",
+    "repo": "pierrebrunelle/pixeltable-lab-accession",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "d42adbd6af79a81054b77378367ceeaabf0fb1d5",
+    "licence": "Apache-2.0",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "114-bravo-box-starter-aro.jsonc",
+    "repo": "bravo-box/starter-aro",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "60036ad3c82e542ef27c12f6a892d6f271a7b2a1",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "115-89jobrien-looprs.jsonc",
+    "repo": "89jobrien/looprs",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "0b8a5dd796bb4c5665ee980331c989f49ed63c4a",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "116-christianalfoni-mastra-code-agent-template.jsonc",
+    "repo": "christianalfoni/mastra-code-agent-template",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "df5f8e47f31a7f10028ff114faf4dafc7be6ccb6",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "117-masatheultimater-library-search.jsonc",
+    "repo": "masatheultimater/library-search",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "beca4c1554636c7ed6aa3fbbd38680d64ad64905",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "118-jahriazion-edgepilot.jsonc",
+    "repo": "jahriazion/EdgePilot-",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "61bfb46649372fc502fb4fcf132e913a846facd3",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "119-crazcalm-github-tutorial.jsonc",
+    "repo": "crazcalm/github-tutorial",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "2331cad66ea80468834c20a2c6e55198dee338c0",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "120-hazardos-ai-wa-law-scraper.jsonc",
+    "repo": "hazardos-ai/wa-law-scraper",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "07db40b0b77e1c7b4d212211119135f3f96ec4ed",
+    "licence": "BSD-3-Clause",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "121-jcbhmr-zig-rs.jsonc",
+    "repo": "jcbhmr/zig-rs",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "cbfb9a18e07c62f2209290fd79577a7db8c2903c",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "122-deburky-postgres-lab.jsonc",
+    "repo": "deburky/postgres-lab",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "ecc4f8ddfdd64a45994dd9261aba69cbdfc75b78",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "123-peac337-skills-copilot-codespaces-vscode.jsonc",
+    "repo": "PEAC337/skills-copilot-codespaces-vscode",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "aa37e8400676378027fd6f53a4d7a1851b3ddd59",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "124-clearbank-tech-test-dotnet-pairing.jsonc",
+    "repo": "clearbank/tech-test-dotnet-pairing",
+    "path": ".devcontainer/payment-engine/devcontainer.json",
+    "commit": "0cdc6e944f694fc27822ee774016b0571f01cb6d",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "125-thecbah-fpga-example.jsonc",
+    "repo": "TheCBaH/fpga_example",
+    "path": ".devcontainer/devcontainers.cli/devcontainer.json",
+    "commit": "963a75fc160e3a51eb0c76ba62a9d8a6e1ace0ff",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "126-kruton-timeserv-esp32.jsonc",
+    "repo": "kruton/timeserv-esp32",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "4e3b3cb8582204fc3319a6d998244efecef46441",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "127-nvidia-nemo-retriever.jsonc",
+    "repo": "NVIDIA/NeMo-Retriever",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "987b004e7d071801b6408a672a8fc27c6eef8633",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "128-spack-spack-packages.jsonc",
+    "repo": "spack/spack-packages",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "4fcf009e9f80634440c461937f322a9f0510a37b",
+    "licence": "Apache-2.0",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "129-mammothphp-woollym.jsonc",
+    "repo": "MammothPHP/WoollyM",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "23dd689e7d3e085999990ea8b1e0e637a68157bc",
+    "licence": "BSD-3-Clause",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "130-h1romas4-asciidoctor-gradle-template.jsonc",
+    "repo": "h1romas4/asciidoctor-gradle-template",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "555ea31b96af901c48a03672e14578572010121c",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "131-orlowskilp-aws-api-gateway-lambda-go.jsonc",
+    "repo": "orlowskilp/aws-api-gateway-lambda-go",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "858cc0d70673b7202b54b87ef2ad4171eaa61c5e",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "132-tyktechnologies-tyk-docs.jsonc",
+    "repo": "TykTechnologies/tyk-docs",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "106b095f1e0335a5f6e15bf5faaac45cfed10be4",
+    "licence": "MPL-2.0",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "133-msmenegol-datapark.jsonc",
+    "repo": "msmenegol/datapark",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "f1f7e567b5473f88cab7d42e4198a74af16d6511",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "134-bketelsen-bluefin-help.jsonc",
+    "repo": "bketelsen/bluefin-help",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "5c4fd4fc0690ea417cd5707b0b47d8185b5c7ac5",
+    "licence": "Apache-2.0",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "135-diamondlightsource-bookshelf-conda-template.jsonc",
+    "repo": "DiamondLightSource/bookshelf-conda-template",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "a82d74f6495ed7ca74a7ff78d94f778b04fa52fc",
+    "licence": "Apache-2.0",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "136-ales27pm-mobile-vscode-project.jsonc",
+    "repo": "ales27pm/mobile-vscode-project",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "d5954e25b9a0d38b4e5ace237e22db5e6c4d0de1",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "137-hossain-khan-kids-math-tutor.jsonc",
+    "repo": "hossain-khan/kids-math-tutor",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "5b53af830504de07a9eca8efb5295a6d186cb5ff",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "138-maishuji-dc-updown-journey.jsonc",
+    "repo": "maishuji/dc-updown-journey",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "b327e1e529ec5c711eb347b459e4433d590c06aa",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "139-tmaier-devcontainer-features.jsonc",
+    "repo": "tmaier/devcontainer-features",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "ddb78130428ba01f2f21e5169ae65755c8cfb975",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "140-lettucebo-akamoney.jsonc",
+    "repo": "lettucebo/AkaMoney",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "80a4a578f3988b896a1a9f1c0d10b8a7a35a58c7",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "141-encotric-hass-anytype-todo.jsonc",
+    "repo": "Encotric/hass-anytype-todo",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "4163b3a0afeab314da172d364799c49c02ec000a",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "142-iblalrakha-workshop.jsonc",
+    "repo": "iblalrakha/workshop",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "50f6e507c32ecde4d50932c97b302c7dee2d3108",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "143-ahmad-se-tech-pagesv2.jsonc",
+    "repo": "Ahmad-Se-tech/pagesv2",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "25ff7020dc47ea88bd23aed0773ea83a503ef0a6",
+    "licence": "Apache-2.0",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "144-infinizius-aiworkhorse.jsonc",
+    "repo": "Infinizius/Aiworkhorse",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "d0f924937e2a34b59150966663628237665ba2bd",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "145-atrawog-ansible-tljh.jsonc",
+    "repo": "atrawog/ansible-tljh",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "ac33eea5c9f330f468492466da7d1648604bb69d",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "146-j-antunes-hyperion-grabber-cplusplus.jsonc",
+    "repo": "j-antunes/hyperion-grabber-cplusplus",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "ffd65f6a6a9f1666eb353dc490c6c167e4625968",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "147-dmmdea-meta-router.jsonc",
+    "repo": "dmmdea/meta-router",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "7aaac9235c3dd879d09eb12ad8f23348f73c719f",
+    "licence": "Apache-2.0",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "148-tomwoodward-jsb-autopilot.jsonc",
+    "repo": "TomWoodward/jsb-autopilot",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "ed9a2afefd39bc2f56de2db4a0f596b36425d6f1",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "149-kumakumapon-ros2sample.jsonc",
+    "repo": "kumakumapon/Ros2Sample",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "36af6f6954620abeec5b026e8d4714352868b1a8",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "150-nivisan-jeyananthan-psychic-spork.jsonc",
+    "repo": "Nivisan-Jeyananthan/psychic-spork",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "675efd507922221509388188f680b640d91cf6cc",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "151-thecbah-ocaml-cloudflare.jsonc",
+    "repo": "TheCBaH/ocaml-cloudflare",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "74ea97f8f5ff7782045b86ffe88a7526610a05ba",
+    "licence": "ISC",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "152-dependabot-dependabot-core.jsonc",
+    "repo": "dependabot/dependabot-core",
+    "path": ".devcontainer/core-dev/devcontainer.json",
+    "commit": "eda07d97d87762779406f5a5beec86fec139e78f",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "153-azure-samples-art-voice-agent-accelerator.jsonc",
+    "repo": "Azure-Samples/art-voice-agent-accelerator",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "a2e1ce2edbf103661c56a861cccef73c30acacee",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "154-ruankie-frontier-rl.jsonc",
+    "repo": "ruankie/frontier-rl",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "cc827a5f1b002d677089aed47edc923b42b13c52",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "155-scaledb-io-cloud.jsonc",
+    "repo": "scaledb-io/cloud",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "abafe38d6df41c92cec36a702102862391416325",
+    "licence": "Apache-2.0",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "156-jernejk-home-automation-offline-gpt.jsonc",
+    "repo": "jernejk/home-automation-offline-gpt",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "2dd6c057abae376d9d039b161db34ab4fa57a946",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "157-erwindouna-pyfirefly.jsonc",
+    "repo": "erwindouna/pyfirefly",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "10aed68ef3c0fe0a571b802528442a0c2fe4795d",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "158-kldgh-risklens.jsonc",
+    "repo": "KLDGH/risklens",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "b4bc9f0b4cb6c41ed8ba150ae4b419a333ab6b2d",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "159-tabo-syu-pig.jsonc",
+    "repo": "tabo-syu/pig",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "761523b91562d083e4f22ca826e38ad73dbcab1b",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "160-kantwon-matlabtuteechallenge.jsonc",
+    "repo": "Kantwon/matlabTuteeChallenge",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "5814c1e1918d1ce6be0839b9495dfa75bcb4f381",
+    "licence": "Apache-2.0",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "161-stillwater-sc-universal-starter.jsonc",
+    "repo": "stillwater-sc/universal-starter",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "fe38c726ec5d3e250cf38435e951ac09543551b5",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "162-chozboots-srpe-paysync-async.jsonc",
+    "repo": "chozboots/srpe-paysync-async",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "0ec14c86c37a598a1dbc771d4f4454ff38648b52",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "163-iaingalloway-sval.jsonc",
+    "repo": "iaingalloway/sval",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "855c016f7ff256d3570feaea19bfa61dfe8042cc",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "164-jvertuss-knightscribe.jsonc",
+    "repo": "Jvertuss/Knightscribe",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "d2601ef73df49763b3463ed81c797e01ae555e1a",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "165-arananet-pcb-spec.jsonc",
+    "repo": "arananet/pcb-spec",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "1549a1c0978176bb73fc3c9a6f7d5f679a3d4524",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "166-productioncity-saltcorn-postgis-type.jsonc",
+    "repo": "productioncity/saltcorn-postgis-type",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "a74b3b0e4184b6bc2a8e5111c9c14c2c1032439b",
+    "licence": "CC0-1.0",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "167-cmu-17313q-opencode-f26-ddsc.jsonc",
+    "repo": "CMU-17313Q/opencode-f26-DDSC",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "76b2505e54a1337608781216a794cc4134143fec",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "168-23min-liminara.jsonc",
+    "repo": "23min/liminara",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "d304cdbe9e89b5532499b2d63f53432064db1ded",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "169-kyleburnsdev-contoso-movies.jsonc",
+    "repo": "kyleburnsdev/contoso-movies",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "6fb79fadf4054a7ca624b4c6de254d7dff38c216",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "170-devndive-advent-of-code-2022.jsonc",
+    "repo": "devndive/advent-of-code-2022",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "9a70a7e8b8d6be5d2ed492ca6dec8a6663aa6882",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "171-fjktkm-maturin-devcontainer.jsonc",
+    "repo": "fjktkm/maturin-devcontainer",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "947eba1a1f18a2e0060aa7cd4559147d31496a93",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "172-toricls-aws-amplify-sns-workshop-in-vscode.jsonc",
+    "repo": "toricls/aws-amplify-sns-workshop-in-vscode",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "b694b293f09136022dc540c590fe8f171ac3c7fb",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "173-forwardsoftware-react-auth.jsonc",
+    "repo": "forwardsoftware/react-auth",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "84c2b7c8dd68f4100ce909244f313bde5c6bbf60",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "174-hostzero-gmbh-yet-another-status-page.jsonc",
+    "repo": "Hostzero-GmbH/yet-another-status-page",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "a2f3c69a7841b59b3285cd3c37d0b6d2babef706",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "175-jbcoe-cc-protocol.jsonc",
+    "repo": "jbcoe/cc-protocol",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "a64f4d066eeb99f5b141f5dfbf4fb7096ab7feaf",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "176-panasenco-jsonresume-docx.jsonc",
+    "repo": "panasenco/jsonresume-docx",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "e3fbf7361bcc44cc2ca07279793c17ca08ca3d36",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "177-gbrltv-cdesf2.jsonc",
+    "repo": "gbrltv/cdesf2",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "2cd35bd16a1527eb4bb67b5dc56c2106579ed9e9",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "178-asadmalik5-handy-kernel-modules.jsonc",
+    "repo": "asadmalik5/handy-kernel_modules",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "7b15891c8a2b72618f2c306cd8730559c05b90a1",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "179-drjdlarson-serums.jsonc",
+    "repo": "drjdlarson/serums",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "9fbe66e4bc09023a5b6bcb051ba6fc26efe191ed",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "180-azure-samples-cargotracker-liberty-aks-azd.jsonc",
+    "repo": "Azure-Samples/cargotracker-liberty-aks-azd",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "481dfc4f6340eedb3f734325919111e0d44dc8da",
+    "licence": "MIT",
+    "scenario": "image",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "181-ms-quality-hub-mzqclib-manuscript.jsonc",
+    "repo": "MS-Quality-Hub/mzqclib-manuscript",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "63e24e55b804b211ef6448a3f441f560cbd0be8a",
+    "licence": "BSD-3-Clause",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "182-fp-matsuri-fp-in-scala-exercises.jsonc",
+    "repo": "fp-matsuri/fp-in-scala-exercises",
+    "path": ".devcontainer/local-build/devcontainer.json",
+    "commit": "82b83a570999ce49c2e4ebc3109359e243d13ea0",
+    "licence": "MIT",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "183-lauslim12-attendance.jsonc",
+    "repo": "lauslim12/attendance",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "97237a079fdb8663208969c0f75e198bbe7d2735",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "184-sonysemiconductorsolutions-aitrios-sample-applic.jsonc",
+    "repo": "SonySemiconductorSolutions/aitrios-sample-application-object-occupancy-rate",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "ee17b7393b67c5e05970cad32f361f3ab27f812a",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "185-ishiharatma-aws-cdk-devops-toolkit.jsonc",
+    "repo": "ishiharatma/aws-cdk-devops-toolkit",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "ff9a4ba0508dce0e748c13e4d5f08045fd592221",
+    "licence": "Apache-2.0",
+    "scenario": "dockerfile",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "186-urbyone-linuxlab.jsonc",
+    "repo": "urbyone/linuxlab",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "f06fc71a479d60a69974af1601f2029d29b56169",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "187-josuabad-project-benchmark-scikit-learn-vs-pyspa.jsonc",
+    "repo": "josuabad/project-benchmark-scikit-learn-vs-pyspark",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "56ad466280cd970924a662b2c26833c4e618ab7b",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "188-hazem-rikabi-kantinenmanager.jsonc",
+    "repo": "hazem-rikabi/kantinenmanager",
+    "path": ".devcontainer/frontend-all/devcontainer.json",
+    "commit": "cc9f61c69d8d65e5fee03296b00c7ae3b8b8e1f0",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "189-darshan-as-dopagent-scraper.jsonc",
+    "repo": "Darshan-AS/dopagent_scraper",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "ab7de4764835772b6e09895e66ddbb556378a7ae",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "190-rdcstu-point4me.jsonc",
+    "repo": "rdcstu/point4me",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "7d1ddbbe04d78386f29853681ace7a18d036d35d",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "191-no-brand-airflow-fork.jsonc",
+    "repo": "no-brand/airflow-fork",
+    "path": ".devcontainer/mysql/devcontainer.json",
+    "commit": "6a0ce67699fbf35f70a5e615610280158ba72fe3",
+    "licence": "Apache-2.0",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "192-kaeldehta-vips-logic-exercises-plugin.jsonc",
+    "repo": "Kaeldehta/vips-logic-exercises-plugin",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "0aff3339a8d2e47cb5e0e0446d9b340d43ee48fc",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "193-naitzel-silex-crud-devcontainer.jsonc",
+    "repo": "naitzel/silex-crud-devcontainer",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "c6f47f908db3836415479dc3f4a8ed2dfa4d9d68",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "194-spectrumx-svi-code.jsonc",
+    "repo": "spectrumx/svi-code",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "df9e2c234a2099cb067ce2012b922a76a9d2d019",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "195-sea-monkeys-daphnia.jsonc",
+    "repo": "sea-monkeys/daphnia",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "1ae6ae610b158d74674ea4133660e59a83f7c52d",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "196-tigrisdata-community-tigrissdk.jsonc",
+    "repo": "tigrisdata-community/tigrissdk",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "960d4611c07e315e293fee6792c187ecf4e15187",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "197-lyrictian-gin-admin.jsonc",
+    "repo": "LyricTian/gin-admin",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "2287d87e0bc55a2b570176feb27ea9f494c5e45e",
+    "licence": "Apache-2.0",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "198-realm-realm-core.jsonc",
+    "repo": "realm/realm-core",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "f8752e180b7f288feadffafdef818068755efe0a",
+    "licence": "Apache-2.0",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "199-fjordllc-bootcamp.jsonc",
+    "repo": "fjordllc/bootcamp",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "c9dbe7004a6d5ac792ace3d915afa413c1849acd",
+    "licence": "MIT",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  },
+  {
+    "file": "200-someengineering-fixinventory.jsonc",
+    "repo": "someengineering/fixinventory",
+    "path": ".devcontainer/devcontainer.json",
+    "commit": "211833381fdd07690bc789d30ffc2bd84a67744e",
+    "licence": "Apache-2.0",
+    "scenario": "compose",
+    "retrieved": "2026-11-04"
+  }
+]

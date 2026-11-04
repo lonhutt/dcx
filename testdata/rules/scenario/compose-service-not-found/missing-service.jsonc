@@ -1,0 +1,5 @@
+{
+  "dockerComposeFile": "../compose.yml",
+  "service": "api", // want: error: No service "api" in ../compose.yml; did you mean "app"?
+  "workspaceFolder": "/workspace"
+}

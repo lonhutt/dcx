@@ -1,0 +1,82 @@
+{
+  "name": "Remote Development Environment for New Hires",
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "files.autoSave": "afterDelay",
+        "git.autofetch": true,
+        "git.enableSmartCommit": true
+      },
+      "extensions": [
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-vscode.cpptools",
+        "golang.go",
+        "ms-dotnettools.csharp",
+        "redhat.java",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "eamodio.gitlens",
+        "GitHub.vscode-pull-request-github",
+        "ms-vscode.live-server",
+        "ritwickdey.LiveServer",
+        "streetsidesoftware.code-spell-checker",
+        "yzhang.markdown-all-in-one",
+        "mhutchie.git-graph",
+        "ms-azuretools.vscode-docker",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "hbenl.vscode-test-explorer",
+        "ms-vscode.test-adapter-converter"
+      ]
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "lts"
+    },
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "latest"
+    }
+  },
+  "forwardPorts": [3000, 3001, 5000, 5173, 8000, 8080, 9229],
+  "portsAttributes": {
+    "3000": {
+      "label": "Web Application",
+      "onAutoForward": "notify"
+    },
+    "5000": {
+      "label": "API Server",
+      "onAutoForward": "notify"
+    },
+    "8080": {
+      "label": "App Server",
+      "onAutoForward": "notify"
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postStartCommand": "echo '🚀 Remote Development Environment Ready! Welcome to the team!' && git config --global --add safe.directory ${containerWorkspaceFolder}",
+  "remoteEnv": {
+    "WORKSPACE_NAME": "New Hire Development Environment",
+    "ENVIRONMENT": "development"
+  },
+  "remoteUser": "codespace",
+  "mounts": [
+    "source=codespace-bash-history,target=/commandhistory,type=volume"
+  ]
+}

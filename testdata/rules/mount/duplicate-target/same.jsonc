@@ -1,0 +1,9 @@
+{
+  "image": "node:22",
+  "mounts": [
+    "type=volume,source=a,target=/data",
+    { "type": "volume", "source": "b", "target": "/data/" }, // want: error: Another mount already targets "/data"
+    "type=volume,source=c,target=/var//cache",
+    "type=volume,source=d,dst=/var/cache" // want: error: Another mount already targets "/var/cache"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "image": "node:22",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {},
+    "./local-feature": {}
+  },
+  "overrideFeatureInstallOrder": [
+    "ghcr.io/devcontainers/features/node",
+    "./local-feature",
+    "ghcr.io/devcontainers/features/nodejs" // want: warning: "ghcr.io/devcontainers/features/nodejs" isn't one of the features in "features"
+  ]
+}

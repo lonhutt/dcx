@@ -1,0 +1,5 @@
+{
+  "image": "node:22",
+  "forwardPorts": [3000, 8080,], // want: warning: Trailing comma in an array
+  "name": "app", // want: warning: Trailing comma in an object
+}

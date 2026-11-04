@@ -69,4 +69,12 @@ export class OverlayFS implements FileSystem {
 
     return [...entries.values()].sort(byName);
   }
+
+  async realpath(path: string): Promise<string | undefined> {
+    const canonPath = resolve(path);
+    // an unsaved new file isn't on disk yet; its own path is as canonical as it gets
+    return (
+      (await this.base.realpath(canonPath)) ?? (this.buffers.has(canonPath) ? canonPath : undefined)
+    );
+  }
 }

@@ -1,0 +1,2 @@
+// the Compose file is missing; fs/compose-file-not-found says so, this rule stays quiet
+{ "dockerComposeFile": "nope.yml", "service": "api", "workspaceFolder": "/workspace" }

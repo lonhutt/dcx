@@ -1,0 +1,4 @@
+{
+  "image": "node:22",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/src,type=bind" // want: error: "workspaceMount" needs "workspaceFolder" to say where the workspace is mounted
+}

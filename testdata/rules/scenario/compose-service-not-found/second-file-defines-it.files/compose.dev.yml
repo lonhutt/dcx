@@ -1,0 +1,6 @@
+x-common: &common
+  restart: unless-stopped
+services:
+  tools:
+    <<: *common
+    extends: { file: base.yml, service: base }

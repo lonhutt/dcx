@@ -1,0 +1,8 @@
+{
+  "image": "node:22",
+  "features": {
+    "./tools": {},
+    "./missing": {}, // want: error: Local feature "./missing" doesn't exist
+    "ghcr.io/devcontainers/features/node:1": {}
+  }
+}

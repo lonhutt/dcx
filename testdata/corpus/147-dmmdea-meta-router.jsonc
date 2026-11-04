@@ -1,0 +1,14 @@
+{
+  "name": "meta-router (Go)",
+  "image": "mcr.microsoft.com/devcontainers/go:1",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/node:1": { "version": "lts" }
+  },
+  "hostRequirements": { "cpus": 2, "memory": "8gb" },
+  "postCreateCommand": "go mod download && go build ./... && npm i -g @github/copilot@latest",
+  "customizations": {
+    "vscode": { "extensions": ["golang.go"] },
+    "codespaces": { "openFiles": ["README.md"] }
+  }
+}

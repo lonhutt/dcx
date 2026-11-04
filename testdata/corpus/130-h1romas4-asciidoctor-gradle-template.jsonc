@@ -1,0 +1,20 @@
+{
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "11"
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/build-codespaces-container.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "asciidoctor.asciidoctor-vscode",
+        "EditorConfig.EditorConfig",
+        "anwar.papyrus-pdf",
+        "jebbs.plantuml",
+        "hediet.vscode-drawio"
+      ]
+    }
+  }
+}

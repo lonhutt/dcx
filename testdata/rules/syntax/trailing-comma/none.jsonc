@@ -1,0 +1,1 @@
+{ "image": "node:22", "forwardPorts": [3000, 8080] }

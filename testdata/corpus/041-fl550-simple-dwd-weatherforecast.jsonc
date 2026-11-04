@@ -1,0 +1,47 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/python
+{
+	"name": "simple_dwd_weatherforecast",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/python:3.14",
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+	// Configure tool-specific properties.
+	"customizations": {
+		// Configure properties specific to VS Code.
+		"vscode": {
+			"settings": {
+				"files.eol": "\n",
+				"editor.tabSize": 4,
+				"editor.formatOnPaste": true,
+				"editor.formatOnSave": true,
+				"editor.formatOnType": false,
+				"python.testing.pytestEnabled": false,
+				"python.testing.unittestEnabled": true,
+				"python.testing.unittestArgs": [
+					"-v",
+					"-s",
+					"./tests",
+					"-p",
+					"test_*.py"
+				],
+				"[python]": {
+					"editor.defaultFormatter": "charliermarsh.ruff"
+				},
+				"python.analysis.typeCheckingMode": "basic"
+			},
+			"extensions": [
+				"gruntfuggly.todo-tree",
+				"charliermarsh.ruff",
+				"github.vscode-pull-request-github",
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"ryanluker.vscode-coverage-gutters"
+			]
+		}
+	},
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": "pip3 install -r requires_development.txt -r requires.txt"
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}

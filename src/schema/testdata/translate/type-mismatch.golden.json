@@ -1,0 +1,20 @@
+[
+  {
+    "class": "type-mismatch",
+    "at": "\"3000\"",
+    "message": "\"forwardPorts\" must be an array",
+    "docsUrl": "https://containers.dev/implementors/json_reference/#general-properties"
+  },
+  {
+    "class": "type-mismatch",
+    "at": "4",
+    "message": "\"portsAttributes.3000.label\" must be a string",
+    "docsUrl": "https://containers.dev/implementors/json_reference/#port-attributes"
+  },
+  {
+    "class": "type-mismatch",
+    "at": "1",
+    "message": "\"postCreateCommand\" must be a string or array or object",
+    "docsUrl": "https://containers.dev/implementors/json_reference/#lifecycle-scripts"
+  }
+]

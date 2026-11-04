@@ -1,0 +1,11 @@
+{
+  "image": "node:22",
+  "mounts": [
+    "type=bind,source=${localWorkspaceFolder}/.cache,target=/cache,readonly",
+    "target=/data,src=data,type=volume,",
+    "type=bind,source:/tmp,target=/tmp", // want: error: Mount part "source:/tmp" has an unknown key "source:/tmp"
+    "type=bind,source,target=/x" // want: error: Mount part "source" needs a value
+  ],
+  "workspaceMount": "type=bind,source=${localWorkspaceFolder},target=/workspace,consistency=cached,sauce=x", // want: error: Mount part "sauce=x" has an unknown key "sauce"
+  "workspaceFolder": "/workspace"
+}

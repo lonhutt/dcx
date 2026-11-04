@@ -1,0 +1,4 @@
+{
+  "image": "node:22",
+  "settings": { "editor.tabSize": 2 } // want: warning: Top-level "settings" is deprecated; use "customizations.vscode.settings"
+}

@@ -1,0 +1,10 @@
+{
+  "image": "node:22",
+  "mounts": [
+    "type=bind,source=/home/alice/.aws,target=/root/.aws", // want: warning: Bind source "/home/alice/.aws" is a path on one particular machine
+    "type=bind,source=${localEnv:HOME}/.aws,target=/home/node/.aws",
+    "type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock",
+    { "type": "bind", "source": "C:\\Users\\bob\\src", "target": "/src" }, // want: warning: Bind source "C:\Users\bob\src" is a path on one particular machine
+    "type=volume,source=/not/a/host/path,target=/v"
+  ]
+}

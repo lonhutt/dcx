@@ -1,0 +1,4 @@
+{
+  "dockerFile": "..", // want: error: Dockerfile ".." is a directory, not a file
+  "context": ".."
+}

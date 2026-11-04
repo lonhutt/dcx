@@ -1,0 +1,29 @@
+{
+  "name": "FastAPI + Nuxt",
+  "image": "mcr.microsoft.com/devcontainers/python:3.13-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22.14.0"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "charliermarsh.ruff",
+        "ms-python.python",
+        "ms-python.debugpy",
+        "bradlc.vscode-tailwindcss",
+        "dbaeumer.vscode-eslint",
+        "Vue.volar",
+        "nuxt.mdc",
+        "esbenp.prettier-vscode",
+        "ms-azuretools.vscode-docker",
+        "eamodio.gitlens",
+        "openai.chatgpt",
+        "anthropic.claude-code"
+      ]
+    }
+  }
+}

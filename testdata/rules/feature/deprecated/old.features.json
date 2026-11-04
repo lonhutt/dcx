@@ -1,0 +1,4 @@
+{
+  "ghcr.io/devcontainers/features/old-thing:1": { "id": "old-thing", "deprecated": true },
+  "ghcr.io/devcontainers/features/node:1": { "id": "node" }
+}

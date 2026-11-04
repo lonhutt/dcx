@@ -1,0 +1,5 @@
+{
+  "image": "node:22",
+  "shutdownAction": "no", // want: error: "shutdownAction" must be one of "none", "stopContainer"
+  "userEnvProbe": "bash" // want: error: "userEnvProbe" must be one of "none", "loginShell", "loginInteractiveShell", "interactiveShell"
+}

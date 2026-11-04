@@ -1,0 +1,7 @@
+{
+  "ghcr.io/example/features/tool:1": {
+    "id": "tool",
+    "dependsOn": { "ghcr.io/devcontainers/features/node:1": {}, "ghcr.io/example/features/removed:1": {} }
+  },
+  "ghcr.io/devcontainers/features/node:1": { "id": "node" }
+}

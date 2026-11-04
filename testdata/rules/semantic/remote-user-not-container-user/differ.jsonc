@@ -1,0 +1,5 @@
+{
+  "image": "node:22",
+  "containerUser": "root",
+  "remoteUser": "node" // want: info: "remoteUser" is "node" but "containerUser" is "root"
+}

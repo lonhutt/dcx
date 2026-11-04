@@ -1,0 +1,88 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/python
+{
+	"name": "Saltcorn PostGIS Types",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"dockerComposeFile": "docker-compose.yaml",
+	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+	"service": "app",
+	// "mounts": [
+	// 	"source=${localWorkspaceFolderBasename}-node_modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
+	//   ],
+	"features": {
+		"ghcr.io/devcontainers/features/common-utils:2": {
+			"installZsh": true,
+			"configureZshAsDefaultShell": true,
+			"installOhMyZsh": true,
+			"installOhMyZshConfig": true,
+			"upgradePackages": true,
+			"nonFreePackages": true,
+			"username": "vscode",
+			"userUid": "automatic",
+			"userGid": "automatic"
+		},
+		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+			"moby": true,
+			"installDockerBuildx": true,
+			"installDockerComposeSwitch": true,
+			"version": "latest",
+			"dockerDashComposeVersion": "v2"
+		},
+		"ghcr.io/devcontainers/features/github-cli:1": {
+			"installDirectlyFromGitHubRelease": true,
+			"version": "latest"
+		},
+		"ghcr.io/devcontainers/features/node:1": {
+			"version": "latest"
+		},
+		"ghcr.io/devcontainers-extra/features/typescript:2": {
+			"version": "latest"
+		},
+		"ghcr.io/stuartleeks/dev-container-features/shell-history:0": {},
+		"ghcr.io/devcontainers-extra/features/act:1": {
+			"version": "latest"
+		},
+		"ghcr.io/devcontainers-extra/features/actions-runner:1": {
+			"version": "latest",
+			"dotnetVersion": "latest"
+		},
+		"ghcr.io/devcontainers-extra/features/zsh-plugins:0": {
+			"plugins": "ssh-agent npm",
+			"omzPlugins": "https://github.com/zsh-users/zsh-autosuggestions",
+			"username": "vscode"
+		}
+	},
+	// "initializeCommand": "touch ${localWorkspaceFolder}/.env",
+	"postCreateCommand": "sudo chown -R vscode:vscode /workspaces/${localWorkspaceFolderBasename} && echo \"export PATH=$PATH:/home/vscode/.local/bin\" >> ~/.zshrc && npm config set @productioncity:registry https://npm.pkg.github.com && npm config set //npm.pkg.github.com/:_authToken \"${GITHUB_TOKEN}\" && npm config set //registry.npmjs.org/:_authToken \"${NPM_AUTH_TOKEN}\" && npm config set install-strategy nested && npm config set fund false && npm config set audit false && npm install --global --install-strategy=nested --omit=dev \"@saltcorn/cli@1.1.4\" && npm i",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-python.black-formatter",
+				"github.vscode-github-actions",
+				"GitHub.codespaces",
+				"GitHub.remotehub",
+				"ms-python.vscode-pylance",
+				"ms-python.python",
+				"ms-python.debugpy",
+				"GitHub.copilot",
+				"GitHub.vscode-pull-request-github",
+				"GitHub.github-vscode-theme",
+				"GitHub.copilot-chat",
+				"ZainChen.json",
+				"redhat.vscode-yaml",
+				"dbaeumer.vscode-eslint",
+				"ms-azuretools.vscode-containers"
+			]
+		}
+	}
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+	// Use 'postCreateCommand' to run commands after the container is created.
+	// "postCreateCommand": "pip3 install --user -r requirements.txt",
+	// Configure tool-specific properties.
+	// "customizations": {},
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}

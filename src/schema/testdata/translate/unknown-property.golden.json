@@ -1,0 +1,21 @@
+[
+  {
+    "class": "unknown-property",
+    "at": "\"postCreateComand\"",
+    "message": "Unknown property \"postCreateComand\"; did you mean \"postCreateCommand\"?",
+    "help": "rename it to \"postCreateCommand\"",
+    "docsUrl": "https://containers.dev/implementors/json_reference/#general-properties"
+  },
+  {
+    "class": "unknown-property",
+    "at": "\"colour\"",
+    "message": "Unknown property \"colour\"",
+    "docsUrl": "https://containers.dev/implementors/json_reference/#general-properties"
+  },
+  {
+    "class": "unknown-property",
+    "at": "\"build-ish\"",
+    "message": "Unknown property \"build-ish\"",
+    "docsUrl": "https://containers.dev/implementors/json_reference/#general-properties"
+  }
+]

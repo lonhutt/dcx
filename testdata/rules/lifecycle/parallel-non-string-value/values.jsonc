@@ -1,0 +1,9 @@
+{
+  "image": "node:22",
+  "postCreateCommand": {
+    "deps": "npm install",
+    "db": ["./scripts/db.sh", "--seed"],
+    "bad": { "cmd": "make" }, // want: error: "postCreateCommand.bad" must be a command string or an array of strings
+    "nums": ["echo", 1] // want: error: "postCreateCommand.nums" must be a command string or an array of strings
+  }
+}

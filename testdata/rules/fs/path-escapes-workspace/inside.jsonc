@@ -1,0 +1,1 @@
+{ "build": { "dockerfile": "../shared/Dockerfile", "context": ".." } }

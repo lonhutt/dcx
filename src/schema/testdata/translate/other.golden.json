@@ -1,0 +1,8 @@
+[
+  {
+    "class": "other",
+    "at": "0",
+    "message": "\"hostRequirements.cpus\" must be >= 1",
+    "docsUrl": "https://containers.dev/implementors/json_reference/#min-host-reqs"
+  }
+]

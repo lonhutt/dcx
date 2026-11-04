@@ -1,0 +1,4 @@
+{
+  "image": "node:22", // want: error: "image" and "build" cannot both be set: a Dockerfile configuration builds its own image
+  "build": { "dockerfile": "Dockerfile" }
+}

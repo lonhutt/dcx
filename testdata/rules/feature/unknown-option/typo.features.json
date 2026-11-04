@@ -1,0 +1,6 @@
+{
+  "ghcr.io/devcontainers/features/node:1": {
+    "id": "node",
+    "options": { "version": { "type": "string", "proposals": ["lts", "20"] }, "nvmVersion": { "type": "string" } }
+  }
+}

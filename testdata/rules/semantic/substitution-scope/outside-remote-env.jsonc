@@ -1,0 +1,5 @@
+{
+  "image": "node:22",
+  "containerEnv": { "P": "${containerEnv:PATH}:/opt" }, // want: warning: ${containerEnv:PATH} is only resolved in "remoteEnv", not in "containerEnv"
+  "remoteEnv": { "P": "${containerEnv:PATH}:/opt" }
+}

@@ -1,0 +1,65 @@
+{
+  "name": "netbrain-zwift-devcontainer",
+  "image": "mcr.microsoft.com/devcontainers/base:debian",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker": {
+      "iptablesSwitchAtRuntime": true,
+      "installDockerBuildx": true,
+      "moby": false
+    },
+    "ghcr.io/devcontainers/features/ruby": {},
+    "ghcr.io/devcontainers/features/go": {},
+    "ghcr.io/devcontainers/features/node": {},
+    "ghcr.io/devcontainers/features/nix": {
+      "packages": "nil,nixfmt,nixfmt-tree",
+      "extraNixConfig": "experimental-features = nix-command flakes"
+    },
+    "ghcr.io/devcontainers-extra/features/actionlint": {},
+    "ghcr.io/devcontainers-extra/features/shellcheck": {},
+    "ghcr.io/devcontainers-extra/features/shfmt": {},
+    "ghcr.io/devcontainers-extra/features/yamllint": {},
+    "ghcr.io/dhoeric/features/hadolint": {}
+  },
+  "overrideFeatureInstallOrder": [
+    "ghcr.io/devcontainers/features/docker-in-docker",
+    "ghcr.io/devcontainers/features/ruby",
+    "ghcr.io/devcontainers/features/go",
+    "ghcr.io/devcontainers/features/node",
+    "ghcr.io/devcontainers/features/nix",
+    "ghcr.io/devcontainers-extra/features/actionlint",
+    "ghcr.io/devcontainers-extra/features/shellcheck",
+    "ghcr.io/devcontainers-extra/features/shfmt",
+    "ghcr.io/devcontainers-extra/features/yamllint",
+    "ghcr.io/dhoeric/features/hadolint"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "DavidAnson.vscode-markdownlint",
+        "docker.docker",
+        "editorconfig.editorconfig",
+        "exiasr.hadolint",
+        "foxundermoon.shell-format",
+        "jnoortheen.nix-ide",
+        "kennylong.kubernetes-yaml-formatter",
+        "ms-azuretools.vscode-containers",
+        "redhat.vscode-yaml",
+        "streetsidesoftware.code-spell-checker",
+        "timonwong.shellcheck"
+      ],
+      "settings": {
+        "nix.enableLanguageServer": true,
+        "nix.serverPath": "nil",
+        "nix.serverSettings.formatting.command": [
+          "nixfmt"
+        ],
+        "yaml.format.enable": false,
+        "better-yaml.directives": true,
+        "better-yaml.indentSeq": false,
+        "better-yaml.lineWidth": 128
+      }
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "remoteUser": "vscode"
+}

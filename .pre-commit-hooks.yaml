@@ -1,0 +1,14 @@
+# dcx as a pre-commit hook. In your .pre-commit-config.yaml:
+#
+#   - repo: https://github.com/lonhutt/dcx
+#     rev: v0.1.0
+#     hooks:
+#       - id: dcx
+- id: dcx
+  name: dcx check
+  description: Lint devcontainer.json
+  entry: dcx check
+  language: node
+  additional_dependencies: ["dcx@0.1.0"]
+  files: (^|/)\.?devcontainer\.json$
+  pass_filenames: true

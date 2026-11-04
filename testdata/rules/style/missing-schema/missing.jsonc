@@ -1,0 +1,4 @@
+{ // want: warning: This config has no "$schema"
+  "name": "api",
+  "image": "node:22"
+}

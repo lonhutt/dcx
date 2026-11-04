@@ -1,0 +1,7 @@
+{
+  "image": "node:22",
+  "features": {
+    "ghcr.io/example/features/tool:1": {}, // want: warning: "tool" depends on "ghcr.io/example/features/removed:1", which doesn't exist
+    "ghcr.io/devcontainers/features/node:1": {}
+  }
+}

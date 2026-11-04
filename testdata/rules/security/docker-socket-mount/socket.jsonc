@@ -1,0 +1,8 @@
+{
+  "image": "node:22",
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind", // want: warning: Mounting the Docker socket gives the container root on the host
+    "source=cache,target=/cache,type=volume"
+  ],
+  "runArgs": ["-v", "/var/run/docker.sock:/var/run/docker.sock"] // want: warning: Mounting the Docker socket gives the container root on the host
+}

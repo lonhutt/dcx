@@ -1,0 +1,35 @@
+{
+  "name": "Deno",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "installZsh": "true",
+      "username": "deno",
+      "upgradePackages": "true"
+    },
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "latest",
+      "ppa": "false"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "justjavac.vscode-deno-extensionpack",
+        "ms-azuretools.vscode-docker",
+        "EditorConfig.EditorConfig",
+        "DavidAnson.vscode-markdownlint",
+        "dnut.rewrap-revived"
+      ]
+    }
+  },
+  "runArgs": [
+    "--userns=keep-id"
+  ],
+  "containerEnv": {
+    "HOME": "/home/deno"
+  },
+  "containerUser": "deno"
+}

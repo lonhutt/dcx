@@ -1,0 +1,11 @@
+{
+  "name": "app",
+  "image": "node:22",
+  "forwardPorts": [3000, 8080],
+  "containerEnv": {
+    "A": "1",
+    "B": ,  // want: error: Value expected
+    "C": "3"
+  },
+  "remoteUser": "node"
+}

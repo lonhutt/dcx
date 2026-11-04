@@ -1,0 +1,5 @@
+{
+  "image": "node:22",
+  // dcx-disable-next-line security/privliged -- typo, so it suppresses nothing // want: warning: This suppression of security/privliged matched nothing
+  "privileged": true
+}

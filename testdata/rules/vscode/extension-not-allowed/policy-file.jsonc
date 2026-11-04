@@ -1,0 +1,4 @@
+{
+  "image": "node:22",
+  "customizations": { "vscode": { "extensions": ["golang.go"] } } // want: error: "golang.go" isn't allowed by the "org" extension policy, so it won't install
+}

@@ -1,0 +1,14 @@
+{
+  "image": "node:22",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go",
+        "ms-python.vscode-pylance",
+        "dbaeumer.vscode-eslnt", // want: error: "dbaeumer.vscode-eslnt" isn't in any required source ("marketplace", "open-vsx")
+        "old.thing",
+        "-ms-python.python"
+      ]
+    }
+  }
+}

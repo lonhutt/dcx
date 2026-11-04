@@ -1,0 +1,1 @@
+services: { app: { image: node:22 } }

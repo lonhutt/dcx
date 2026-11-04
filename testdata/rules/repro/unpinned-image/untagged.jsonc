@@ -1,0 +1,3 @@
+{
+  "image": "localhost:5000/team/base" // want: warning: Image "localhost:5000/team/base" has no tag, so it means ":latest"
+}

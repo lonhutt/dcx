@@ -1,0 +1,46 @@
+name: dcx
+description: Lint devcontainer.json, with findings in code scanning
+branding:
+  icon: check-square
+  color: blue
+inputs:
+  path:
+    description: Files or directories to lint, space-separated
+    default: .
+  version:
+    description: The dcx version to run
+    default: 0.1.0
+  online:
+    description: Run the rules that need network access
+    default: "false"
+  upload-sarif:
+    description: Upload findings to GitHub code scanning
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: "1.4.2"
+    - id: check
+      shell: bash
+      env:
+        DCX_VERSION: ${{ inputs.version }}
+        DCX_PATHS: ${{ inputs.path }}
+        DCX_ONLINE: ${{ inputs.online }}
+      run: |
+        # exit 1 (findings) still uploads; exit 2 (dcx broke) fails the step right away
+        set +e
+        bunx "dcx@${DCX_VERSION}" check --format sarif $DCX_PATHS > dcx.sarif
+        code=$?
+        set -e
+        [ "$code" -eq 2 ] && exit 2
+        echo "exit=$code" >> "$GITHUB_OUTPUT"
+        bunx "dcx@${DCX_VERSION}" check --format github $DCX_PATHS || true
+    - if: inputs.upload-sarif == 'true'
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: dcx.sarif
+        category: dcx
+    - shell: bash
+      run: exit ${{ steps.check.outputs.exit }}

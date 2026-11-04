@@ -1,0 +1,23 @@
+{
+  "name": "Silex Crud",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "fpm",
+  "workspaceFolder": "/var/www/html",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "search.exclude": {
+          "**/vendor": true,
+          "**/node_modules": true,
+          "**/bower_components": true,
+          "**/*.code-search": true
+        }
+      },
+      "extensions": [
+        "whatwedo.twig",
+        "bmewburn.vscode-intelephense-client",
+        "mblode.twig-language-2"
+      ]
+    }
+  }
+}

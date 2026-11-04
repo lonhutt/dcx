@@ -1,0 +1,2 @@
+::warning file=.devcontainer/devcontainer.json,line=4,col=3,endLine=4,endColumn=9,title=schema/unknown-property::Unknown property "nmae"; did you mean "name"? (rename it to "name") [schema/unknown-property]
+::error file=.devcontainer/devcontainer.json,line=5,col=3,endLine=5,endColumn=12,title=deprecation/app-port::"appPort" is deprecated; use "forwardPorts" [deprecation/app-port]

@@ -1,0 +1,6 @@
+{
+  "$schema": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json",
+  // comments stay
+  "name": "api",
+  "image": "node:22"
+}

@@ -1,0 +1,5 @@
+{
+  "image": "node:22",
+  "onCreateCommand": "npm ci",
+  "waitFor": "postCreateCommand" // want: warning: "waitFor" is "postCreateCommand", which this config doesn't define
+}

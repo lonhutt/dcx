@@ -1,0 +1,11 @@
+{
+  "image": "node:22",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20",
+      "verison": "20" // want: error: "node" has no option "verison"; did you mean "version"?
+    },
+    "ghcr.io/devcontainers/features/gone:1": { "x": 1 },
+    "./local": { "anything": true }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "Ros2Sample Development Container",
+  "dockerComposeFile": [
+    "../docker/compose.yml"
+  ],
+  "service": "ros2sample",
+  "workspaceFolder": "/workspace/Ros2Sample",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-iot.vscode-ros",
+        "twxs.cmake",
+        "ms-azuretools.vscode-docker",
+        "redhat.vscode-yaml",
+        "redhat.vscode-xml",
+        "eamodio.gitlens",
+        "foxglove.foxglove-studio"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/bin/python3",
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "remoteUser": "root",
+  "shutdownAction": "stopCompose"
+}

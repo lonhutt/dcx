@@ -1,0 +1,4 @@
+features:
+  allow-unpinned:
+    - ghcr.io/devcontainers/features/node
+    - ghcr.io/devcontainers/features/go

@@ -1,0 +1,7 @@
+{
+  "image": "node:22",
+  "features": {
+    "ghcr.io/devcontainers/features/node": {},
+    "ghcr.io/devcontainers/features/go:latest": {}
+  }
+}

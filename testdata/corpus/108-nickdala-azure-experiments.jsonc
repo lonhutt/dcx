@@ -1,0 +1,56 @@
+{
+    "name": "nickdala-azure-experiments",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "args": {
+            "VARIANT": "jammy"
+        }
+    },
+    "remoteUser": "vscode",
+    "containerEnv": {
+        //"GRADLE_USER_HOME": "/home/vscode", // Gradle cache
+        "M2": "/home/vscode" // Maven cache
+    },
+    "features": {
+        // https://containers.dev/features
+        "docker-in-docker": "latest",
+        "docker-from-docker": "latest",
+        "ghcr.io/devcontainers/features/azure-cli:1": {
+            "version": "latest"
+        },
+        "ghcr.io/devcontainers/features/java:1": {
+            "version": "17",
+            "installMaven": "true",
+            "installGradle": "false"
+        },
+        //"ghcr.io/devcontainers/features/terraform:1": {},
+        "ghcr.io/devcontainers/features/go:1": {}
+        //"ghcr.io/devcontainers/features/dotnet:2": {},
+        //"ghcr.io/devcontainers/features/node:1": {},
+        //"ghcr.io/devcontainers/features/python:1": {},
+    },
+    //"forwardPorts": [ ],
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                // Extension Pack for Java; includes language support, debugging, maven.
+                "vscjava.vscode-java-pack",
+                // Spring Boot Extension Pack
+                "vmware.vscode-boot-dev-pack",
+                // YAML language support
+                "redhat.vscode-yaml",
+                // EditorConfig
+                "EditorConfig.EditorConfig",
+                // Terraform
+                //"ms-azuretools.vscode-azureterraform"
+                // Go
+                "golang.go"
+                // Azure Bicep
+                //"ms-azuretools.vscode-bicep"
+            ]
+        }
+    },
+    "hostRequirements": {
+        "cpus": 2
+    }
+}

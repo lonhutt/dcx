@@ -1,0 +1,9 @@
+// every finding here belongs to a scenario or deprecation rule, so translation reports none
+{
+  "dockerComposeFile": "compose.yml",
+  "image": "x",
+  "runArgs": ["--init"],
+  "shutdownAction": "stopContainer",
+  "extensions": ["a.b"],
+  "settings": {}
+}

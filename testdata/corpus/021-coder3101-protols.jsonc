@@ -1,0 +1,33 @@
+{
+  "name": "Rust",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "..",
+    "cacheFrom": "ghcr.io/coder3101/protols/devcontainer:latest"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/rust:1": {
+      "version": "latest",
+      "profile": "minimal",
+      "components": " " // Disable default components so that the ones from rust-toolchain.toml are respected
+    }
+  },
+  "containerEnv": {
+    "RUSTUP_PERMIT_COPY_RENAME": "true"
+  },
+  "mounts": [
+    {
+      "source": "devcontainer-cargo-cache-${devcontainerId}",
+      "target": "/usr/local/cargo",
+      "type": "volume"
+    },
+    {
+      "source": "${localWorkspaceFolder}/.devcontainer/dotfiles",
+      "target": "/home/vscode/.config/nvim",
+      "type": "bind"
+    }
+  ],
+  "onCreateCommand": "rustup show",
+  "postCreateCommand": "cargo fetch",
+  "waitFor": "postCreateCommand"
+}

@@ -1,0 +1,8 @@
+{
+  "image": "node:22",
+  "initializeCommand": "", // want: warning: "initializeCommand" is empty
+  "onCreateCommand": [], // want: warning: "onCreateCommand" is empty
+  "postCreateCommand": { "a": " " }, // want: warning: "postCreateCommand.a" is empty
+  "postStartCommand": {}, // want: warning: "postStartCommand" has no commands
+  "postAttachCommand": "echo hi"
+}

@@ -1,0 +1,24 @@
+{
+  "name": "Python Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bookworm",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "editor.formatOnSave": true,
+        "files.autoSave": "onFocusChange"
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.debugpy",
+        "ms-python.black-formatter",
+        "charliermarsh.ruff",
+        "ms-toolsai.jupyter",
+        "ms-toolsai.jupyter-keymap",
+        "ms-toolsai.jupyter-renderers"
+      ]
+    }
+  },
+  "forwardPorts": [
+    5000
+  ]
+}

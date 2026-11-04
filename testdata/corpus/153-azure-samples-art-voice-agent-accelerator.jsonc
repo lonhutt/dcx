@@ -1,0 +1,79 @@
+// For format details, see https://aka.ms/devcontainer.json
+// For config options, see https://github.com/devcontainers/templates/tree/main/src/python
+{
+	"name": "ARTAgent DevContainer",
+	
+	// Use custom Dockerfile to remove expired Yarn GPG key before feature installation
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	
+	// Features to add to the dev container
+	"features": {
+		// Docker-in-Docker for container builds
+		"ghcr.io/devcontainers/features/docker-in-docker:2": {},
+		
+		// Node.js for React/Vite frontend
+		"ghcr.io/devcontainers/features/node:1": {
+			"version": "22",
+			"installYarnUsingApt": false
+		},
+		
+		// Azure CLI
+		"ghcr.io/devcontainers/features/azure-cli:1": {
+			"version": "latest"
+		},
+		
+		// Terraform (multi-arch)
+		"ghcr.io/devcontainers/features/terraform:1": {
+			"version": "latest"
+		},
+		
+		// Azure Developer CLI (azd)
+		"ghcr.io/azure/azure-dev/azd:0": {
+			"version": "latest"
+		}
+	},
+	
+	// VS Code customizations
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+				"python.terminal.activateEnvironment": true
+			},
+			"extensions": [
+				// Python (essential)
+				"ms-python.python",
+				"ms-python.debugpy",
+				// GitHub Copilot
+				"GitHub.copilot",
+				"GitHub.copilot-chat",
+				// Azure (essential for this project)
+				"ms-azuretools.azure-dev",
+				"ms-azuretools.vscode-azureterraform",
+				// Utilities
+				"timonwong.shellcheck"
+			]
+		}
+	},
+	
+	// Port forwarding
+	"forwardPorts": [8010, 5173],
+	"portsAttributes": {
+		"8010": {
+			"label": "FastAPI Backend",
+			"onAutoForward": "notify"
+		},
+		"5173": {
+			"label": "Vite Frontend",
+			"onAutoForward": "notify"
+		}
+	},
+	
+	// Run setup script after container creation
+	"postCreateCommand": "bash .devcontainer/post_create.sh",
+	
+	// Run as non-root user
+	"remoteUser": "vscode"
+}

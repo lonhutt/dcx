@@ -1,0 +1,14 @@
+{
+  "image": "node:22",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go",
+        "ms-python.vscode-pylance", // want: warning: "ms-python.vscode-pylance" isn't available from "open-vsx", so it won't install for anyone using it
+        "dbaeumer.vscode-eslnt",
+        "old.thing",
+        "-ms-python.python"
+      ]
+    }
+  }
+}

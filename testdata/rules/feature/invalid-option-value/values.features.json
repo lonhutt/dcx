@@ -1,0 +1,11 @@
+{
+  "ghcr.io/devcontainers/features/python:1": {
+    "id": "python",
+    "options": {
+      "version": { "type": "string", "proposals": ["latest", "3.12"] },
+      "installTools": { "type": "boolean" },
+      "toolsToInstall": { "type": "string" },
+      "optimize": { "type": "string", "enum": ["none", "speed"] }
+    }
+  }
+}

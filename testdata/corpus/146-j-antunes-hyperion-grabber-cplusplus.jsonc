@@ -1,0 +1,39 @@
+{
+  "name": "hyperion-grabber-c",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+
+  "runArgs": [
+    "--privileged"
+  ],
+
+  "mounts": [
+    "source=${localEnv:HOME}/.android,target=/home/ubuntu/.android,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.ssh,target=/home/ubuntu/.ssh,type=bind,consistency=cached,readonly"
+  ],
+
+  "containerEnv": {
+    "DISPLAY": ":99",
+    "ANDROID_EMULATOR_USE_SYSTEM_LIBS": "1"
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-vscode.cpptools",
+        "ms-vscode.cmake-tools",
+        "kotlin-lang-team.kotlin"
+      ],
+      "settings": {
+        "cmake.configureOnOpen": true,
+        "cmake.buildDirectory": "${workspaceFolder}/build"
+      }
+    }
+  },
+
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postStartCommand": "bash .devcontainer/start-emulator.sh",
+
+  "remoteUser": "ubuntu"
+}

@@ -1,0 +1,4 @@
+{
+  "dockerFile": "Dockerfile", // want: warning: Top-level "dockerFile" and "context" are deprecated; use "build.dockerfile" and "build.context"
+  "context": ".."
+}

@@ -1,0 +1,108 @@
+{
+  "version": "1",
+  "files": [
+    {
+      "path": ".devcontainer/devcontainer.json",
+      "diagnostics": [
+        {
+          "ruleId": "schema/unknown-property",
+          "severity": "warning",
+          "message": "Unknown property \"nmae\"; did you mean \"name\"?",
+          "help": "rename it to \"name\"",
+          "docsUrl": "https://containers.dev/implementors/json_reference/#general-properties",
+          "range": {
+            "start": {
+              "offset": 30,
+              "line": 4,
+              "column": 3
+            },
+            "end": {
+              "offset": 36,
+              "line": 4,
+              "column": 9
+            }
+          }
+        },
+        {
+          "ruleId": "deprecation/app-port",
+          "severity": "error",
+          "message": "\"appPort\" is deprecated; use \"forwardPorts\"",
+          "range": {
+            "start": {
+              "offset": 47,
+              "line": 5,
+              "column": 3
+            },
+            "end": {
+              "offset": 56,
+              "line": 5,
+              "column": 12
+            }
+          },
+          "related": [
+            {
+              "range": {
+                "start": {
+                  "offset": 14,
+                  "line": 3,
+                  "column": 3
+                },
+                "end": {
+                  "offset": 21,
+                  "line": 3,
+                  "column": 10
+                }
+              },
+              "message": "the image"
+            }
+          ],
+          "fix": {
+            "title": "Rename",
+            "edits": [
+              {
+                "range": {
+                  "start": {
+                    "offset": 47,
+                    "line": 5,
+                    "column": 3
+                  },
+                  "end": {
+                    "offset": 56,
+                    "line": 5,
+                    "column": 12
+                  }
+                },
+                "newText": "\"forwardPorts\""
+              }
+            ]
+          }
+        },
+        {
+          "ruleId": "style/missing-name",
+          "severity": "info",
+          "message": "No name",
+          "range": {
+            "start": {
+              "offset": 0,
+              "line": 1,
+              "column": 1
+            },
+            "end": {
+              "offset": 1,
+              "line": 1,
+              "column": 2
+            }
+          },
+          "suppressed": true,
+          "suppressReason": "generated file"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "errors": 1,
+    "warnings": 1,
+    "infos": 0,
+    "files": 1
+  }
+}

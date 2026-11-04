@@ -1,0 +1,7 @@
+{
+  "image": "node:22",
+  "securityOpt": [
+    "seccomp=unconfined", // want: warning: seccomp=unconfined disables syscall filtering
+    "label=disable"
+  ]
+}

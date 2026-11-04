@@ -1,0 +1,15 @@
+{
+  "image": "node:22",
+  "forwardPorts": [
+    3000,
+    "db:5432",
+    0, // want: error: 0 isn't a port; ports run from 1 to 65535
+    70000, // want: error: 70000 isn't a port; ports run from 1 to 65535
+    "db:99999" // want: error: 99999 isn't a port; ports run from 1 to 65535
+  ],
+  "portsAttributes": {
+    "3000-3010": {},
+    "3010-3000": {}, // want: error: Port range "3010-3000" ends before it starts
+    "65536": {} // want: error: "65536" isn't a port; ports run from 1 to 65535
+  }
+}

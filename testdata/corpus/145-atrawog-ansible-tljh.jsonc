@@ -1,0 +1,69 @@
+{
+	"name": "jupyter-devcontainer",
+	"containerEnv": {
+		"TZ": "Europe/Vienna",
+		"LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
+	},
+	"workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+	"workspaceFolder": "/workspace",
+
+	"build": {
+		"dockerfile": "../Dockerfile",
+		"context": "../",
+		"args": {
+			// "CONTAINER_WORKSPACE_FOLDER": "/workspace",
+			// "NEW_MAMBA_USER": "jovian",
+			// "NEW_MAMBA_USER_ID": "1010",
+			// "NEW_MAMBA_USER_GID": "1010",
+		},
+		"cacheFrom": [
+			"type=registry,ref=docker.io/atrawog/jupyter-devel:latest"
+		]
+	},
+	"extensions": [	
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"ms-toolsai.jupyter",
+				"ms-azuretools.vscode-docker",
+				"ms-vscode.makefile-tools",
+				"ms-vscode-remote.remote-containers",
+				"ms-vscode-remote.vscode-remote-extensionpack",
+				"GitHub.copilot",
+				"GitHub.copilot-chat",
+				"ritwickdey.LiveServer",
+				"dhoeric.ansible-vault",
+				"redhat.ansible",
+				"redhat.vscode-yaml"
+				],
+	"remoteUser": "jovian",
+	"settings": { 
+		"terminal.integrated.shell.linux": "/bin/bash",
+        "terminal.integrated.shellArgs.linux": ["-c"],
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.profiles.linux": {
+            "bash": {
+                "path": "/bin/bash"
+            }
+        },
+		"files.autoSave": "afterDelay",
+		"python.pythonPath": "/opt/conda/bin/python",
+		"python.defaultInterpreterPath": "/opt/conda/bin/python",
+		"jupyter.interactiveWindow.textEditor.magicCommandsAsComments": true,
+		"python.terminal.activateEnvironment": false	
+	  },
+	"mounts": [
+        "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+		"source=${localWorkspaceFolder}/.cache,target=/home/jovian/.cache,type=bind,consistency=cached"
+    ],
+    "runArgs": [
+		"--device=/dev/kvm",
+		"--ulimit", "nofile=1048576:1048576"
+		"-p=8000:8000",
+		"-p=8443:8443",
+
+	],
+	"containerEnv": {
+		"KVM_DEVICE": "/dev/kvm",
+		"DOCKER_SOCKET": "/var/run/docker.sock"
+	}
+}

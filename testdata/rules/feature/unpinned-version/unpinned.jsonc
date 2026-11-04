@@ -1,0 +1,10 @@
+{
+  "image": "node:22",
+  "features": {
+    "ghcr.io/devcontainers/features/node": {}, // want: warning: Feature "ghcr.io/devcontainers/features/node" has no version tag
+    "ghcr.io/devcontainers/features/go:latest": {}, // want: warning: Feature "ghcr.io/devcontainers/features/go:latest" is pinned to ":latest", which moves
+    "ghcr.io/devcontainers/features/python:1": {},
+    "ghcr.io/devcontainers/features/rust@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": {},
+    "./local": {}
+  }
+}

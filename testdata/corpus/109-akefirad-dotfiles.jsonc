@@ -1,0 +1,16 @@
+{
+	"name": "Ubuntu",
+	"image": "mcr.microsoft.com/devcontainers/base:noble",
+	"postCreateCommand": "${containerWorkspaceFolder}/install.sh",
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"terminal.integrated.defaultProfile.linux": "zsh"
+			}
+		}
+	},
+	"containerEnv": {
+		"DEVCONTAINER": "1",
+		"ZDOTDIR": "/home/vscode/.config/zsh"
+	}
+}

@@ -1,0 +1,7 @@
+{
+  "dockerComposeFile": "compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "runArgs": ["--init"], // want: warning: "runArgs" is ignored in a Compose config
+  "appPort": [3000] // want: warning: "appPort" is ignored in a Compose config
+}

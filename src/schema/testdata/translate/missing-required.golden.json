@@ -1,0 +1,20 @@
+[
+  {
+    "class": "missing-required",
+    "at": "\"build\"",
+    "message": "\"build\" is missing required property \"dockerfile\"",
+    "docsUrl": "https://containers.dev/implementors/json_reference/#image-specific"
+  },
+  {
+    "class": "unknown-property",
+    "at": "\"dockerfle\"",
+    "message": "Unknown property \"dockerfle\"",
+    "docsUrl": "https://containers.dev/implementors/json_reference/#image-specific"
+  },
+  {
+    "class": "missing-required",
+    "at": "{",
+    "message": "\"mounts.0\" is missing required property \"target\"",
+    "docsUrl": "https://containers.dev/implementors/json_reference/#general-properties"
+  }
+]

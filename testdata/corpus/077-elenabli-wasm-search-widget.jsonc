@@ -1,0 +1,14 @@
+{
+  "name": "Rust Development Container",
+  "image": "mcr.microsoft.com/vscode/devcontainers/rust:latest",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+      },
+      "extensions": [
+        "matklad.rust-analyzer"
+      ]
+    }
+  }
+}

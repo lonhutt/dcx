@@ -1,0 +1,8 @@
+{
+  "image": "node:22",
+  "mounts": [
+    { "type": "volume", "source": "cache" }, // want: error: This mount has no target in the container
+    { "type": "volume", "source": "data", "target": "/data" },
+    "type=volume,source=x" // want: error: This mount has no target in the container
+  ]
+}

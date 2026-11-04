@@ -1,0 +1,28 @@
+{
+  "name": "Jupyter + Spark Dev Environment",
+  "dockerComposeFile": [
+    "../docker-compose.yml"
+  ],
+  "service": "jupyter-spark",
+  "workspaceFolder": "/workspace",
+  "remoteUser": "root",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "jupyter.notebookFileRoot": "${workspaceFolder}"
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "ms-toolsai.jupyter",
+        "esbenp.prettier-vscode",
+        "redhat.vscode-yaml"
+      ]
+    }
+  },
+  "forwardPorts": [
+    8888,
+    4040
+  ]
+}

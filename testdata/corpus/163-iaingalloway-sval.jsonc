@@ -1,0 +1,9 @@
+{
+  "name": "sval-devcontainer",
+  "image": "ghcr.io/iaingalloway/devcontainers/go:1.5.57",
+  "runArgs": [
+    "--name",
+    "sval-devcontainer",
+    "--network=host"
+  ]
+}

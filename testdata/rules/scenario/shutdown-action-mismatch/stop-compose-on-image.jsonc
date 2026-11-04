@@ -1,0 +1,4 @@
+{
+  "image": "node:22",
+  "shutdownAction": "stopCompose" // want: error: "stopCompose" only applies to a Compose config; use "stopContainer"
+}
