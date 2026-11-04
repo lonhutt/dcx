@@ -28,7 +28,7 @@ export interface Config {
   readonly online?: boolean;
   readonly rules?: Readonly<Record<string, Severity>>;
   readonly categories?: Readonly<Partial<Record<Category, Severity>>>;
-  /** gitignore-style patterns, relative to `base`. */
+  /** gitignore-style patterns, relative to `base`, or to the directory being checked when only the user config sets them. */
   readonly exclude?: readonly string[];
   readonly allowUnpinned?: readonly string[];
   /** Milliseconds. */

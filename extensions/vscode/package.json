@@ -46,7 +46,7 @@
         "dcx.online": {
           "type": "boolean",
           "default": false,
-          "description": "Enable rules that need network access: feature options and extension availability."
+          "description": "Enable rules that need network access: feature options and extension availability. Left unset, .dcx.yaml or DCX_ONLINE decides."
         },
         "dcx.configPath": {
           "type": "string",

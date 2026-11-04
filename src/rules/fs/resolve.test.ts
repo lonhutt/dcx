@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { BunFS } from "../../vfs/bunfs";
 import { MemFS } from "../../vfs/memfs";
-import { inside, resolveRef } from "./resolve";
+import { inside, readInside, resolveRef } from "./resolve";
 
 describe("inside", () => {
   test.each<[string, string, boolean]>([
@@ -16,6 +16,16 @@ describe("inside", () => {
   ])("%s contains %s: %s", (root, child, want) => {
     expect(inside(root, child)).toBe(want);
   });
+});
+
+test("readInside reads a file in the workspace and nothing outside it", async () => {
+  const fs = new MemFS({ "/w/Dockerfile": "ARG A", "/etc/secret": "ARG LEAKED" });
+  expect(await readInside(fs, "/w", "/w/.devcontainer", "../Dockerfile")).toBe("ARG A");
+  expect(await readInside(fs, "/w", "/w/.devcontainer", "../../etc/secret")).toBeUndefined();
+  expect(await readInside(fs, "/w", "/w", "nope")).toBeUndefined();
+  expect(fs.calls.map((p) => p.replace(/\\/g, "/").replace(/^[A-Z]:/, ""))).not.toContain(
+    "/etc/secret",
+  );
 });
 
 describe("resolveRef over an in-memory workspace", () => {

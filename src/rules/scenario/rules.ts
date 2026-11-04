@@ -1,5 +1,6 @@
 import { definitionKeys } from "../../schema/generated/devContainer.scenarios.validator.js";
 import { readServices } from "../../model/compose";
+import { readInside } from "../fs/resolve";
 import { keySpan, type Field } from "../../model/model";
 import { rangeOf } from "../../jsonc/jsonc";
 import { suggest } from "../../schema/suggest";
@@ -150,12 +151,11 @@ a file can't be read reliably.
 Change "service" to one of the defined services, or add the service to the Compose file.`,
   defaultSeverity: "error",
   justification: "the CLI fails when it tries to attach to the service",
-  async check({ model, fs, dir, report }) {
+  async check({ model, fs, root, dir, report }) {
     const service = model.string("service");
     if (!service || !model.composeFiles.length) return;
     const names = await readServices(
-      fs,
-      dir,
+      (f) => readInside(fs, root, dir, f),
       model.composeFiles.map((f) => f.value),
     );
     // undefined: a file couldn't be read or parsed reliably, so skip rather than guess

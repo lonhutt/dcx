@@ -1,13 +1,8 @@
 import { expect, test } from "bun:test";
-import { MemFS } from "../vfs/memfs";
 import { readServices } from "./compose";
 
 const read = (files: Record<string, string>, names = Object.keys(files)) =>
-  readServices(
-    new MemFS(Object.fromEntries(Object.entries(files).map(([k, v]) => [`/w/${k}`, v]))),
-    "/w",
-    names,
-  );
+  readServices(async (f) => files[f], names);
 
 test("service names, unioned across files in order", async () => {
   expect(
@@ -40,8 +35,8 @@ test("a missing file is undefined", async () => {
   expect(await read({}, ["nope.yml"])).toBeUndefined();
 });
 
-test("the read goes through the FileSystem, not the disk", async () => {
-  const fs = new MemFS({ "/w/c.yml": "services: {app: {}}" });
-  await readServices(fs, "/w", ["c.yml"]);
-  expect(fs.calls.map((p) => p.replace(/\\/g, "/").replace(/^[A-Z]:/, ""))).toEqual(["/w/c.yml"]);
+test("each file is read through the reader it's given, once", async () => {
+  const asked: string[] = [];
+  await readServices(async (f) => (asked.push(f), "services: {app: {}}"), ["a.yml", "b.yml"]);
+  expect(asked).toEqual(["a.yml", "b.yml"]);
 });

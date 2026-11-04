@@ -3,6 +3,8 @@ import { applyEdits, parse } from "../jsonc/jsonc";
 import { duplicateKey } from "./syntax/duplicate-key";
 import { runCase } from "./rulestest/harness";
 import { RULES } from "./index";
+import { buildArgNotDeclared } from "./semantic/rules";
+import { composeServiceNotFound } from "./scenario/rules";
 import { appPort, rootExtensions, rootSettings, topLevelDockerfile } from "./deprecation/rules";
 
 const fixed = (
@@ -82,8 +84,100 @@ describe("deprecation fixes exist now, long before the fix engine", () => {
     expect(d!.fix).toBeUndefined();
   });
 
+  test("a first member with a comment before its comma leaves valid JSONC", async () => {
+    const text = '{\n  "settings": {} /* c */, "name": "x", "image": "node:22"\n}';
+    const [d] = await runCase(rootSettings, text);
+    const out = fixed(text, d!);
+    expect(parse("f", out).errors).toEqual([]);
+    expect(out).toContain("/* c */");
+  });
+
+  test("a comma inside a comment isn't taken for the property's own", async () => {
+    const text = '{\n  "name": "x",\n  "settings": {} // a, b\n  , "image": "node:22"\n}';
+    const [d] = await runCase(rootSettings, text);
+    const out = fixed(text, d!);
+    expect(parse("f", out).errors).toEqual([]);
+    expect(out).toContain("// a, b");
+  });
+
+  test("merging extensions keeps the comments in the existing list", async () => {
+    const text = `{
+  "image": "x",
+  "extensions": ["a.b", "c.d"],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // needed for CI lint
+        "c.d"
+      ]
+    }
+  }
+}`;
+    const [d] = await runCase(rootExtensions, text);
+    const out = fixed(text, d!);
+    expect(out).toContain("// needed for CI lint");
+    expect(parse("f", out).errors).toEqual([]);
+    const value = JSON.parse(out.replace(/\/\/.*$/gm, ""));
+    expect(value.customizations.vscode.extensions).toEqual(["c.d", "a.b"]);
+  });
+
+  test("merging settings keeps the comments in the existing object", async () => {
+    const text = `{
+  "image": "x",
+  "settings": { "a": 1, "b": 2 },
+  "customizations": { "vscode": { "settings": {
+    // why b is 3
+    "b": 3
+  } } }
+}`;
+    const [d] = await runCase(rootSettings, text);
+    const out = fixed(text, d!);
+    expect(out).toContain("// why b is 3");
+    const value = JSON.parse(out.replace(/\/\/.*$/gm, ""));
+    expect(value.customizations.vscode.settings).toEqual({ b: 3, a: 1 });
+  });
+
+  test("a moved value keeps its own comments, re-indented to where it lands", async () => {
+    const text = `{
+  "image": "x",
+  "settings": {
+    // two, for the linter
+    "editor.tabSize": 2
+  }
+}`;
+    const [d] = await runCase(rootSettings, text);
+    const out = fixed(text, d!);
+    expect(parse("f", out).errors).toEqual([]);
+    expect(out).toContain('\n        // two, for the linter\n        "editor.tabSize": 2\n      }');
+  });
+
   test("app-port has no automatic fix", async () => {
     const [d] = await runCase(appPort, '{"image": "x", "appPort": 3000}');
     expect(d!.fix).toBeUndefined();
+  });
+});
+
+describe("rules that read a referenced file stay inside the workspace", () => {
+  const outside = {
+    "../etc/Dockerfile": "ARG LEAKED",
+    "../etc/compose.yml": "services: {leaked: {}}",
+  };
+
+  test("build-arg-not-declared doesn't read a Dockerfile outside it", async () => {
+    const found = await runCase(
+      buildArgNotDeclared,
+      '{"name": "x", "build": {"dockerfile": "../../etc/Dockerfile", "args": {"LEAKE": "1"}}}',
+      outside,
+    );
+    expect(found).toEqual([]);
+  });
+
+  test("compose-service-not-found doesn't list services from a file outside it", async () => {
+    const found = await runCase(
+      composeServiceNotFound,
+      '{"name": "x", "dockerComposeFile": "../../etc/compose.yml", "service": "app", "workspaceFolder": "/w"}',
+      outside,
+    );
+    expect(found).toEqual([]);
   });
 });

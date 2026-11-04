@@ -28,6 +28,11 @@ const PROJECTS: Record<string, string> = {
   "multi/.dcx.yaml": "exclude:\n  - .devcontainer/b/\n",
   "online/.devcontainer.json":
     '{"name": "x", "image": "node:22", "features": {"ghcr.io/devcontainers/features/node:1": {}}, "customizations": {"vscode": {"extensions": ["golang.go"]}}}',
+  "commas/.devcontainer.json": '{"name": "x", "image": "node:22",}',
+  "userexclude/.devcontainer/a/devcontainer.json": '{"name": "a", "image": "node:22"}',
+  "userexclude/.devcontainer/b/devcontainer.json":
+    '{"name": "b", "image": "node:22", "privileged": "yes"}',
+  "userhome/.config/dcx/config.yaml": "exclude:\n  - .devcontainer/b/\n",
   "fixme/.devcontainer.json":
     '{\n  "name": "x",\n  "image": "node:22",\n  "settings": {"a": 1}\n}\n',
 };
@@ -43,7 +48,9 @@ beforeAll(() => {
 afterAll(() => rmSync(root, { recursive: true, force: true }));
 
 /** The CLI in-process, with captured output and an empty home. */
-async function dcx(...args: string[]) {
+const dcx = (...args: string[]) => dcxIn(join(root, "home"), ...args);
+
+async function dcxIn(home: string, ...args: string[]) {
   let stdout = "";
   let stderr = "";
   const io: Io = {
@@ -52,7 +59,7 @@ async function dcx(...args: string[]) {
     env: {},
     cwd: root,
     isTTY: false,
-    home: join(root, "home"),
+    home,
   };
   const code = await run(args, io);
   return { stdout, stderr, code };
@@ -211,6 +218,28 @@ test("--fix-dry-run prints the diff and leaves the file alone; --fix writes it",
   writeFileSync(path, before);
 });
 
+test("--fix-dry-run exits on the file as it is, not as the fix would leave it", async () => {
+  expect((await dcx("check", "--error-on-warning", "fixme")).code).toBe(1);
+  expect((await dcx("check", "--error-on-warning", "--fix-dry-run", "fixme")).code).toBe(1);
+});
+
+test("--rule turns an off rule on even with --max-severity", async () => {
+  const named = await dcx(
+    "check",
+    "--rule",
+    "syntax/trailing-comma",
+    "--max-severity",
+    "info",
+    "commas",
+  );
+  expect(named.stdout).toContain("syntax/trailing-comma");
+});
+
+test("a user config's excludes are relative to the project, not ~/.config/dcx", async () => {
+  expect((await dcx("check", "userexclude")).code).toBe(1);
+  expect((await dcxIn(join(root, "userhome"), "check", "userexclude")).code).toBe(0);
+});
+
 test("--format json and sarif", async () => {
   const j = JSON.parse((await dcx("check", "--format", "json", "broken")).stdout);
   expect(j.version).toBe("1");
@@ -288,4 +317,13 @@ describe("--online", () => {
     );
     expect(stderr).toContain('dcx: warning: extension source "open-vsx" is unreachable');
   });
+});
+
+test("the pre-commit hook and the action run this version", async () => {
+  const repo = join(import.meta.dir, "..", "..");
+  const { version } = await Bun.file(join(repo, "package.json")).json();
+  expect(await Bun.file(join(repo, ".pre-commit-hooks.yaml")).text()).toContain(
+    `bunx dcx@${version} check`,
+  );
+  expect(await Bun.file(join(repo, "action.yml")).text()).toContain(`default: ${version}`);
 });

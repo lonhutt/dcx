@@ -6,7 +6,8 @@ export interface DcxConfig {
   /** A local dcx checkout to load the analyser from; for working on dcx itself. */
   readonly path: string;
   readonly run: "onSave" | "onType";
-  readonly online: boolean;
+  /** Unset unless the user set it, so .dcx.yaml and DCX_ONLINE still decide. */
+  readonly online: boolean | undefined;
   /** An explicit `.dcx.yaml`, absolute or relative to the workspace folder. */
   readonly configPath: string;
   /** For the language server; nothing reads it until the extension uses one. */
@@ -22,8 +23,15 @@ export function readConfig(scope?: vscode.ConfigurationScope): DcxConfig {
     enable: c.get("enable", true),
     path: c.get("path", ""),
     run: c.get<string>("run", "onSave") === "onType" ? "onType" : "onSave",
-    online: c.get("online", false),
+    online: explicit(c.inspect<boolean>("online")),
     configPath: c.get("configPath", ""),
     trace: c.get("trace.server", "off"),
   };
+}
+
+/** The value set at the narrowest scope; the manifest default doesn't count. */
+function explicit<T>(
+  i: { globalValue?: T; workspaceValue?: T; workspaceFolderValue?: T } | undefined,
+) {
+  return i?.workspaceFolderValue ?? i?.workspaceValue ?? i?.globalValue;
 }

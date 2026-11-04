@@ -30,7 +30,10 @@ module.exports = {
       doc(${JSON.stringify(join(sandbox, "w", ".devcontainer.json"))}, '{"name": "x", "image": "node:22", "nmae": "y", "privileged": "yes"}'),
       doc(${JSON.stringify(join(sandbox, "w", "package.json"))}, "{"),
     ],
-    getConfiguration: () => ({ get: (k, d) => (k in settings ? settings[k] : d) }),
+    getConfiguration: () => ({
+      get: (k, d) => (k in settings ? settings[k] : d),
+      inspect: (k) => (k in settings ? { globalValue: settings[k] } : {}),
+    }),
     workspaceFolders: undefined,
     onDidOpenTextDocument: event(), onDidSaveTextDocument: event(), onDidChangeTextDocument: event(),
     onDidCloseTextDocument: event(), onDidChangeConfiguration: event(),
@@ -92,6 +95,8 @@ test("every command in package.json is registered, and nothing else", async () =
 
 test("every setting the extension reads is declared", () => {
   const source = readFileSync(join(extensionDir, "src", "config.ts"), "utf8");
-  const read = [...source.matchAll(/c\.get(?:<\w+>)?\("([^"]+)"/g)].map((m) => `dcx.${m[1]}`);
+  const read = [...source.matchAll(/c\.(?:get|inspect)(?:<\w+>)?\("([^"]+)"/g)].map(
+    (m) => `dcx.${m[1]}`,
+  );
   expect(read.sort()).toEqual(Object.keys(manifest.contributes.configuration.properties).sort());
 });

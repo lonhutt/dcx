@@ -142,29 +142,40 @@ come from user settings or group policy instead.
   },
 });
 
+// the three network rules share one round of lookups per document
+const looked = new WeakMap<Pass["model"], ReturnType<typeof lookupAll>>();
+const lookups = (pass: Pass) => {
+  let found = looked.get(pass.model);
+  if (!found) looked.set(pass.model, (found = lookupAll(pass)));
+  return found;
+};
+
 /** Each extension, with what every network source said: found, absent, or unreachable. */
-async function lookups(pass: Pass) {
+async function lookupAll(pass: Pass) {
   const remote = pass.extensions.sources.filter((s) => s.source.requiresNetwork);
   if (!remote.length) return [];
-  const out = [];
-  for (const { field, entry } of extensionEntries(pass)) {
-    if (!entry || entry.excluded) continue;
-    const results = await Promise.all(
-      remote.map(async (s) => {
-        try {
-          return {
-            ...s,
-            ext: await s.source.lookup(entry.publisher, entry.name, pass.signal),
-            reached: true,
-          };
-        } catch {
-          return { ...s, ext: undefined, reached: false };
-        }
-      }),
-    );
-    out.push({ field, id: `${entry.publisher}.${entry.name}`, results });
-  }
-  return out;
+  const wanted = extensionEntries(pass).flatMap(({ field, entry }) =>
+    entry && !entry.excluded ? [{ field, entry }] : [],
+  );
+  return Promise.all(
+    wanted.map(async ({ field, entry }) => ({
+      field,
+      id: `${entry.publisher}.${entry.name}`,
+      results: await Promise.all(
+        remote.map(async (s) => {
+          try {
+            return {
+              ...s,
+              ext: await s.source.lookup(entry.publisher, entry.name, pass.signal),
+              reached: true,
+            };
+          } catch {
+            return { ...s, ext: undefined, reached: false };
+          }
+        }),
+      ),
+    })),
+  );
 }
 
 const names = (xs: readonly { source: { id: string } }[]) =>

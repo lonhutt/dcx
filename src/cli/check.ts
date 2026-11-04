@@ -255,11 +255,7 @@ export async function check(
     const config = await configFor(isFile ? dirname(abs) : abs);
     for (const path of found.targets) {
       // a file named outright is always linted; exclude only filters what discovery found
-      if (
-        !isFile &&
-        config.exclude?.length &&
-        excluded(config.exclude, config.base ?? io.cwd, path)
-      )
+      if (!isFile && config.exclude?.length && excluded(config.exclude, config.base ?? abs, path))
         continue;
       if (!files.some((f) => f.path === path)) files.push({ path, config });
     }
@@ -269,9 +265,12 @@ export async function check(
   const results: FileResult[] = [];
   let failed = false;
   let diffs = "";
+  const rules = only && all().filter((r) => only.includes(r.id));
+  // one Config per project config, so services.forConfig builds each one's sources once
+  const named = new Map<Config, Config>();
   for (const { path, config: base } of files) {
-    const rules = only && all().filter((r) => only.includes(r.id));
-    const config = only ? withNamedRulesOn(only, base) : base;
+    let config = base;
+    if (only) named.set(base, (config = named.get(base) ?? withNamedRulesOn(only, base)));
     const extra = await services.forConfig(config).catch((err: Error) => {
       if (err instanceof SourceError) throw new ToolError(err.message);
       throw err;
@@ -295,8 +294,10 @@ export async function check(
         );
       if (values["fix-dry-run"])
         diffs += unifiedDiff(relative(io.cwd, path).replace(/\\/g, "/"), before, fixed.text);
-      else if (fixed.text !== before) await Bun.write(path, fixed.text);
-      source = fixed.text;
+      else {
+        if (fixed.text !== before) await Bun.write(path, fixed.text);
+        source = fixed.text;
+      }
     }
     const doc = parse(path, source);
     const diagnostics = await lint(doc);
@@ -319,8 +320,7 @@ export async function check(
 /** `--rule` names a rule to run: one that's off by default or by config runs at warning. */
 function withNamedRulesOn(only: readonly string[], config: Config): Config {
   const rules = { ...config.rules };
-  for (const id of only)
-    if (severityFor(get(id)!, config) === "off" && !config.maxSeverity) rules[id] = "warning";
+  for (const id of only) if (severityFor(get(id)!, config) === "off") rules[id] = "warning";
   return { ...config, rules };
 }
 

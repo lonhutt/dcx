@@ -5,6 +5,7 @@ import { DEFAULTS, type Config } from "./config";
 import { discoverConfig, userConfigPath } from "./discover";
 import { ConfigError, parseConfig } from "./load";
 import { fromEnv, merge } from "./merge";
+import { ConfigResolver } from "./resolve";
 
 const W = resolve("/w");
 
@@ -219,5 +220,25 @@ describe("discovery", () => {
   test("the user config lives under XDG_CONFIG_HOME, falling back to ~/.config", () => {
     expect(userConfigPath({ XDG_CONFIG_HOME: "/x" }, "/h")).toBe(join("/x", "dcx", "config.yaml"));
     expect(userConfigPath({}, "/h")).toBe(join("/h", ".config", "dcx", "config.yaml"));
+  });
+});
+
+describe("ConfigResolver", () => {
+  const fs = new MemFS({
+    [join(W, ".git", "HEAD")]: "",
+    [join(W, "a", ".devcontainer.json")]: "{}",
+    [join(W, "b", ".devcontainer.json")]: "{}",
+    [join(W, "home", ".config", "dcx", "config.yaml")]: "exclude: [examples/]\n",
+  });
+  const resolver = () => new ConfigResolver({ fs, env: {}, home: join(W, "home") });
+
+  // services caches on Config identity; a fresh object per lint would never hit
+  test("folders under the same project config get the same object", async () => {
+    const r = resolver();
+    expect(await r.for(join(W, "a"))).toBe(await r.for(join(W, "b")));
+  });
+
+  test("a user config sets no base, so its excludes follow the project", async () => {
+    expect((await resolver().for(join(W, "a"))).base).toBeUndefined();
   });
 });

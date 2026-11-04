@@ -42,7 +42,7 @@ export function activate(context: vscode.ExtensionContext): void {
       env: process.env,
       home: homedir(),
       ...(configPath && { configPath }),
-      overrides: { online: c.online },
+      ...(c.online !== undefined && { overrides: { online: c.online } }),
     });
   }
 

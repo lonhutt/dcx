@@ -171,7 +171,8 @@ SARIF; give the job `security-events: write`).
     - id: dcx
 ```
 
-The hook needs Bun on the PATH.
+The hook runs `bunx dcx@0.1.0 check` with the Bun on your PATH, so it needs Bun installed;
+pre-commit doesn't install it.
 
 ## JSON output
 

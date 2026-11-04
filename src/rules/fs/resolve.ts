@@ -18,6 +18,21 @@ export function inside(root: string, child: string): boolean {
 }
 
 /**
+ * The text of `ref`, resolved as {@link resolveRef} does: `undefined` when it leaves the
+ * workspace or isn't a readable file. Every rule that reads a referenced file uses this.
+ */
+export async function readInside(
+  fs: FileSystem,
+  root: string,
+  dir: string,
+  ref: string,
+): Promise<string | undefined> {
+  const r = await resolveRef(fs, root, dir, ref);
+  if (r.escapes || r.kind !== "file") return undefined;
+  return fs.readFile(r.path).catch(() => undefined);
+}
+
+/**
  * Resolves `ref` (as written in devcontainer.json, forward slashes) against `dir`, and
  * checks it stays inside `root`. A lexical escape is rejected before anything outside
  * is touched; otherwise the path is canonicalised and checked again, which is what

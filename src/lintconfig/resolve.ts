@@ -25,13 +25,22 @@ export interface ResolveOptions {
 export class ConfigResolver {
   private user?: Promise<Config>;
   private readonly files = new Map<string, Promise<Config>>();
+  // one object per project config: callers cache on Config identity
+  private readonly merged = new Map<string | undefined, Promise<Config>>();
 
   constructor(private readonly options: ResolveOptions) {}
 
   async for(dir: string): Promise<Config> {
-    const { fs, configPath, noConfig, env, overrides = {} } = this.options;
-    const user = await (this.user ??= this.loadUser());
+    const { fs, configPath, noConfig } = this.options;
     const path = configPath ?? (noConfig ? undefined : await discoverConfig(fs, dir));
+    let config = this.merged.get(path);
+    if (!config) this.merged.set(path, (config = this.layer(path)));
+    return config;
+  }
+
+  private async layer(path: string | undefined): Promise<Config> {
+    const { env, overrides = {} } = this.options;
+    const user = await (this.user ??= this.loadUser());
     const project = path ? await this.read(path, "project") : {};
     return [user, project, fromEnv(env), overrides].reduce(merge, DEFAULTS);
   }
@@ -44,10 +53,10 @@ export class ConfigResolver {
   private read(path: string, layer: "user" | "project"): Promise<Config> {
     let config = this.files.get(path);
     if (!config) {
-      config = load(this.options.fs, resolve(path), layer).then((c) => ({
-        ...c,
-        base: c.base ?? dirname(path),
-      }));
+      // a user config's excludes are relative to the project being checked, not ~/.config/dcx
+      config = load(this.options.fs, resolve(path), layer).then((c) =>
+        layer === "project" ? { ...c, base: c.base ?? dirname(path) } : { ...c, base: undefined },
+      );
       this.files.set(path, config);
     }
     return config;

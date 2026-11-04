@@ -21,7 +21,8 @@ export function services(
   const failures: string[] = [];
   const network: Network = { fetch: fetchFn, cache, env, failures };
   const resolvers = new Map<number, ReturnType<typeof ociResolver>>();
-  const built = new Map<Config, Promise<Partial<AnalyzeOptions>>>();
+  // weak: an editor makes a new resolver, and new Configs, whenever settings change
+  const built = new WeakMap<Config, Promise<Partial<AnalyzeOptions>>>();
 
   const forConfig = (config: Config): Promise<Partial<AnalyzeOptions>> => {
     let s = built.get(config);

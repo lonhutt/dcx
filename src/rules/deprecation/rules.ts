@@ -1,8 +1,8 @@
-import { isObject, keySpan, member } from "../../model/model";
+import { elements, isObject, keySpan, member, members } from "../../model/model";
 import { REFERENCE, rule } from "../util";
 import { rangeOf } from "../../jsonc/jsonc";
 import { featureEntries, isLegacyId } from "../feature/features";
-import { fixWith, moveProperty, rewrite } from "./edits";
+import { fixWith, moveProperty, rewrite, verbatim, type Change } from "./edits";
 
 const VSCODE_DOCS = "https://containers.dev/supporting#visual-studio-code";
 
@@ -101,11 +101,20 @@ The fix moves the list, merging it with any extensions already listed there.`,
   check({ model, doc, report }) {
     const extensions = model.get("extensions");
     if (!extensions) return;
+    const target = ["customizations", "vscode", "extensions"];
     const vscode = member(member(model.get("customizations")?.node, "vscode")?.node, "extensions");
-    const existing = Array.isArray(vscode?.value) ? vscode.value : [];
-    const merged = Array.isArray(extensions.value)
-      ? [...existing, ...extensions.value.filter((e) => !existing.includes(e))]
-      : extensions.value;
+    // into an existing list: append only what's new, so the list's own comments stay put
+    const existing = vscode?.value;
+    const into: Change[] =
+      Array.isArray(existing) && Array.isArray(extensions.value)
+        ? elements(extensions.node)
+            .filter((e) => !existing.includes(e.value))
+            .map((e, i) => ({
+              path: [...target, existing.length + i],
+              raw: verbatim(doc, e.node),
+              insert: true,
+            }))
+        : [{ path: target, raw: verbatim(doc, extensions.node) }];
     report({
       range: keySpan(extensions),
       message: 'Top-level "extensions" is deprecated; use "customizations.vscode.extensions"',
@@ -113,7 +122,7 @@ The fix moves the list, merging it with any extensions already listed there.`,
       docsUrl: VSCODE_DOCS,
       ...fixWith(
         'Move to "customizations.vscode.extensions"',
-        moveProperty(doc, "extensions", ["customizations", "vscode", "extensions"], merged),
+        moveProperty(doc, "extensions", into),
       ),
     });
   },
@@ -138,21 +147,20 @@ when the same setting is in both.`,
     const settings = model.get("settings");
     if (!settings) return;
     const existing = member(member(model.get("customizations")?.node, "vscode")?.node, "settings");
-    const isObject = (v: unknown): v is Record<string, unknown> =>
-      typeof v === "object" && v !== null && !Array.isArray(v);
-    const merged =
-      isObject(settings.value) && isObject(existing?.value)
-        ? { ...settings.value, ...existing.value }
-        : settings.value;
+    const target = ["customizations", "vscode", "settings"];
+    // existing settings win, and only the others are added, so its comments stay put
+    const into: Change[] =
+      isObject(settings) && isObject(existing)
+        ? members(settings.node)
+            .filter((m) => !(m.name in existing.value))
+            .map((m) => ({ path: [...target, m.name], raw: verbatim(doc, m.field.node) }))
+        : [{ path: target, raw: verbatim(doc, settings.node) }];
     report({
       range: keySpan(settings),
       message: 'Top-level "settings" is deprecated; use "customizations.vscode.settings"',
       help: 'move it to "customizations.vscode.settings"',
       docsUrl: VSCODE_DOCS,
-      ...fixWith(
-        'Move to "customizations.vscode.settings"',
-        moveProperty(doc, "settings", ["customizations", "vscode", "settings"], merged),
-      ),
+      ...fixWith('Move to "customizations.vscode.settings"', moveProperty(doc, "settings", into)),
     });
   },
 });

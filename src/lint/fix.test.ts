@@ -186,7 +186,8 @@ describe("unifiedDiff", () => {
     expect(unifiedDiff("f", "a\nb", "a\nc")).toContain("\\ No newline at end of file");
   });
 
-  // patch(1) isn't on every CI runner; windows-latest has none
+  // patch(1) isn't on every machine; Git for Windows ships GNU patch, which writes CRLF
+  // in text mode, so it's told to keep bytes as they are there
   test.skipIf(!Bun.which("patch"))(
     "applying the diff with patch(1) reproduces the fixed file",
     async () => {
@@ -195,7 +196,8 @@ describe("unifiedDiff", () => {
         const before = await Bun.file(join(FIXTURES, "root-settings-and-extensions.jsonc")).text();
         const after = (await fixDocument(before, PATH, lint)).text;
         await Bun.write(join(dir, "f"), before);
-        await Bun.$`patch -s -p1 -d ${dir} < ${Buffer.from(unifiedDiff("f", before, after))}`.quiet();
+        const binary = process.platform === "win32" ? ["--binary"] : [];
+        await Bun.$`patch ${binary} -s -p1 -d ${dir} < ${Buffer.from(unifiedDiff("f", before, after))}`.quiet();
         expect(await Bun.file(join(dir, "f")).text()).toBe(after);
       } finally {
         rmSync(dir, { recursive: true, force: true });

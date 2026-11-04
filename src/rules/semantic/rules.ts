@@ -1,4 +1,4 @@
-import { resolve } from "node:path";
+import { readInside } from "../fs/resolve";
 import { rangeOf, textOf, type Document, type Node } from "../../jsonc/jsonc";
 import { keySpan, members } from "../../model/model";
 import {
@@ -265,15 +265,12 @@ reads), and the build runs with the Dockerfile's default.
 Fix the name, or add an ARG for it to the Dockerfile. This is the only check dcx makes
 against a Dockerfile, and it's skipped if the Dockerfile can't be read.`,
   defaultSeverity: "warning",
-  async check({ model, fs, dir, report }) {
+  async check({ model, fs, root, dir, report }) {
     const build = model.build;
     if (!build?.args || !build.dockerfile) return;
-    let text: string;
-    try {
-      text = await fs.readFile(resolve(dir, build.dockerfile.value));
-    } catch {
-      return; // fs/dockerfile-not-found says why; nothing to compare against here
-    }
+    const text = await readInside(fs, root, dir, build.dockerfile.value);
+    // the fs/* rules say why; nothing to compare against here
+    if (text === undefined) return;
     const declared = declaredArgs(text);
     for (const { name, field } of members(build.args.node)) {
       if (declared.has(name)) continue;
