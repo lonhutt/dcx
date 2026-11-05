@@ -113,3 +113,31 @@ jobs:
 
       - run: xvfb-run -a bun run test:e2e
         working-directory: extensions/vscode
+
+  # Publishes the extension once main is green. Marketplace Trusted Publishing trusts this
+  # workflow file in the marketplace environment, so there's no token to store or renew;
+  # a merge that doesn't bump the version is a no-op.
+  publish-vscode:
+    name: publish vscode extension
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [test, check, build-smoke, vscode]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: marketplace
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+
+      - run: bun install --frozen-lockfile
+
+      # 4.1.0 is the first vsce with --oidc
+      - run: |
+          bun run build
+          bunx @vscode/vsce@4.1.0 publish --oidc --no-dependencies --skip-license --skip-duplicate
+        working-directory: extensions/vscode

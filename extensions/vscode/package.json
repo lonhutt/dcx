@@ -91,6 +91,6 @@
   "scripts": {
     "build": "bun build src/extension.ts src/server.ts --target=node --format=cjs --external vscode --minify --outdir dist",
     "test:e2e": "bun e2e/run.ts",
-    "package": "bun run build && bunx @vscode/vsce@4.0.0 package --no-dependencies --skip-license"
+    "package": "bun run build && bunx @vscode/vsce@4.1.0 package --no-dependencies --skip-license"
   }
 }
