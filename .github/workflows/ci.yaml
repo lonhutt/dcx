@@ -30,7 +30,7 @@ jobs:
       # schemas/ is a symlink into the devcontainer-spec submodule — without this,
       # both tsc's text-import resolution and the schema tests' readdirSync see an
       # empty/missing directory.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -45,7 +45,7 @@ jobs:
       # One copy is enough; the lcov content doesn't vary by OS.
       - name: Upload coverage
         if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage
           path: coverage/lcov.info
@@ -59,7 +59,7 @@ jobs:
     steps:
       # Same reason as the test job: tsc resolves schemas/*.schema.json through the
       # devcontainer-spec submodule symlink.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
 
@@ -78,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -97,7 +97,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -106,7 +106,7 @@ jobs:
       - run: bun install --frozen-lockfile
 
       # the pinned VS Code is the same download every run
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: extensions/vscode/.vscode-test
           key: vscode-test-1.90.0
@@ -128,7 +128,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: oven-sh/setup-bun@v2
         with:
