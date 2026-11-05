@@ -78,6 +78,8 @@ export function analyzer(options: {
   const running = new Map<string, AbortController>();
   const latest = new Map<string, Analysis>();
 
+  /** Documents with a timer or a run still going; for tests to assert nothing leaks. */
+  const pending = () => new Set([...timers.keys(), ...running.keys()]);
   const cancel = (uri: string) => {
     clearTimeout(timers.get(uri));
     timers.delete(uri);
@@ -125,10 +127,9 @@ export function analyzer(options: {
       void options.connection.sendDiagnostics({ uri, diagnostics: [] });
     },
     latest: (uri: string) => latest.get(uri),
-    /** Documents with a timer or a run still going; for tests to assert nothing leaks. */
-    pending: () => new Set([...timers.keys(), ...running.keys()]),
+    pending,
     dispose() {
-      for (const uri of [...timers.keys(), ...running.keys()]) cancel(uri);
+      for (const uri of pending()) cancel(uri);
     },
   };
 }

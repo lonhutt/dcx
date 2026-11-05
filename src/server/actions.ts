@@ -67,9 +67,3 @@ export async function fixAllEdit(
   const e = diff(before, text);
   return { range: lspRange(snapshot, e.range), newText: e.newText };
 }
-
-export const fixAllAction = (doc: TextDocument, edit: LspTextEdit): CodeAction => ({
-  title: "Fix all dcx problems",
-  kind: FIX_ALL_KIND,
-  edit: { changes: { [doc.uri]: [edit] } },
-});

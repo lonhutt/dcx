@@ -7,6 +7,7 @@ import {
   TextDocuments,
   TextDocumentSyncKind,
   type Connection,
+  type DidChangeWatchedFilesClientCapabilities,
   type InitializeParams,
   type InitializeResult,
   type FileSystemWatcher,
@@ -24,14 +25,7 @@ import type { Fetch } from "../net/http";
 import { LineIndex } from "../position/position";
 import { OverlayFS } from "../vfs/overlayfs";
 import type { FileSystem } from "../vfs/vfs";
-import {
-  FIX_ALL_COMMAND,
-  FIX_ALL_KIND,
-  fixAllAction,
-  fixAllEdit,
-  quickFixes,
-  wantsFixAll,
-} from "./actions";
+import { FIX_ALL_COMMAND, FIX_ALL_KIND, fixAllEdit, quickFixes, wantsFixAll } from "./actions";
 import { completions, hover } from "./assist";
 import { analyzer } from "./diagnostics";
 import { definition, documentLinks } from "./links";
@@ -91,8 +85,7 @@ export function startServer(
   const debounceMs = options.debounceMs ?? DEBOUNCE_MS;
   let init: InitializationOptions = {};
   let folder: string | undefined;
-  let canWatch = false;
-  let relativeWatch = false;
+  let watch: DidChangeWatchedFilesClientCapabilities | undefined;
   let resolver: ConfigResolver;
   let extra: ReturnType<typeof services>;
   // config files currently showing a problem, so a fixed one gets its squiggles cleared
@@ -186,7 +179,7 @@ export function startServer(
       if (devcontainer(doc.uri)) analysis.schedule(doc.uri, delayMs);
   };
   // the explicit config and the user config can live anywhere, under any name
-  const watchers = (relative: boolean): FileSystemWatcher[] => {
+  const watchers = (): FileSystemWatcher[] => {
     // resolved as the config loader resolves them: on Windows "/etc" means the current drive
     const files = [configPath(), userConfigPath(options.env, options.home)].flatMap((p) =>
       p ? [resolve(p)] : [],
@@ -194,7 +187,7 @@ export function startServer(
     return [
       { globPattern: CONFIG_FILES },
       ...files.map((p) => ({
-        globPattern: relative
+        globPattern: watch?.relativePatternSupport
           ? { baseUri: URI.file(dirname(p)).toString(), pattern: basename(p) }
           : p.replaceAll("\\", "/"),
       })),
@@ -205,9 +198,7 @@ export function startServer(
     init = (params.initializationOptions as InitializationOptions | undefined) ?? {};
     const first = params.workspaceFolders?.[0]?.uri ?? params.rootUri;
     folder = first ? pathOf(first) : undefined;
-    const watch = params.capabilities.workspace?.didChangeWatchedFiles;
-    canWatch = !!watch?.dynamicRegistration;
-    relativeWatch = !!watch?.relativePatternSupport;
+    watch = params.capabilities.workspace?.didChangeWatchedFiles;
     reset();
     return { capabilities: CAPABILITIES, serverInfo: { name: "dcx", version: pkg.version } };
   });
@@ -218,9 +209,9 @@ export function startServer(
       connection.console.warn(
         `configPath "${init.configPath}" is relative and there's no workspace folder to resolve it against; ignoring it`,
       );
-    if (canWatch)
+    if (watch?.dynamicRegistration)
       void connection.client.register(DidChangeWatchedFilesNotification.type, {
-        watchers: watchers(relativeWatch),
+        watchers: watchers(),
       });
     else
       connection.console.info(
@@ -266,7 +257,12 @@ export function startServer(
         : quickFixes(doc, analysis.latest(doc.uri), range);
     if (wantsFixAll(context.only)) {
       const edit = await fixAll(doc.uri);
-      if (edit) actions.push(fixAllAction(doc, edit));
+      if (edit)
+        actions.push({
+          title: "Fix all dcx problems",
+          kind: FIX_ALL_KIND,
+          edit: { changes: { [doc.uri]: [edit] } },
+        });
     }
     return actions;
   });

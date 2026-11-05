@@ -11,7 +11,6 @@ import type { DcxConfig } from "./config";
 
 // the server's command; not imported, since that would bundle the rules into the client
 export const FIX_ALL_COMMAND = "dcx.fixAll";
-const isDevcontainer = (fileName: string) => /(^|[\\/])\.?devcontainer\.json$/.test(fileName);
 
 /** A client for the bundled server, or for a dcx checkout's when `dcx.path` is set. */
 export function createClient(
@@ -41,10 +40,10 @@ export function createClient(
       async executeCommand(command, args, next) {
         if (command !== FIX_ALL_COMMAND || args.length) return next(command, args);
         const doc = window.activeTextEditor?.document;
-        if (!doc || !isDevcontainer(doc.fileName))
-          return void window.showInformationMessage("dcx: open a devcontainer.json to fix");
+        if (!doc) return void window.showInformationMessage("dcx: open a devcontainer.json to fix");
+        // the server only fixes devcontainer.json, and answers false for anything else
         if (!(await next(command, [doc.uri.toString()])))
-          void window.showInformationMessage("dcx: nothing to fix");
+          void window.showInformationMessage("dcx: nothing to fix in this file");
       },
     },
   };
