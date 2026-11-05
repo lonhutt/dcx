@@ -6,7 +6,9 @@ import {
   DidChangeWatchedFilesNotification,
   TextDocuments,
   TextDocumentSyncKind,
+  type CodeAction,
   type Connection,
+  type DidChangeWatchedFilesClientCapabilities,
   type InitializeParams,
   type InitializeResult,
   type FileSystemWatcher,
@@ -24,17 +26,11 @@ import type { Fetch } from "../net/http";
 import { LineIndex } from "../position/position";
 import { OverlayFS } from "../vfs/overlayfs";
 import type { FileSystem } from "../vfs/vfs";
-import {
-  FIX_ALL_COMMAND,
-  FIX_ALL_KIND,
-  fixAllAction,
-  fixAllEdit,
-  quickFixes,
-  wantsFixAll,
-} from "./actions";
+import { FIX_ALL_KIND, fixAllEdit, quickFixes, wantsFixAll } from "./actions";
 import { completions, hover } from "./assist";
-import { analyzer } from "./diagnostics";
+import { analyzer, type Analysis } from "./diagnostics";
 import { definition, documentLinks } from "./links";
+import { FIX_ALL_COMMAND, isDevcontainer } from "./protocol";
 
 export interface ServerOptions {
   readonly fs: FileSystem;
@@ -51,6 +47,8 @@ export interface InitializationOptions {
   readonly online?: boolean;
   /** An explicit .dcx.yaml, absolute or relative to the first workspace folder. */
   readonly configPath?: string;
+  /** `onSave` lints a document when it's opened and saved, not as it's edited. Default `onType`. */
+  readonly run?: "onSave" | "onType";
 }
 
 /** Exactly what's implemented; a client trusts these, so over-advertising breaks it. */
@@ -66,7 +64,6 @@ export const CAPABILITIES = {
 
 const DEBOUNCE_MS = 200;
 const CONFIG_FILES = "**/.dcx.{yaml,yml,json}";
-const isDevcontainer = (path: string) => /(^|[\\/])\.?devcontainer\.json$/.test(path);
 // fsPath lowercases a Windows drive letter and Node's paths don't; the overlay is keyed
 // by exact path, so a buffer stored under d:\ would be missed by a read of D:\
 const pathOf = (uri: string) =>
@@ -89,8 +86,7 @@ export function startServer(
   const debounceMs = options.debounceMs ?? DEBOUNCE_MS;
   let init: InitializationOptions = {};
   let folder: string | undefined;
-  let canWatch = false;
-  let relativeWatch = false;
+  let watch: DidChangeWatchedFilesClientCapabilities | undefined;
   let resolver: ConfigResolver;
   let extra: ReturnType<typeof services>;
   // config files currently showing a problem, so a fixed one gets its squiggles cleared
@@ -125,12 +121,16 @@ export function startServer(
       );
   };
 
+  const lintDoc = async (doc: TextDocument, signal?: AbortSignal) => {
+    const path = pathOf(doc.uri);
+    return (await lintText(path, signal))(parse(path, doc.getText()));
+  };
+
   const analysis = analyzer({
     connection,
     get: (uri) => documents.get(uri),
     async lint(doc, signal) {
-      const path = pathOf(doc.uri);
-      const found = await (await lintText(path, signal))(parse(path, doc.getText()));
+      const found = await lintDoc(doc, signal);
       for (const f of extra.failures()) {
         if (warned.has(f)) continue;
         warned.add(f);
@@ -169,22 +169,21 @@ export function startServer(
   };
   const fixAll = async (uri: string) => {
     const doc = devcontainer(uri);
-    if (!doc) return undefined;
-    try {
-      return await fixAllEdit(doc, pathOf(uri), await lintText(pathOf(uri)));
-    } catch (err) {
-      // a broken .dcx.yaml is already shown in that file by the analysis
-      if (!(err instanceof ConfigError))
-        connection.console.error(`couldn't fix ${pathOf(uri)}: ${(err as Error)?.stack ?? err}`);
-      return undefined;
-    }
+    return doc && fixAllEdit(doc, pathOf(uri), await lintText(pathOf(uri)));
+  };
+  // with run: onSave, or mid-debounce, the last analysis is of older text than the editor's
+  const current = async (doc: TextDocument): Promise<Analysis> => {
+    const latest = analysis.latest(doc.uri);
+    if (latest?.version === doc.version) return latest;
+    const version = doc.version;
+    return { version, diagnostics: await lintDoc(doc) };
   };
   const relintAll = (delayMs: number) => {
     for (const doc of documents.all())
       if (devcontainer(doc.uri)) analysis.schedule(doc.uri, delayMs);
   };
   // the explicit config and the user config can live anywhere, under any name
-  const watchers = (relative: boolean): FileSystemWatcher[] => {
+  const watchers = (): FileSystemWatcher[] => {
     // resolved as the config loader resolves them: on Windows "/etc" means the current drive
     const files = [configPath(), userConfigPath(options.env, options.home)].flatMap((p) =>
       p ? [resolve(p)] : [],
@@ -192,7 +191,7 @@ export function startServer(
     return [
       { globPattern: CONFIG_FILES },
       ...files.map((p) => ({
-        globPattern: relative
+        globPattern: watch?.relativePatternSupport
           ? { baseUri: URI.file(dirname(p)).toString(), pattern: basename(p) }
           : p.replaceAll("\\", "/"),
       })),
@@ -203,9 +202,7 @@ export function startServer(
     init = (params.initializationOptions as InitializationOptions | undefined) ?? {};
     const first = params.workspaceFolders?.[0]?.uri ?? params.rootUri;
     folder = first ? pathOf(first) : undefined;
-    const watch = params.capabilities.workspace?.didChangeWatchedFiles;
-    canWatch = !!watch?.dynamicRegistration;
-    relativeWatch = !!watch?.relativePatternSupport;
+    watch = params.capabilities.workspace?.didChangeWatchedFiles;
     reset();
     return { capabilities: CAPABILITIES, serverInfo: { name: "dcx", version: pkg.version } };
   });
@@ -216,9 +213,9 @@ export function startServer(
       connection.console.warn(
         `configPath "${init.configPath}" is relative and there's no workspace folder to resolve it against; ignoring it`,
       );
-    if (canWatch)
+    if (watch?.dynamicRegistration)
       void connection.client.register(DidChangeWatchedFilesNotification.type, {
-        watchers: watchers(relativeWatch),
+        watchers: watchers(),
       });
     else
       connection.console.info(
@@ -230,16 +227,22 @@ export function startServer(
     relintAll(0);
   });
 
+  const onType = () => init.run !== "onSave";
+  documents.onDidOpen(({ document }) => {
+    if (!onType() && devcontainer(document.uri)) analysis.schedule(document.uri, 0);
+  });
   // an open Compose file or Dockerfile is what the open configs read, so editing it re-lints them
   documents.onDidChangeContent(({ document }) => {
     if (!isLocal(document.uri)) return;
     const path = pathOf(document.uri);
     overlay.set(path, document.getText());
+    if (!onType()) return;
     if (isDevcontainer(path)) analysis.schedule(document.uri, debounceMs);
     else relintAll(debounceMs);
   });
   documents.onDidSave(({ document }) => {
     if (devcontainer(document.uri)) analysis.schedule(document.uri, 0);
+    else if (isLocal(document.uri) && !onType()) relintAll(0);
   });
   documents.onDidClose(({ document }) => {
     if (!isLocal(document.uri)) return;
@@ -252,20 +255,32 @@ export function startServer(
   connection.onCodeAction(async ({ textDocument, range, context }) => {
     const doc = devcontainer(textDocument.uri);
     if (!doc) return [];
-    const actions =
-      context.only?.length && !context.only.includes(CodeActionKind.QuickFix)
-        ? []
-        : quickFixes(doc, analysis.latest(doc.uri), range);
-    if (wantsFixAll(context.only)) {
-      const edit = await fixAll(doc.uri);
-      if (edit) actions.push(fixAllAction(doc, edit));
+    const actions: CodeAction[] = [];
+    try {
+      if (!context.only?.length || context.only.includes(CodeActionKind.QuickFix))
+        actions.push(...quickFixes(doc, await current(doc), range));
+      const edit = wantsFixAll(context.only) && (await fixAll(doc.uri));
+      if (edit)
+        actions.push({
+          title: "Fix all dcx problems",
+          kind: FIX_ALL_KIND,
+          edit: { changes: { [doc.uri]: [edit] } },
+        });
+    } catch (err) {
+      // a broken .dcx.yaml is already shown in that file by the analysis
+      if (!(err instanceof ConfigError))
+        connection.console.error(
+          `couldn't fix ${pathOf(doc.uri)}: ${(err as Error)?.stack ?? err}`,
+        );
     }
     return actions;
   });
+  // a failure is an error response, so a client can tell it from there being nothing to fix
   connection.onExecuteCommand(async ({ command, arguments: args }) => {
-    if (command !== FIX_ALL_COMMAND || typeof args?.[0] !== "string") return;
+    if (command !== FIX_ALL_COMMAND || typeof args?.[0] !== "string") return false;
     const edit = await fixAll(args[0]);
-    if (edit) await connection.workspace.applyEdit({ changes: { [args[0]]: [edit] } });
+    if (!edit) return false;
+    return (await connection.workspace.applyEdit({ changes: { [args[0]]: [edit] } })).applied;
   });
   connection.onHover(({ textDocument, position }) => {
     const doc = devcontainer(textDocument.uri);

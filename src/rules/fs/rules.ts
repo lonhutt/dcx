@@ -5,7 +5,7 @@ import type { Pass } from "../rule";
 import { REFERENCE, rule } from "../util";
 import { resolveRef } from "./resolve";
 
-export type Ref = { field: Field<string>; what: string; want: "file" | "directory" };
+type Ref = { field: Field<string>; what: string; want: "file" | "directory" };
 
 /** Every path the config refers to, and what kind of thing should be there. */
 export function references(model: DevContainer): Ref[] {

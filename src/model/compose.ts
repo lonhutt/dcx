@@ -15,15 +15,11 @@ export async function readServices(
   for (const file of files) {
     const text = await read(file);
     if (text === undefined) return undefined;
-    const services = servicesOf(text);
+    const services = serviceKeys(text);
     if (!services) return undefined;
-    services.forEach((s) => names.add(s));
+    services.forEach((s) => names.add(s.name));
   }
   return [...names];
-}
-
-function servicesOf(text: string): string[] | undefined {
-  return serviceKeys(text)?.map((k) => k.name);
 }
 
 /**

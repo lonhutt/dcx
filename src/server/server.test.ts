@@ -8,6 +8,7 @@ import { lspPair } from "../testutil/lsp";
 import { MemFS } from "../vfs/memfs";
 import { CAPABILITIES } from "./server";
 import { analyzer } from "./diagnostics";
+import { FIX_ALL_COMMAND } from "./protocol";
 
 const PATH = join("/w", ".devcontainer", "devcontainer.json");
 const CLEAN = '{\n  "name": "x",\n  "image": "node:22"\n}\n';
@@ -59,7 +60,7 @@ test("every advertised capability has a handler", async () => {
   const range = { start: position, end: position };
   const params: Record<string, object> = {
     "textDocument/codeAction": { textDocument, range, context: { diagnostics: [] } },
-    "workspace/executeCommand": { command: "dcx.fixAll", arguments: [textDocument.uri] },
+    "workspace/executeCommand": { command: FIX_ALL_COMMAND, arguments: [textDocument.uri] },
     "textDocument/hover": { textDocument, position },
     "textDocument/completion": { textDocument, position },
     "textDocument/documentLink": { textDocument },
@@ -285,6 +286,20 @@ describe("review fixes", () => {
       { baseUri: p.uriOf("/etc"), pattern: "lint.yaml" },
       { baseUri: p.uriOf(join("/home", ".config", "dcx")), pattern: "config.yaml" },
     ]);
+  });
+
+  test("run: onSave lints on open and save, not on each edit", async () => {
+    const p = start({ [PATH]: CLEAN });
+    await p.initialize({}, { run: "onSave" });
+    await p.open(PATH, CLEAN);
+    await p.diagnostics(PATH);
+    await p.change(PATH, { text: '{ "nmae": 1 }' });
+    await p.settle();
+    expect(p.published).toHaveLength(1);
+    await p.client.sendNotification("textDocument/didSave", {
+      textDocument: { uri: p.uriOf(PATH) },
+    });
+    expect((await p.diagnostics(PATH, 2)).map((d) => d.code)).toContain("schema/unknown-property");
   });
 
   test("dispose stops analysis that's still pending", async () => {

@@ -32,7 +32,7 @@
           "type": "string",
           "default": "",
           "scope": "machine",
-          "description": "A local dcx checkout to load the analyser from. Only for working on dcx itself; needs a window reload."
+          "description": "A local dcx checkout to run the language server from, with bun. Only for working on dcx itself."
         },
         "dcx.run": {
           "type": "string",
@@ -40,7 +40,7 @@
             "onSave",
             "onType"
           ],
-          "default": "onSave",
+          "default": "onType",
           "description": "Lint when a file is saved, or as you type."
         },
         "dcx.online": {
@@ -61,7 +61,7 @@
             "verbose"
           ],
           "default": "off",
-          "description": "Language server tracing."
+          "description": "Log the messages between VS Code and the dcx language server to the dcx output channel."
         }
       }
     },
@@ -89,7 +89,7 @@
     ]
   },
   "scripts": {
-    "build": "bun build src/extension.ts --target=node --format=cjs --external vscode --minify --outfile dist/extension.js",
+    "build": "bun build src/extension.ts src/server.ts --target=node --format=cjs --external vscode --minify --outdir dist",
     "package": "bun run build && bunx @vscode/vsce@4.0.0 package --no-dependencies --skip-license"
   }
 }
