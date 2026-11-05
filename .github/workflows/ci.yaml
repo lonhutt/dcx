@@ -89,3 +89,27 @@ jobs:
 
       # dog-food: lint our own devcontainer.json with the binary just built
       - run: ./dist/dcx check
+
+  # The extension in a real VS Code, under a virtual display. Linux only: the suite finds
+  # the server process with pgrep, and one OS is enough for the editor side.
+  vscode:
+    name: vscode extension
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+
+      - run: bun install --frozen-lockfile
+
+      # the pinned VS Code is the same download every run
+      - uses: actions/cache@v4
+        with:
+          path: extensions/vscode/.vscode-test
+          key: vscode-test-1.90.0
+
+      - run: xvfb-run -a bun run test:e2e
+        working-directory: extensions/vscode
