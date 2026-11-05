@@ -218,6 +218,21 @@ silenced; every other format leaves them out.
 The VS Code extension in `extensions/vscode` runs the same rules as you type. Settings:
 `dcx.enable`, `dcx.run` (`onSave` or `onType`), `dcx.online`, `dcx.configPath`.
 
+### Language server
+
+`dcx serve --stdio` is a language server for any editor that speaks LSP. It finds
+`.dcx.yaml` the same way `dcx check` does, so the editor and CI agree. It provides:
+
+- diagnostics as you type (debounced; a newer edit cancels the older run)
+- quick fixes, and `source.fixAll.dcx` (or the `dcx.fixAll` command) for every fix at once
+- hover and completion from the spec's own schema
+- links to the Dockerfile, Compose files and local features, and go-to-definition from
+  `"service"` to its Compose service
+
+`initializationOptions` takes `online` and `configPath`, as the extension settings of
+the same names. Point the client at `devcontainer.json` and `.devcontainer.json`; the
+server ignores any other file it's sent, apart from keeping it in sync.
+
 ## Development
 
 ```bash

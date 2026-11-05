@@ -1,4 +1,5 @@
 import { isMap, parseDocument } from "yaml";
+import type { Range } from "../position/position";
 
 /**
  * The service names defined across `files`, in order, without duplicates. Only the
@@ -22,6 +23,14 @@ export async function readServices(
 }
 
 function servicesOf(text: string): string[] | undefined {
+  return serviceKeys(text)?.map((k) => k.name);
+}
+
+/**
+ * Each service key in a Compose file, with the span of the key itself, in order; undefined
+ * when the file can't be read reliably, as for {@link readServices}.
+ */
+export function serviceKeys(text: string): { name: string; range: Range }[] | undefined {
   // catch only around the parse; a bug below it should surface, not quietly skip the rule
   let doc;
   try {
@@ -32,8 +41,11 @@ function servicesOf(text: string): string[] | undefined {
   if (doc.errors.length || !isMap(doc.contents)) return undefined;
   const services = doc.contents.get("services", true);
   if (!isMap(services)) return undefined;
-  const keys = services.items.map((p) => (p.key as { value?: unknown } | null)?.value);
+  const keys = services.items.map((p) => p.key as { value?: unknown; range?: number[] } | null);
   // a merge key at this level means names come from somewhere we don't follow
-  if (keys.some((k) => typeof k !== "string" || k === "<<")) return undefined;
-  return keys as string[];
+  if (keys.some((k) => typeof k?.value !== "string" || k.value === "<<")) return undefined;
+  return keys.map((k) => ({
+    name: k!.value as string,
+    range: { start: k!.range![0]!, end: k!.range![1]! },
+  }));
 }

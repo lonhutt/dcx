@@ -1,28 +1,27 @@
 import { relative } from "node:path";
 import { rangeOf } from "../../jsonc/jsonc";
-import { members, type Field } from "../../model/model";
+import { members, type DevContainer, type Field } from "../../model/model";
 import type { Pass } from "../rule";
 import { REFERENCE, rule } from "../util";
 import { resolveRef } from "./resolve";
 
-type Ref = { field: Field<string>; what: string; want: "file" | "directory" };
+export type Ref = { field: Field<string>; what: string; want: "file" | "directory" };
 
 /** Every path the config refers to, and what kind of thing should be there. */
-function references(pass: Pass): Ref[] {
+export function references(model: DevContainer): Ref[] {
   const out: Ref[] = [];
-  const build = pass.model.build;
+  const build = model.build;
   if (build?.dockerfile) out.push({ field: build.dockerfile, what: "Dockerfile", want: "file" });
   if (build?.context) out.push({ field: build.context, what: "build context", want: "directory" });
-  for (const f of pass.model.composeFiles)
-    out.push({ field: f, what: "Compose file", want: "file" });
-  for (const f of localFeatures(pass))
+  for (const f of model.composeFiles) out.push({ field: f, what: "Compose file", want: "file" });
+  for (const f of localFeatures(model))
     out.push({ field: f, what: "local feature", want: "directory" });
   return out;
 }
 
 /** Feature keys that are relative paths: `./feature` or `../feature`. */
-function localFeatures(pass: Pass): Field<string>[] {
-  const features = pass.model.object("features");
+function localFeatures(model: DevContainer): Field<string>[] {
+  const features = model.object("features");
   if (!features) return [];
   return members(features.node).flatMap(({ name, field }) => {
     const key = field.key!;
@@ -41,7 +40,7 @@ function notFound(id: string, what: string, description: string, explain: string
     defaultSeverity: "error",
     justification: "the build fails on a path that isn't there, before anything runs",
     async check(pass) {
-      for (const ref of references(pass).filter((r) => r.what === what)) {
+      for (const ref of references(pass.model).filter((r) => r.what === what)) {
         const r = await resolveRef(pass.fs, pass.root, pass.dir, ref.field.value);
         if (r.escapes) continue; // fs/path-escapes-workspace's finding, and nothing was read
         const shown = relative(pass.dir, r.path) || ".";
@@ -133,7 +132,7 @@ Keep everything the container needs inside the repository. dcx doesn't read anyt
 outside the workspace, so the other fs rules skip these paths.`,
   defaultSeverity: "warning",
   async check(pass) {
-    for (const ref of references(pass)) {
+    for (const ref of references(pass.model)) {
       const r = await resolveRef(pass.fs, pass.root, pass.dir, ref.field.value);
       if (!r.escapes) continue;
       report(

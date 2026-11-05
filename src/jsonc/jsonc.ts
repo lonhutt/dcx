@@ -18,6 +18,7 @@ export {
   applyEdits,
   findNodeAtLocation,
   findNodeAtOffset,
+  getLocation,
   getNodeValue,
   modify,
   printParseErrorCode,

@@ -112,6 +112,11 @@ export async function buildValidators(): Promise<void> {
     standaloneCode(ajv07, feature),
   );
   await Bun.write(path.join(outDir, "dcxConfig.validator.js"), standaloneCode(ajv07, config));
+  // for hover and completion, which read descriptions and enums the validators don't keep
+  await Bun.write(
+    path.join(outDir, "devContainer.base.schema.json"),
+    JSON.stringify(baseSchema, null, 2) + "\n",
+  );
 }
 
 if (import.meta.main) {
