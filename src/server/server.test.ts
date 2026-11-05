@@ -222,6 +222,82 @@ describe("diagnostics", () => {
   });
 });
 
+describe("review fixes", () => {
+  const compose = "services:\n  db:\n    image: postgres\n";
+  const composeConfig =
+    '{ "dockerComposeFile": "../compose.yml", "service": "app", "workspaceFolder": "/w" }';
+
+  test("editing an open Compose file re-lints the configs that read it", async () => {
+    const p = start({ "/w/.git/HEAD": "", "/w/compose.yml": compose, [PATH]: composeConfig });
+    await p.initialize();
+    await p.open(PATH, composeConfig);
+    const codes = async (n: number) => (await p.diagnostics(PATH, n)).map((d) => d.code);
+    expect(await codes(1)).toContain("scenario/compose-service-not-found");
+    await p.open("/w/compose.yml", compose + "  app:\n    image: node\n");
+    expect(await codes(2)).not.toContain("scenario/compose-service-not-found");
+  });
+
+  test("a document that isn't a file never touches the working copy's buffer", async () => {
+    const p = start({ "/w/.git/HEAD": "", [PATH]: CLEAN });
+    await p.initialize();
+    await p.open(PATH, CLEAN);
+    await p.diagnostics(PATH);
+    const git = p.uriOf(PATH).replace(/^file:/, "git:");
+    const textDocument = { uri: git, languageId: "jsonc", version: 1, text: "{ broken" };
+    await p.client.sendNotification("textDocument/didOpen", { textDocument });
+    await p.client.sendNotification("textDocument/didClose", { textDocument: { uri: git } });
+    await p.settle();
+    expect(await p.overlay.readFile(PATH)).toBe(CLEAN);
+    expect(p.published.some((d) => d.uri === git)).toBe(false);
+  });
+
+  test("fix-all with a broken .dcx.yaml answers with nothing rather than failing", async () => {
+    const text = '{\n  "name": "x",\n  "image": "node:22",\n  "extensions": ["a.b"]\n}\n';
+    const p = start({ "/w/.git/HEAD": "", "/w/.dcx.yaml": "fail-on: sometimes\n", [PATH]: text });
+    await p.initialize();
+    await p.open(PATH, text);
+    const actions = await p.request("textDocument/codeAction", {
+      textDocument: { uri: p.uriOf(PATH) },
+      range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } },
+      context: { diagnostics: [], only: ["source.fixAll"] },
+    });
+    expect(actions).toEqual([]);
+  });
+
+  test("the explicit config and the user config are watched too", async () => {
+    const p = start();
+    const registered = new Promise<unknown>((resolve) =>
+      p.client.onRequest("client/registerCapability", (r: unknown) => (resolve(r), null)),
+    );
+    await p.initialize(
+      {
+        workspace: {
+          didChangeWatchedFiles: { dynamicRegistration: true, relativePatternSupport: true },
+        },
+      },
+      { configPath: "/etc/lint.yaml" },
+    );
+    const { registrations } = (await registered) as {
+      registrations: { registerOptions: { watchers: { globPattern: unknown }[] } }[];
+    };
+    expect(registrations[0]!.registerOptions.watchers.map((w) => w.globPattern)).toEqual([
+      "**/.dcx.{yaml,yml,json}",
+      { baseUri: p.uriOf("/etc"), pattern: "lint.yaml" },
+      { baseUri: p.uriOf(join("/home", ".config", "dcx")), pattern: "config.yaml" },
+    ]);
+  });
+
+  test("dispose stops analysis that's still pending", async () => {
+    const p = lspPair({ fs: new MemFS({ [PATH]: CLEAN }), debounceMs: 10_000 });
+    pair = p;
+    await p.initialize();
+    await p.open(PATH, CLEAN);
+    while (!p.pending().size) await Bun.sleep(5);
+    p.disposeServer();
+    expect(p.pending().size).toBe(0);
+  });
+});
+
 describe("analyzer cancellation", () => {
   const doc = TextDocument.create("file:///w/.devcontainer.json", "jsonc", 1, "{}");
   const sent: unknown[] = [];

@@ -38,6 +38,7 @@ export function serve(args: string[], io: Io): Promise<number> {
       done = true;
       clearInterval(parent);
       clearTimeout(drain);
+      server.dispose();
       connection.dispose();
       process.stdin.destroy();
       resolve(code);
@@ -74,6 +75,6 @@ export function serve(args: string[], io: Io): Promise<number> {
     process.stdin.on("end", () => {
       drain = setTimeout(() => finish(shutdownReceived ? 0 : 1), DRAIN_MS);
     });
-    startServer(connection, { fs: new DiskFS(), env: io.env, home: io.home });
+    const server = startServer(connection, { fs: new DiskFS(), env: io.env, home: io.home });
   });
 }

@@ -43,7 +43,11 @@ export function lspPair(options: Pick<ServerOptions, "fs"> & Partial<ServerOptio
       exit: (code) => void (exitCode = code),
     },
   );
-  const { overlay, pending } = startServer(server, {
+  const {
+    overlay,
+    pending,
+    dispose: disposeServer,
+  } = startServer(server, {
     env: {},
     home: "/home",
     debounceMs: 5,
@@ -73,6 +77,7 @@ export function lspPair(options: Pick<ServerOptions, "fs"> & Partial<ServerOptio
     client,
     overlay,
     pending,
+    disposeServer,
     published,
     applied,
     wire,

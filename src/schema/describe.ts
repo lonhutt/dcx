@@ -1,4 +1,4 @@
-import base from "../../schemas/devContainer.base.schema.json" with { type: "json" };
+import base from "./generated/devContainer.base.schema.json" with { type: "json" };
 
 interface Schema {
   readonly $ref?: string;

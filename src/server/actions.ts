@@ -1,4 +1,4 @@
-import type { TextDocument } from "vscode-languageserver-textdocument";
+import { TextDocument } from "vscode-languageserver-textdocument";
 import {
   CodeActionKind,
   type CodeAction,
@@ -52,18 +52,20 @@ export const wantsFixAll = (only: readonly string[] | undefined) =>
 
 /**
  * The one edit that applies every fix, through the same engine as `dcx check --fix`;
- * undefined when there's nothing to fix.
+ * undefined when there's nothing to fix, or when the document changed while it ran.
  */
 export async function fixAllEdit(
   doc: TextDocument,
   path: string,
   lint: Parameters<typeof fixDocument>[2],
 ): Promise<LspTextEdit | undefined> {
-  const before = doc.getText();
+  // TextDocuments updates `doc` in place, so positions come from a copy of what was fixed
+  const snapshot = TextDocument.create(doc.uri, doc.languageId, doc.version, doc.getText());
+  const before = snapshot.getText();
   const { text } = await fixDocument(before, path, lint);
-  if (text === before) return undefined;
+  if (text === before || doc.version !== snapshot.version) return undefined;
   const e = diff(before, text);
-  return { range: lspRange(doc, e.range), newText: e.newText };
+  return { range: lspRange(snapshot, e.range), newText: e.newText };
 }
 
 export const fixAllAction = (doc: TextDocument, edit: LspTextEdit): CodeAction => ({

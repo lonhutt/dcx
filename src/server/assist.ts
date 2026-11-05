@@ -45,10 +45,10 @@ export function completions(doc: TextDocument, offset: number): CompletionItem[]
   const typed = location.previousNode;
   // `"name": "x" "ima|` (no comma yet) reads as a value; the property node says otherwise
   const atKey = location.isAtPropertyKey || typed?.type === "property";
-  const replace = (newText: string) =>
-    typed
-      ? { range: lspRange(doc, { start: typed.offset, end: typed.offset + typed.length }), newText }
-      : { range: lspRange(doc, { start: offset, end: offset }), newText };
+  // a bare word (`t`, `ima`) isn't a node at all, so what's typed is found by hand
+  const start = typed?.offset ?? offset - /[\w$-]*$/.exec(text.slice(0, offset))![0].length;
+  const end = typed ? typed.offset + typed.length : offset;
+  const replace = (newText: string) => ({ range: lspRange(doc, { start, end }), newText });
 
   if (atKey) {
     const objectPath = location.path.slice(0, -1);

@@ -10,8 +10,10 @@ import type {
   Location,
   TextEdit,
 } from "vscode-languageserver/lib/common/api";
+import type { Diagnostic } from "../diagnostic/diagnostic";
 import { parse } from "../jsonc/jsonc";
 import { propertiesAt } from "../schema/describe";
+import { fixAllEdit } from "./actions";
 import { lspPair } from "../testutil/lsp";
 import { MemFS } from "../vfs/memfs";
 
@@ -191,6 +193,20 @@ describe("completion", () => {
     expect(TextDocument.applyEdits(doc, [edit])).toBe('{ "name": "x" "forwardPorts"');
   });
 
+  test.each([
+    ['{ "init": t|', "true", '{ "init": true'],
+    ["{ ima|", "image", '{ "image": '],
+  ])("a bare word is replaced, not appended to: %s", async (typed, label, want) => {
+    const { text, position } = cursor(typed);
+    const { p, textDocument, doc } = await opened(text);
+    const items = await p.request<CompletionItem[]>("textDocument/completion", {
+      textDocument,
+      position,
+    });
+    const item = items.find((c) => c.label === label)!;
+    expect(TextDocument.applyEdits(doc, [item.textEdit as TextEdit])).toBe(want);
+  });
+
   test("nested objects complete their own properties", async () => {
     const labels = (await complete('{ "build": { | } }')).map((c) => c.label);
     expect(labels).toEqual(["args", "cacheFrom", "context", "dockerfile", "options", "target"]);
@@ -260,4 +276,25 @@ describe("links and definition", () => {
       await p.request<Location[]>("textDocument/definition", { textDocument, position }),
     ).toEqual([]);
   });
+});
+
+test("fix-all gives up if the document changes while it's working", async () => {
+  const doc = TextDocument.create("file:///w/devcontainer.json", "jsonc", 1, "{}");
+  let passes = 0;
+  const edit = await fixAllEdit(doc, "/w/devcontainer.json", async (): Promise<Diagnostic[]> => {
+    // the client's next keystroke lands while the lint is awaited
+    if (passes++) return [];
+    TextDocument.update(doc, [{ text: "{ }" }], 2);
+    const range = { start: 1, end: 1 };
+    return [
+      {
+        ruleId: "x/y",
+        severity: "warning",
+        range,
+        message: "m",
+        fix: { title: "t", edits: [{ range, newText: '"a": 1' }] },
+      },
+    ];
+  });
+  expect(edit).toBeUndefined();
 });

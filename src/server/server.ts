@@ -1,4 +1,4 @@
-import { dirname, isAbsolute, join } from "node:path";
+import { basename, dirname, isAbsolute, join } from "node:path";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import {
   CodeActionKind,
@@ -9,6 +9,7 @@ import {
   type Connection,
   type InitializeParams,
   type InitializeResult,
+  type FileSystemWatcher,
   type ServerCapabilities,
 } from "vscode-languageserver/lib/common/api";
 import { URI } from "vscode-uri";
@@ -17,6 +18,7 @@ import { parse } from "../jsonc/jsonc";
 import { analyze } from "../lint/analyze";
 import { services } from "../lint/services";
 import { ConfigError } from "../lintconfig/load";
+import { userConfigPath } from "../lintconfig/discover";
 import { ConfigResolver } from "../lintconfig/resolve";
 import type { Fetch } from "../net/http";
 import { LineIndex } from "../position/position";
@@ -66,38 +68,44 @@ const DEBOUNCE_MS = 200;
 const CONFIG_FILES = "**/.dcx.{yaml,yml,json}";
 const isDevcontainer = (path: string) => /(^|[\\/])\.?devcontainer\.json$/.test(path);
 const pathOf = (uri: string) => URI.parse(uri).fsPath;
+// a git: or untitled: document can share a working copy's fsPath, but isn't what's on disk
+const isLocal = (uri: string) => URI.parse(uri).scheme === "file";
 
 /**
  * Serves dcx over `connection`: the same rules, config discovery and fixes as the CLI,
  * against the editor's unsaved buffers. Starts listening; never writes anywhere but the
- * connection. Returns the overlay the rules read through, and the documents with
- * analysis still pending, for tests.
+ * connection. Returns the overlay the rules read through, the documents with analysis
+ * still pending (for tests), and `dispose`, which stops any analysis still going.
  */
 export function startServer(
   connection: Connection,
   options: ServerOptions,
-): { overlay: OverlayFS; pending: () => Set<string> } {
+): { overlay: OverlayFS; pending: () => Set<string>; dispose: () => void } {
   const documents = new TextDocuments(TextDocument);
   const overlay = new OverlayFS(options.fs);
   const debounceMs = options.debounceMs ?? DEBOUNCE_MS;
   let init: InitializationOptions = {};
   let folder: string | undefined;
   let canWatch = false;
+  let relativeWatch = false;
   let resolver: ConfigResolver;
   let extra: ReturnType<typeof services>;
   // config files currently showing a problem, so a fixed one gets its squiggles cleared
   const brokenConfigs = new Set<string>();
   const warned = new Set<string>();
 
+  const configPath = () => {
+    if (!init.configPath || isAbsolute(init.configPath)) return init.configPath;
+    return folder ? join(folder, init.configPath) : undefined;
+  };
+
   const reset = () => {
-    const configPath =
-      init.configPath &&
-      (isAbsolute(init.configPath) || !folder ? init.configPath : join(folder, init.configPath));
+    const explicit = configPath();
     resolver = new ConfigResolver({
       fs: overlay,
       env: options.env,
       home: options.home,
-      ...(configPath && { configPath }),
+      ...(explicit && { configPath: explicit }),
       ...(init.online !== undefined && { overrides: { online: init.online } }),
     });
     extra = services(options.env, options.home, overlay, options.fetch);
@@ -154,31 +162,59 @@ export function startServer(
 
   const devcontainer = (uri: string) => {
     const doc = documents.get(uri);
-    return doc && isDevcontainer(pathOf(uri)) ? doc : undefined;
+    return doc && isLocal(uri) && isDevcontainer(pathOf(uri)) ? doc : undefined;
   };
   const fixAll = async (uri: string) => {
     const doc = devcontainer(uri);
-    return doc && fixAllEdit(doc, pathOf(uri), await lintText(pathOf(uri)));
+    if (!doc) return undefined;
+    try {
+      return await fixAllEdit(doc, pathOf(uri), await lintText(pathOf(uri)));
+    } catch (err) {
+      // a broken .dcx.yaml is already shown in that file by the analysis
+      if (!(err instanceof ConfigError))
+        connection.console.error(`couldn't fix ${pathOf(uri)}: ${(err as Error)?.stack ?? err}`);
+      return undefined;
+    }
   };
-  const relintAll = () => {
+  const relintAll = (delayMs: number) => {
     for (const doc of documents.all())
-      if (isDevcontainer(pathOf(doc.uri))) analysis.schedule(doc.uri, 0);
+      if (devcontainer(doc.uri)) analysis.schedule(doc.uri, delayMs);
+  };
+  // the explicit config and the user config can live anywhere, under any name
+  const watchers = (relative: boolean): FileSystemWatcher[] => {
+    const files = [configPath(), userConfigPath(options.env, options.home)].filter(
+      (p): p is string => !!p,
+    );
+    return [
+      { globPattern: CONFIG_FILES },
+      ...files.map((p) => ({
+        globPattern: relative
+          ? { baseUri: URI.file(dirname(p)).toString(), pattern: basename(p) }
+          : p.replaceAll("\\", "/"),
+      })),
+    ];
   };
 
   connection.onInitialize((params: InitializeParams): InitializeResult => {
     init = (params.initializationOptions as InitializationOptions | undefined) ?? {};
     const first = params.workspaceFolders?.[0]?.uri ?? params.rootUri;
     folder = first ? pathOf(first) : undefined;
-    canWatch = !!params.capabilities.workspace?.didChangeWatchedFiles?.dynamicRegistration;
+    const watch = params.capabilities.workspace?.didChangeWatchedFiles;
+    canWatch = !!watch?.dynamicRegistration;
+    relativeWatch = !!watch?.relativePatternSupport;
     reset();
     return { capabilities: CAPABILITIES, serverInfo: { name: "dcx", version: pkg.version } };
   });
 
   // config is cached once read; an edited .dcx.yaml has to reach every open document
   connection.onInitialized(() => {
+    if (init.configPath && !configPath())
+      connection.console.warn(
+        `configPath "${init.configPath}" is relative and there's no workspace folder to resolve it against; ignoring it`,
+      );
     if (canWatch)
       void connection.client.register(DidChangeWatchedFilesNotification.type, {
-        watchers: [{ globPattern: CONFIG_FILES }],
+        watchers: watchers(relativeWatch),
       });
     else
       connection.console.info(
@@ -187,20 +223,26 @@ export function startServer(
   });
   connection.onDidChangeWatchedFiles(() => {
     reset();
-    relintAll();
+    relintAll(0);
   });
 
+  // an open Compose file or Dockerfile is what the open configs read, so editing it re-lints them
   documents.onDidChangeContent(({ document }) => {
+    if (!isLocal(document.uri)) return;
     const path = pathOf(document.uri);
     overlay.set(path, document.getText());
     if (isDevcontainer(path)) analysis.schedule(document.uri, debounceMs);
+    else relintAll(debounceMs);
   });
   documents.onDidSave(({ document }) => {
-    if (isDevcontainer(pathOf(document.uri))) analysis.schedule(document.uri, 0);
+    if (devcontainer(document.uri)) analysis.schedule(document.uri, 0);
   });
   documents.onDidClose(({ document }) => {
-    overlay.delete(pathOf(document.uri));
-    if (isDevcontainer(pathOf(document.uri))) analysis.close(document.uri);
+    if (!isLocal(document.uri)) return;
+    const path = pathOf(document.uri);
+    overlay.delete(path);
+    if (isDevcontainer(path)) analysis.close(document.uri);
+    else relintAll(debounceMs);
   });
 
   connection.onCodeAction(async ({ textDocument, range, context }) => {
@@ -241,5 +283,5 @@ export function startServer(
   connection.onShutdown(() => analysis.dispose());
   documents.listen(connection);
   connection.listen();
-  return { overlay, pending: analysis.pending };
+  return { overlay, pending: analysis.pending, dispose: analysis.dispose };
 }
