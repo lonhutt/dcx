@@ -99,6 +99,7 @@ export const OPTIONS = {
 >;
 
 export const HELP = `Usage: dcx check [flags] [path...]
+       dcx serve --stdio    (the language server, for editors)
 
 Lints devcontainer.json. Each path is a file, or a directory to find configs in
 (default: the current directory).

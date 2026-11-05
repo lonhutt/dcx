@@ -1,6 +1,7 @@
 import { homedir } from "node:os";
 import { check, HELP, versionString, type Io } from "./check";
 import { ToolError, UsageError } from "./errors";
+import { serve } from "./serve";
 
 /**
  * Runs the CLI and resolves to its exit code: 0 clean, 1 findings at or above the
@@ -11,6 +12,7 @@ export async function run(args: string[], io: Io = processIo()): Promise<number>
   try {
     if (command === "-h" || command === "--help") return (io.stdout(HELP + "\n"), 0);
     if (command === "-v" || command === "--version") return (io.stdout(versionString() + "\n"), 0);
+    if (command === "serve") return await serve(rest, io);
     if (command !== "check")
       throw new UsageError(command ? `unknown command "${command}"` : "no command given");
     return await check(rest, io);

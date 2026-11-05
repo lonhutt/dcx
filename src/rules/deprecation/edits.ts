@@ -148,7 +148,7 @@ function remove(text: string, path: JSONPath): string {
 }
 
 /** One edit turning `before` into `after`: everything between their common prefix and suffix. */
-function diff(before: string, after: string): TextEdit {
+export function diff(before: string, after: string): TextEdit {
   let start = 0;
   while (start < before.length && start < after.length && before[start] === after[start]) start++;
   let end = 0;
