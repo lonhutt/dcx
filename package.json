@@ -28,6 +28,7 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/vscode": "1.90.0",
+    "@vscode/test-electron": "^3.1.0",
     "ajv": "^8.20.0",
     "fast-check": "^4.10.2",
     "jsonc-parser": "^3.3.1",
