@@ -2,7 +2,7 @@
   "name": "dcx",
   "displayName": "dcx: devcontainer.json linter",
   "description": "Lints devcontainer.json as you type: typos, invalid values, and settings that don't fit the config's setup.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "lonhutt",
   "license": "MIT",
   "repository": "https://github.com/lonhutt/dcx",
