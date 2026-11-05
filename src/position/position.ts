@@ -28,6 +28,9 @@ export interface TerminalPosition {
   readonly column: number;
 }
 
+/** How many terminal columns `s` takes; a tab counts 0, since its width depends on where it lands. */
+export const displayWidth = (s: string): number => Bun.stringWidth(s);
+
 const clamp = (n: number, lo: number, hi: number) => Math.min(Math.max(n, lo), hi);
 
 const CR = 0x0d;
@@ -124,7 +127,7 @@ export class LineIndex {
     const runs = this.text.slice(start, start + character).split("\t");
     let width = 0;
     runs.forEach((run, i) => {
-      width += Bun.stringWidth(run);
+      width += displayWidth(run);
       if (i < runs.length - 1) width = (Math.floor(width / tabWidth) + 1) * tabWidth;
     });
     return { line: line + 1, column: width + 1 };

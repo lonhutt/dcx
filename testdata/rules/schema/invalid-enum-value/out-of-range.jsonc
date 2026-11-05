@@ -1,0 +1,4 @@
+{
+  "image": "node:22",
+  "hostRequirements": { "cpus": 0 } // want: error: "hostRequirements.cpus" must be >= 1
+}

@@ -1,0 +1,4 @@
+// comments and trailing commas are both fine
+{
+  "image": "node:22",
+}

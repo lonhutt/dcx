@@ -1,0 +1,5 @@
+{
+  // no resolver: offline, so nothing to check against
+  "image": "node:22",
+  "features": { "ghcr.io/devcontainers/features/node:1": { "verison": "20" } }
+}

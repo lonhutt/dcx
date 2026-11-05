@@ -1,0 +1,10 @@
+{
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "NODE_VERSION": "22",
+      "NODE_VERISON": "22", // want: warning: Build arg "NODE_VERISON" isn't declared with ARG in Dockerfile, so it's ignored; did you mean "NODE_VERSION"?
+      "USERNAME": "dev"
+    }
+  }
+}

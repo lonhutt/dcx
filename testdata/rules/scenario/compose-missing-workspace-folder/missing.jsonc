@@ -1,0 +1,4 @@
+{
+  "dockerComposeFile": "compose.yml", // want: warning: Without "workspaceFolder", a Compose config opens at "/"
+  "service": "app"
+}

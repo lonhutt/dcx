@@ -1,0 +1,50 @@
+{
+  "name": "Dev",
+  "dockerComposeFile": [
+    "./docker-compose.yaml"
+  ],
+  "service": "workspace",
+  "workspaceFolder": "/workspace/tigrissdk",
+  "postStartCommand": "bash ./.devcontainer/poststart.sh",
+  "initializeCommand": "mkdir -p ${localEnv:HOME}${localEnv:USERPROFILE}/.local/share/atuin && mkdir -p ${localEnv:HOME}${localEnv:USERPROFILE}/.aws && mkdir -p ${localEnv:HOME}${localEnv:USERPROFILE}/.fly",
+  "features": {
+    "ghcr.io/devcontainers-extra/features/act:1": {},
+    "ghcr.io/devcontainers/features/aws-cli:1": {}
+  },
+  "mounts": [
+    {
+      "type": "bind",
+      "source": "${localEnv:HOME}${localEnv:USERPROFILE}/.local/share/atuin",
+      "target": "/home/vscode/.local/share/atuin"
+    },
+    {
+      "type": "bind",
+      "source": "${localEnv:HOME}${localEnv:USERPROFILE}/.aws",
+      "target": "/home/vscode/.aws"
+    }
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "ms-azuretools.vscode-containers",
+        "golang.go",
+        "a-h.templ",
+        "redhat.vscode-yaml",
+        "ms-vsliveshare.vsliveshare",
+        "ms-azuretools.vscode-docker",
+        "dbaeumer.vscode-eslint",
+        "GitHub.vscode-github-actions",
+        "jinliming2.vscode-go-template",
+        "DavidAnson.vscode-markdownlint",
+        "ms-vscode.wordcount",
+        "hashicorp.hcl",
+        "docker.docker",
+        "fredwangwang.vscode-hcl-format",
+        "EditorConfig.EditorConfig",
+        "otovo-oss.htmx-tags",
+        "tamasfe.even-better-toml"
+      ]
+    }
+  }
+}

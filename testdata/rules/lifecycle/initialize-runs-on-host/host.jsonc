@@ -1,0 +1,6 @@
+{
+  "image": "node:22",
+  "initializeCommand": "apt-get install -y jq", // want: info: "initializeCommand" runs on the host, but this looks like it expects the container
+  "onCreateCommand": "apt-get install -y jq",
+  "postCreateCommand": "cd ${containerWorkspaceFolder} && npm install"
+}

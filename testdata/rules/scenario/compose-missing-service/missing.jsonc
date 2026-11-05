@@ -1,0 +1,4 @@
+{
+  "dockerComposeFile": "compose.yml", // want: error: A Compose config needs "service": the Compose service to attach to
+  "workspaceFolder": "/workspace"
+}

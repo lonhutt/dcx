@@ -1,0 +1,17 @@
+{
+  "name": "Devcontainer",
+  // Reference the Docker Compose file
+  "dockerComposeFile": "docker-compose.yml",
+
+  // Name of the service VS Code should connect to
+  "service": "app",
+
+  // Where your code lives inside the container
+  "workspaceFolder": "/workspace",
+
+  // Forward ports for your Node app and Qdrant
+  "forwardPorts": [3000, 6333],
+
+  // Stop all containers when you close the dev container
+  "shutdownAction": "stopCompose"
+}

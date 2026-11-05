@@ -1,0 +1,10 @@
+{
+  "name": "legacy",
+  "image": "node:22",
+  "features": {
+    "docker-in-docker": {}, // want: warning: "docker-in-docker" is a legacy short feature ID
+    "ghcr.io/devcontainers/features/go:1": {},
+    "./local-feature": {},
+    "ghcr.io/Devcontainers/Go": {}
+  }
+}

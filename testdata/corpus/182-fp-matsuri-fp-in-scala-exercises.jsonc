@@ -1,0 +1,28 @@
+{
+  "name": "FP in Scala Exercises (Local Build / arm64)",
+  "build": {
+    "dockerfile": "../../.devcontainer-image/Dockerfile",
+    "context": "../.."
+  },
+  "remoteUser": "vscode",
+  "containerEnv": {
+    "MISE_TRUSTED_CONFIG_PATHS": "/workspaces"
+  },
+  "remoteEnv": {
+    "PATH": "/home/vscode/.local/share/mise/shims:/home/vscode/.opam/default/bin:${containerEnv:PATH}",
+    "MISE_GLOBAL_CONFIG_FILE": "${containerWorkspaceFolder}/mise.toml"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "betterthantomorrow.calva",
+        "clj-kondo.clj-kondo",
+        "flix.flix",
+        "haskell.haskell",
+        "ocamllabs.ocaml-platform",
+        "scalameta.metals",
+        "usernamehw.errorlens"
+      ]
+    }
+  }
+}

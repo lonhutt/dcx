@@ -1,0 +1,1 @@
+{ "image": "node:22", "onCreateCommand": "npm ci", "waitFor": "onCreateCommand" }

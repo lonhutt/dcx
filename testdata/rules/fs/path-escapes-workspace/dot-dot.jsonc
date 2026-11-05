@@ -1,0 +1,6 @@
+{
+  "build": {
+    "dockerfile": "../../shared/Dockerfile", // want: warning: Dockerfile "../../shared/Dockerfile" is outside the workspace
+    "context": "../.." // want: warning: Build context "../.." is outside the workspace
+  }
+}

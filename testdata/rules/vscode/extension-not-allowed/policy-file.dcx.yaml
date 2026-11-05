@@ -1,0 +1,4 @@
+extension-sources:
+  - id: org
+    kind: policy
+    path: org-policy.json

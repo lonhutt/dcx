@@ -1,0 +1,10 @@
+{
+	"name": "Existing Docker Compose (Extend)",
+	"dockerComposeFile": [
+		"../docker-compose.yml",
+		"docker-compose.yml"
+	],
+	"postCreateCommand": "git config --global user.name 'Your Name' && git config --global user.email 'your@email.com'",
+	"service": "web",
+	"workspaceFolder": "/app"
+}

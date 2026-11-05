@@ -1,0 +1,22 @@
+{
+    "name": "Ubuntu",
+    "image": "mcr.microsoft.com/devcontainers/base:jammy",
+    "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash"
+    },
+    "extensions": [
+        "ms-azuretools.vscode-docker",
+        "ms-vscode-remote.remote-containers",
+        "ms-azuretools.vscode-bicep",
+        "hashicorp.hcl"
+    ],
+    "mounts": [
+        "source=${env:HOME}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached"
+    ],
+    "forwardPorts": [],
+    "postCreateCommand": "git config --global --add safe.directory /workspaces/${localWorkspaceFolderBasename} ; chmod +x ./scripts/install-packer.sh && ./scripts/install-packer.sh",
+    "features": {
+        "ghcr.io/devcontainers/features/azure-cli:1": {},
+        "ghcr.io/devcontainers-extra/features/devcontainers-cli:1": {}
+    }
+}

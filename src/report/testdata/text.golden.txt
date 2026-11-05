@@ -1,0 +1,23 @@
+.devcontainer/devcontainer.json:4:3: warning: Unknown property "nmae"; did you mean "name"? [schema/unknown-property]
+
+ 2 │   // base
+ 3 │   "image": "x",
+ 4 │   "nmae": "<y>",
+   │   ^^^^^^
+ 5 │   "appPort": 3000
+ 6 │ }
+
+  help: rename it to "name"
+  docs: https://containers.dev/implementors/json_reference/#general-properties
+
+.devcontainer/devcontainer.json:5:3: error: "appPort" is deprecated; use "forwardPorts" [deprecation/app-port]
+
+ 3 │   "image": "x",
+ 4 │   "nmae": "<y>",
+ 5 │   "appPort": 3000
+   │   ^^^^^^^^^
+ 6 │ }
+
+  fix:  Rename (dcx check --fix)
+
+✖ 1 error, 1 warning in 1 file

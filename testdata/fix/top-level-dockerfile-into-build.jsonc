@@ -1,0 +1,8 @@
+{
+  "name": "api",
+  "dockerFile": "Dockerfile",
+  "build": {
+    // build args stay
+    "args": { "V": "1" }
+  }
+}

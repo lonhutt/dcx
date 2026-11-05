@@ -1,0 +1,66 @@
+{
+  "name": "Workshop Environment",
+
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+
+  "containerEnv": {
+    "CODEGRAPH_TELEMETRY": "0",
+    "CODEGRAPH_NO_UPDATE_CHECK": "1"
+  },
+
+  "forwardPorts": [4387],
+
+  "portsAttributes": {
+    "4387": {
+      "label": "Lavish Review",
+      "onAutoForward": "silent"
+    },
+    "5173": {
+      "label": "App Preview (Vite)",
+      "onAutoForward": "notify"
+    }
+  },
+
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+  "workspaceFolder": "/workspace",
+
+  "features": {
+    // Lavish requires Node 22 or newer. The pinned runtime (see
+    // workshop/vendor/lavish/package.json) is installed non-fatally by
+    // post-create so a registry outage cannot block the core workshop.
+    "ghcr.io/devcontainers/features/node:2": {
+      "version": "22",
+      "nodeGypDependencies": false,
+      "pnpmVersion": "none"
+    },
+
+    // Docker-in-Docker keeps project bind mounts inside this Codespace and makes
+    // the workshop behave like a normal Docker host.
+    "ghcr.io/devcontainers/features/docker-in-docker:4": {},
+
+    // GitHub CLI supports authentication, forks, repositories, and manual pushes.
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-docker",
+        "anthropic.claude-code",
+        "openai.chatgpt"
+      ],
+      "settings": {
+        "claudeCode.allowDangerouslySkipPermissions": false,
+        "claudeCode.initialPermissionMode": "default",
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "editor.formatOnSave": true,
+        "files.trimTrailingWhitespace": true,
+        "files.insertFinalNewline": true
+      }
+    }
+  },
+
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  "remoteUser": "vscode"
+}

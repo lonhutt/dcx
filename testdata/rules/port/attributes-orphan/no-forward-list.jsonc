@@ -1,0 +1,5 @@
+{
+  // nothing forwarded explicitly: attributes are for auto-detected ports
+  "image": "node:22",
+  "portsAttributes": { "8080": { "label": "admin" } }
+}

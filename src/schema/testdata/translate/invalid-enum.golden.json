@@ -1,0 +1,20 @@
+[
+  {
+    "class": "invalid-enum",
+    "at": "\"no\"",
+    "message": "\"shutdownAction\" must be one of \"none\", \"stopContainer\"",
+    "docsUrl": "https://containers.dev/implementors/json_reference/#image-specific"
+  },
+  {
+    "class": "invalid-enum",
+    "at": "\"postCreate\"",
+    "message": "\"waitFor\" must be one of \"initializeCommand\", \"onCreateCommand\", \"updateContentCommand\", \"postCreateCommand\", \"postStartCommand\"",
+    "docsUrl": "https://containers.dev/implementors/json_reference/#lifecycle-scripts"
+  },
+  {
+    "class": "invalid-enum",
+    "at": "\"bash\"",
+    "message": "\"userEnvProbe\" must be one of \"none\", \"loginShell\", \"loginInteractiveShell\", \"interactiveShell\"",
+    "docsUrl": "https://containers.dev/implementors/json_reference/#general-properties"
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "image": "node:22",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "Microsoft.VSCode-JS",
+        "golang.go", // want: error: "golang.go" isn't allowed by the "org" extension policy, so it won't install
+        "ms-vscode.cpptools", // want: error: "ms-vscode.cpptools" isn't allowed by the "org" extension policy, so it won't install
+        "-golang.go"
+      ]
+    }
+  }
+}

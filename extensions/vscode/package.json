@@ -13,12 +13,81 @@
     "Linters"
   ],
   "activationEvents": [
-    "onLanguage:json",
     "onLanguage:jsonc",
-    "workspaceContains:**/.devcontainer/**/devcontainer.json",
+    "workspaceContains:**/.devcontainer/devcontainer.json",
+    "workspaceContains:**/.devcontainer/*/devcontainer.json",
     "workspaceContains:**/.devcontainer.json"
   ],
   "main": "dist/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "dcx",
+      "properties": {
+        "dcx.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Lint devcontainer.json files."
+        },
+        "dcx.path": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "description": "A local dcx checkout to load the analyser from. Only for working on dcx itself; needs a window reload."
+        },
+        "dcx.run": {
+          "type": "string",
+          "enum": [
+            "onSave",
+            "onType"
+          ],
+          "default": "onSave",
+          "description": "Lint when a file is saved, or as you type."
+        },
+        "dcx.online": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable rules that need network access: feature options and extension availability. Left unset, .dcx.yaml or DCX_ONLINE decides."
+        },
+        "dcx.configPath": {
+          "type": "string",
+          "default": "",
+          "description": "An explicit .dcx.yaml, absolute or relative to the workspace folder. Empty means discover it."
+        },
+        "dcx.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Language server tracing."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "dcx.lintWorkspace",
+        "title": "Lint Workspace",
+        "category": "dcx"
+      },
+      {
+        "command": "dcx.fixAll",
+        "title": "Fix All Auto-fixable Problems",
+        "category": "dcx"
+      },
+      {
+        "command": "dcx.restartServer",
+        "title": "Restart Server",
+        "category": "dcx"
+      },
+      {
+        "command": "dcx.showOutput",
+        "title": "Show Output",
+        "category": "dcx"
+      }
+    ]
+  },
   "scripts": {
     "build": "bun build src/extension.ts --target=node --format=cjs --external vscode --minify --outfile dist/extension.js",
     "package": "bun run build && bunx @vscode/vsce@4.0.0 package --no-dependencies --skip-license"

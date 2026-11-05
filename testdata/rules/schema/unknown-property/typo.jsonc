@@ -1,0 +1,4 @@
+{
+  "image": "node:22",
+  "postCreateComand": "npm ci" // want: warning: Unknown property "postCreateComand"; did you mean "postCreateCommand"?
+}

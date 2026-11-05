@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": ".dcx.yaml",
+  "type": "object",
+  "additionalProperties": false,
+  "definitions": {
+    "severity": { "enum": ["error", "warning", "info", "off"] },
+    "category": {
+      "enum": [
+        "syntax",
+        "schema",
+        "scenario",
+        "semantic",
+        "fs",
+        "deprecation",
+        "feature",
+        "port",
+        "mount",
+        "lifecycle",
+        "security",
+        "vscode",
+        "repro",
+        "style",
+        "meta"
+      ]
+    }
+  },
+  "properties": {
+    "version": { "const": 1 },
+    "fail-on": { "enum": ["error", "warning", "info"] },
+    "online": { "type": "boolean" },
+    "rules": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z]+/[a-z0-9]+(-[a-z0-9]+)*$" },
+      "additionalProperties": { "$ref": "#/definitions/severity" }
+    },
+    "categories": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/definitions/category" },
+      "additionalProperties": { "$ref": "#/definitions/severity" }
+    },
+    "exclude": { "type": "array", "items": { "type": "string" } },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow-unpinned": { "type": "array", "items": { "type": "string" } },
+        "cache-ttl": { "type": "string", "pattern": "^[0-9]+(s|m|h|d)$" }
+      }
+    },
+    "extension-sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "kind": { "enum": ["openvsx", "vscode-gallery", "policy"] },
+          "url": { "type": "string" },
+          "path": { "type": "string" },
+          "allowed": { "type": "object" },
+          "token-env": { "type": "string" },
+          "required": { "type": "boolean" }
+        }
+      }
+    },
+    "extensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "satisfy": { "enum": ["all", "any"] } }
+    }
+  }
+}

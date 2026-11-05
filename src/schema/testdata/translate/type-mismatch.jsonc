@@ -1,0 +1,6 @@
+{
+  "image": "x",
+  "forwardPorts": "3000",
+  "postCreateCommand": 1,
+  "portsAttributes": { "3000": { "label": 4 } }
+}

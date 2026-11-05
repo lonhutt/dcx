@@ -1,0 +1,24 @@
+{
+    // Name this configuration
+    "name": "Codespace for Skills!",
+    // Use the base codespace image
+    "image": "mcr.microsoft.com/vscode/devcontainers/universal:latest",
+  
+    "remoteUser": "codespace",
+    "overrideCommand": false ,
+    // Add the IDs of extensions you want installed when the container is created.
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "GitHub.copilot",
+                "Dracula.Official"
+            ]
+        },
+        "codespaces": {
+            "openFiles": [
+                "codespace.md"
+            ]
+        }
+    },
+    "postCreateCommand": "echo 'Hello, Codespace!' >> codespace.md"
+  }

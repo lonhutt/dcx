@@ -1,0 +1,37 @@
+{
+  "name": "Node.js",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bullseye",
+  "features": {
+    "ghcr.io/devcontainers-extra/features/pnpm:2": {}
+  },
+
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "16gb"
+  },
+
+  "forwardPorts": [4000, 9010, 9011],
+
+  "updateContentCommand": "pnpm install",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "deque-systems.vscode-axe-linter",
+        "digitalbrainstem.javascript-ejs-support",
+        "figma.figma-vscode-extension",
+        "github.vscode-github-actions",
+        "github.vscode-pull-request-github",
+        "davidanson.vscode-markdownlint",
+        "unifiedjs.vscode-mdx",
+        "esbenp.prettier-vscode",
+        "stylelint.vscode-stylelint",
+        "jock.svg",
+        "vitest.explorer",
+        "vue.volar",
+        "johnsoncodehk.volarjs-labs"
+      ]
+    }
+  }
+}

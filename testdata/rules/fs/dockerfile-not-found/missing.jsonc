@@ -1,0 +1,6 @@
+{
+  "build": {
+    "dockerfile": "Dockerfile", // want: error: Dockerfile "Dockerfile" doesn't exist
+    "context": ".."
+  }
+}

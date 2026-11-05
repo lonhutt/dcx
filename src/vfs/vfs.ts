@@ -40,6 +40,12 @@ export interface FileSystem {
    * it is not a directory.
    */
   readDir(path: string): Promise<DirEntry[]>;
+
+  /**
+   * The canonical path, every symlink followed. Resolves `undefined` when nothing is
+   * there; rejects on a symlink loop or another I/O failure.
+   */
+  realpath(path: string): Promise<string | undefined>;
 }
 
 export type FileType = "file" | "directory" | "other";

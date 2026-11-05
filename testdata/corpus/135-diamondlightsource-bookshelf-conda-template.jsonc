@@ -1,0 +1,40 @@
+// For format details, see https://containers.dev/implementors/json_reference/
+{
+	"name": "Python 3 Developer Container",
+	"image": "continuumio/miniconda3:22.11.1",
+	"remoteEnv": {
+		"DISPLAY": "${localEnv:DISPLAY}"
+	},
+	// Add the URLs of features you want added when the container is built.
+	"features": {
+		// "ghcr.io/devcontainers/features/common-utils:1": {
+		// 	"upgradePackages": false
+		// }
+	},
+	"customizations": {
+		"vscode": {
+			// Add the IDs of extensions you want installed when the container is created.
+			"extensions": [
+				"ms-python.python",
+				"tamasfe.even-better-toml",
+				"redhat.vscode-yaml"
+			]
+		}
+	},
+	// Make sure the files we are mapping into the container exist on the host
+	"initializeCommand": "bash -c 'for i in $HOME/.inputrc; do [ -f $i ] || touch $i; done'",
+	"runArgs": [
+		"--net=host",
+		"--security-opt=label=type:container_runtime_t"
+	],
+	"mounts": [
+		"source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind",
+		"source=${localEnv:HOME}/.inputrc,target=/root/.inputrc,type=bind",
+		// map in home directory - not strictly necessary but useful
+		"source=${localEnv:HOME},target=${localEnv:HOME},type=bind,consistency=cached"
+	],
+	// make the workspace folder the same inside and outside of the container
+	"workspaceMount": "source=${localWorkspaceFolder},target=${localWorkspaceFolder},type=bind",
+	"workspaceFolder": "${localWorkspaceFolder}",
+	"postCreateCommand": "conda env update --file environment.yml; conda env update --file .bookshelf/environment.interactive.yml; conda env update --file .bookshelf/environment.processing.yml"
+}

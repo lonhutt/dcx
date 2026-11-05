@@ -1,0 +1,6 @@
+{
+  "dockerComposeFile": "compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "image": "node:22" // want: error: "image" and "dockerComposeFile" cannot both be set: a Compose configuration takes its image from the Compose file
+}

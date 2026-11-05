@@ -1,0 +1,9 @@
+{
+  "image": "node:22",
+  "forwardPorts": [
+    3000,
+    5432,
+    "localhost:3000", // want: warning: Port 3000 is already forwarded
+    "db:5432"
+  ]
+}

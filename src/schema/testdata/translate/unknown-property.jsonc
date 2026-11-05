@@ -1,0 +1,7 @@
+{
+  "image": "x",
+  "postCreateComand": "a",
+  "colour": "red",
+  "build-ish": 1,
+  "customizations": { "vscode": { "extensions": [] } }
+}

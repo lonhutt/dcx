@@ -1,0 +1,3 @@
+{ // want: info: This config has no "name"
+  "image": "node:22"
+}

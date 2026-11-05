@@ -1,0 +1,4 @@
+{ // want: error: Nothing to run: set "image", "build" or "dockerComposeFile"
+  "name": "app",
+  "forwardPorts": [3000]
+}

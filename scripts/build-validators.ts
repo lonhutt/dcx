@@ -6,6 +6,7 @@ import standaloneCode from "ajv/dist/standalone/index.js";
 import path from "path";
 import baseSchema from "../schemas/devContainer.base.schema.json" with { type: "json" };
 import devcontainerFeatureSchema from "../schemas/devContainerFeature.schema.json" with { type: "json" };
+import configSchema from "../src/lintconfig/config.schema.json" with { type: "json" };
 
 /**
  * Compiles standalone Ajv validator modules from `schemas/*.schema.json` into
@@ -55,6 +56,7 @@ export async function buildValidators(): Promise<void> {
   ajv2019.addSchema(scenario("dockerfileContainer", "nonComposeBase"), "dockerfile");
   ajv2019.addSchema(scenario("composeContainer"), "compose");
   const feature = ajv07.compile(devcontainerFeatureSchema);
+  const config = ajv07.compile(configSchema);
 
   // emitted beside the validators so nothing at runtime reads schemas/, which is a
   // submodule symlink: missing without the submodule, a plain file on Windows
@@ -79,6 +81,15 @@ export async function buildValidators(): Promise<void> {
       ].flatMap((name) => keysOf(definitions[name]!)),
     ),
   ].sort();
+  const definitionKeys = Object.fromEntries(
+    Object.entries({
+      common: "devContainerCommon",
+      nonCompose: "nonComposeBase",
+      image: "imageContainer",
+      dockerfile: "dockerfileContainer",
+      compose: "composeContainer",
+    }).map(([label, name]) => [label, [...new Set(keysOf(definitions[name]!))].sort()]),
+  );
 
   // TODO: both schemas use `format: "uri"`, and without `ajv-formats` Ajv ignores it
   // (it warns `unknown format "uri" ignored` at compile time). Adding it would be a
@@ -93,12 +104,14 @@ export async function buildValidators(): Promise<void> {
   await Bun.write(
     path.join(outDir, "devContainer.scenarios.validator.js"),
     standaloneCode(ajv2019, { image: "image", dockerfile: "dockerfile", compose: "compose" }) +
-      `\n/** Every top-level property any scenario accepts. */\nexport const rootKeys = ${JSON.stringify(rootKeys)};\n`,
+      `\n/** Every top-level property any scenario accepts. */\nexport const rootKeys = ${JSON.stringify(rootKeys)};\n` +
+      `\n/** The top-level properties each schema definition declares. */\nexport const definitionKeys = ${JSON.stringify(definitionKeys)};\n`,
   );
   await Bun.write(
     path.join(outDir, "devContainerFeature.validator.js"),
     standaloneCode(ajv07, feature),
   );
+  await Bun.write(path.join(outDir, "dcxConfig.validator.js"), standaloneCode(ajv07, config));
 }
 
 if (import.meta.main) {

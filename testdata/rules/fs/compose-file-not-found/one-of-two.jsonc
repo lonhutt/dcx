@@ -1,0 +1,8 @@
+{
+  "dockerComposeFile": [
+    "../compose.yml",
+    "compose.dev.yml" // want: error: Compose file "compose.dev.yml" doesn't exist
+  ],
+  "service": "app",
+  "workspaceFolder": "/workspace"
+}

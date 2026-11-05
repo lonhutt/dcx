@@ -1,0 +1,7 @@
+{
+  "image": "node:22",
+  "features": {
+    "ghcr.io/devcontainers/features/old-thing:1": {}, // want: warning: Feature "ghcr.io/devcontainers/features/old-thing:1" is deprecated upstream
+    "ghcr.io/devcontainers/features/node:1": {}
+  }
+}

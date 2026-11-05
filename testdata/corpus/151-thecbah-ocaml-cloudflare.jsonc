@@ -1,0 +1,40 @@
+// For format details, see https://aka.ms/devcontainer.json.
+{
+    "name": "OCaml Cloudflare Workers",
+    "build":  {
+        "dockerfile": "Dockerfile"
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "installZsh": "true",
+            "username": "vscode",
+            "userUid": "1000",
+            "userGid": "1000",
+            "upgradePackages": "false"
+        },
+        "ghcr.io/thecbah/ocaml-features/ocaml:1": {
+            "packages": "js_of_ocaml js_of_ocaml-compiler js_of_ocaml-ppx melange",
+        },
+        "ghcr.io/devcontainers/features/node:2": {}
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ocamllabs.ocaml-platform"
+            ],
+            "settings": {
+                "remote.portsAttributes": {
+                    "8787": {
+                        "onAutoForward": "ignore"
+                    }
+                }
+            }
+        }
+    },
+    "remoteUser": "vscode",
+    "postCreateCommand": {
+        "opam": "sudo sh -ceux \"chown -R $(id -u):$(id -g) ${OPAMROOT}/log\"",
+        "postCreateCommand": ". ${NVM_DIR}/nvm.sh && npm install -g @devcontainers/cli && make npm-install"
+    },
+    "waitFor": "postCreateCommand"
+}

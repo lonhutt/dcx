@@ -1,0 +1,4 @@
+{
+  "build": { "dockerfle": "Dockerfile" },
+  "mounts": [{ "type": "bind" }]
+}

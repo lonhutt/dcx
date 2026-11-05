@@ -1,0 +1,4 @@
+{
+  "image": "node:22",
+  "colour": "red" // want: warning: Unknown property "colour"
+}

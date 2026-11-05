@@ -1,0 +1,14 @@
+{
+  "image": "node:22",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "-ms-python.python",
+        "golang.Go@0.40.0",
+        "ESLint", // want: error: "ESLint" isn't an extension ID; IDs look like "publisher.name"
+        "a.b.c" // want: error: "a.b.c" isn't an extension ID; IDs look like "publisher.name"
+      ]
+    }
+  }
+}

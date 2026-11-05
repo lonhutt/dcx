@@ -1,0 +1,34 @@
+{
+  "name": "Cantaro Development",
+  "image": "mcr.microsoft.com/devcontainers/dotnet:1-10.0",
+  
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "24"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "github.copilot",
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.csdevkit",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "microsoft-aspire.aspire-vscode",
+        "oven.bun-vscode"
+      ],
+      "settings": {
+        "editor.formatOnSave": true
+      }
+    }
+  },
+
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  "forwardPorts": [5000, 5173, 5432, 8443],
+
+  "remoteUser": "vscode"
+}

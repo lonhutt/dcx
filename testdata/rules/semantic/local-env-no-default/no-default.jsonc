@@ -1,0 +1,7 @@
+{
+  "image": "node:22",
+  "containerEnv": {
+    "API": "${localEnv:API_URL}", // want: info: ${localEnv:API_URL} is empty when API_URL isn't set on the host
+    "OK": "${localEnv:API_URL:http://localhost}"
+  }
+}

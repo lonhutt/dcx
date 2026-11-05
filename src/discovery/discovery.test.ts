@@ -2,7 +2,7 @@ import { afterEach, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { BunFS } from "../vfs/bunfs";
+import { DiskFS } from "../vfs/diskfs";
 import { OverlayFS } from "../vfs/overlayfs";
 import { discoverDevcontainer } from "./discovery";
 
@@ -20,7 +20,7 @@ function project(...files: string[]): string {
   return root;
 }
 
-const disk = new BunFS();
+const disk = new DiskFS();
 
 test.each([
   [

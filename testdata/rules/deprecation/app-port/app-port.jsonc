@@ -1,0 +1,4 @@
+{
+  "image": "node:22",
+  "appPort": [3000, "8080:80"] // want: warning: "appPort" is superseded by "forwardPorts"
+}

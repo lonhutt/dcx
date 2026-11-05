@@ -1,0 +1,8 @@
+{
+  "image": "node:22",
+  "containerEnv": {
+    "ab": "1",
+    "ab": "2" // want: error: Duplicate key "ab"; only the last one takes effect
+  },
+  "remoteEnv": { "ab": "1" }
+}

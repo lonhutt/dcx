@@ -1,3 +1,11 @@
-# position fixtures depend on their exact line endings (\n, \r\n, lone \r); keeps
-# autocrlf on Windows from rewriting them
+# goldens and fixtures are compared byte for byte; keeps autocrlf on Windows from
+# rewriting them
+testdata/** text eol=lf
+src/**/testdata/** text eol=lf
+RULES.md text eol=lf
+
+# real-world configs keep whatever line endings upstream committed
+testdata/corpus/*.jsonc -text
+
+# position fixtures depend on their exact line endings (\n, \r\n, lone \r)
 src/position/testdata/*.jsonc -text

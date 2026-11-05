@@ -1,0 +1,9 @@
+{
+  "sources": [
+    { "id": "marketplace", "kind": "vscode-gallery", "required": true,
+      "extensions": { "golang.Go": {}, "ms-python.vscode-pylance": {}, "old.thing": { "deprecated": true } } },
+    { "id": "open-vsx", "required": true,
+      "extensions": { "golang.Go": {}, "old.thing": { "downloadable": false } } },
+    { "id": "vpn-gallery", "kind": "vscode-gallery", "required": true, "unreachable": true, "extensions": {} }
+  ]
+}

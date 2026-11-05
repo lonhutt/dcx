@@ -1,0 +1,5 @@
+{
+  "image": "node:22",
+  "remoteUser": "root",
+  "updateRemoteUserUID": true // want: info: "updateRemoteUserUID" has no effect when the user is root
+}

@@ -1,0 +1,6 @@
+{
+  "image": "node:22",
+  "workspaceFolder": "/workspaces/${localWorkspaceFolderName}", // want: error: Unknown variable "localWorkspaceFolderName"; did you mean "localWorkspaceFolder"?
+  "containerEnv": { "X": "${localenv:HOME}" }, // want: error: Unknown variable "localenv"; did you mean "localEnv"?
+  "remoteEnv": { "Y": "${localEnv:}" } // want: error: ${localEnv:...} needs a variable name
+}

@@ -1,0 +1,6 @@
+{
+  "image": "node:22",
+  "mounts": [
+    { "type": "bind", "source": "/tmp" } // want: error: "mounts.0" is missing required property "target"
+  ]
+}

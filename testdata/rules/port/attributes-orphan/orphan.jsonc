@@ -1,0 +1,9 @@
+{
+  "image": "node:22",
+  "forwardPorts": [3005, "db:5432"],
+  "portsAttributes": {
+    "3000-3010": { "label": "covers 3005" },
+    "5432": {},
+    "8080": { "label": "admin" } // want: info: Attributes for "8080", which "forwardPorts" doesn't forward
+  }
+}

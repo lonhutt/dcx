@@ -1,0 +1,4 @@
+{
+  "image": "node:22",
+  "initializeCommand": "mkdir -p ${localEnv:HOME}/.cache && git fetch"
+}

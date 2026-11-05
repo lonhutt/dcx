@@ -1,0 +1,4 @@
+{
+  "image": "node:22"
+  "name": "app" // want: error: Comma expected
+}

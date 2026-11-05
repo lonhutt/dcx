@@ -1,0 +1,94 @@
+// For format details, see https://aka.ms/devcontainer.json.
+{
+  "name": "Deep Learning Template Dev",
+  "build": {
+    // Sets the run context to one level up instead of the .devcontainer folder.
+    "context": "..",
+    // Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
+    "dockerfile": "../Dockerfile",
+    "target": "dev"
+  },
+  // Activate GPU usage as additional container specific runtime settings.
+  // Also loads ENV variables from .env file
+  "runArgs": ["--gpus", "all", "--env-file", ".env"],
+  "postCreateCommand": "/bin/sh scripts/setup.sh",
+  // Configure tool-specific properties.
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // Code completion and AI
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        // Code formatting and linting
+        "ms-azuretools.vscode-docker",
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "ms-python.flake8",
+        "ms-python.isort",
+        "redhat.vscode-yaml",
+        "ms-vscode.makefile-tools",
+        "ms-azuretools.vscode-docker",
+        // Project management
+        "Gruntfuggly.todo-tree",
+        "eamodio.gitlens",
+        // Data Version Control
+        "iterative.dvc",
+        // Visuals
+        "oderwat.indent-rainbow",
+        // Notebooks
+        "ms-toolsai.jupyter"
+      ],
+      "settings": {
+        // Code formatting and linting
+        "autoDocstring.docstringFormat": "google",
+        "python.testing.pytestEnabled": true,
+        "editor.formatOnSave": true,
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.black-formatter",
+          "editor.codeActionsOnSave": {
+            "source.organizeImports": true,
+            "source.fixAll": true
+          },
+          "files.trimTrailingWhitespace": true
+        },
+        "yaml.schemas": {
+          "https://raw.githubusercontent.com/iterative/dvcyaml-schema/master/schema.json": "dvc.yaml"
+        },
+        "[yaml]": {
+          "editor.formatOnSave": true,
+          "editor.defaultFormatter": "redhat.vscode-yaml",
+          "editor.insertSpaces": true,
+          "editor.tabSize": 4,
+          "editor.autoIndent": "keep",
+          "diffEditor.ignoreTrimWhitespace": false,
+          "editor.quickSuggestions": {
+            "other": true,
+            "comments": false,
+            "strings": true
+          }
+        },
+        "flake8.args": [
+          // Default 88, personal preference here
+          "--max-line-length=110"
+        ],
+        "isort.args": ["--profile", "black"],
+        // Intent rainbow
+        "indentRainbow.indicatorStyle": "light",
+        "indentRainbow.lightIndicatorStyleLineWidth": 1,
+        "indentRainbow.colors": [
+          "rgba(255,255,64,0.3)",
+          "rgba(127,255,127,0.3)",
+          "rgba(255,127,255,0.3)",
+          "rgba(79,236,236,0.3)"
+        ],
+        // The indent color if the number of spaces is not a multiple of "tabSize".
+        "indentRainbow.errorColor": "rgba(128,32,32,0.6)"
+      },
+      "files_exlude": {
+        // hide pycache folders.
+        "**/__pycache__": true,
+        ".pytest_cache": true
+      }
+    }
+  }
+}

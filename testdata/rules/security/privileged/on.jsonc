@@ -1,0 +1,4 @@
+{
+  "image": "node:22",
+  "privileged": true // want: warning: This container runs privileged, with near-host access
+}

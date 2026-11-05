@@ -1,0 +1,3 @@
+ARG NODE_VERSION=20
+FROM node:${NODE_VERSION}
+arg USERNAME USER_UID=1000 # trailing comment

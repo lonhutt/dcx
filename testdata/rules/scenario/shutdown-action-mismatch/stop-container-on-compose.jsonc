@@ -1,0 +1,6 @@
+{
+  "dockerComposeFile": "compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "shutdownAction": "stopContainer" // want: error: "stopContainer" only applies to a single-container config; use "stopCompose"
+}

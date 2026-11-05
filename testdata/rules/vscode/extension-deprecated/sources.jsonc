@@ -1,0 +1,14 @@
+{
+  "image": "node:22",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go",
+        "ms-python.vscode-pylance",
+        "dbaeumer.vscode-eslnt",
+        "old.thing", // want: warning: "old.thing" is deprecated on "marketplace"
+        "-ms-python.python"
+      ]
+    }
+  }
+}

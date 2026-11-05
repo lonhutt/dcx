@@ -1,0 +1,5 @@
+{
+  // no network sources: nothing to check against
+  "image": "node:22",
+  "customizations": { "vscode": { "extensions": ["dbaeumer.vscode-eslnt"] } }
+}

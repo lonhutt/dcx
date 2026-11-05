@@ -19,7 +19,7 @@ export class OverlayFS implements FileSystem {
   private readonly base: FileSystem;
   private readonly buffers: Map<string, string>;
 
-  /** @param base Serves every path that has no buffer, usually a `BunFS`. */
+  /** @param base Serves every path that has no buffer, usually a `DiskFS`. */
   constructor(base: FileSystem) {
     this.base = base;
     this.buffers = new Map();
@@ -68,5 +68,13 @@ export class OverlayFS implements FileSystem {
     }
 
     return [...entries.values()].sort(byName);
+  }
+
+  async realpath(path: string): Promise<string | undefined> {
+    const canonPath = resolve(path);
+    // an unsaved new file isn't on disk yet; its own path is as canonical as it gets
+    return (
+      (await this.base.realpath(canonPath)) ?? (this.buffers.has(canonPath) ? canonPath : undefined)
+    );
   }
 }

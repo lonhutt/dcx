@@ -1,0 +1,54 @@
+// SPDX-License-Identifier: MIT
+// © 2026 Hannes Stauss (scalarion@nimblescape.com)
+// Licensed under the MIT License. See LICENSE in the repository root for details.
+
+// devcontainer-base: VS Code settings of this image.
+// The layers (go, node, ts, deno, prettier) and devcontainer-core add their own
+// settings; this file adds the settings that belong to this image. The release
+// workflow writes all of them into the image label devcontainer.metadata.
+// Documentation: https://github.com/majikmate/devcontainer-base#readme
+{
+  "name": "Dev Container Base",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  // apt in the terminal does not ask questions
+  "containerEnv": {
+    "DEBIAN_FRONTEND": "noninteractive"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        // PlantUML diagrams in Markdown files and PlantUML files: the
+        // extension renders them itself, without a PlantUML server, Java or
+        // Graphviz, and formats PlantUML files
+        "nimblescape.nimblescape-plantuml",
+        // Mindbug: shows the stack and the heap of a TypeScript program as a
+        // diagram while it is debugged (with Deno or Node.js)
+        "nimblescape.nimblescape-mindbug",
+        // Comment Links: Markdown links in code comments show only their label,
+        // and a click opens the target file at the heading that the link names
+        "nimblescape.nimblescape-commentlinks",
+        // PDF viewer: contains PDF.js 6 (tomoki1207.pdf is not used: it has no
+        // update since 2023 and contains PDF.js 3.1.81, which has the security
+        // problem CVE-2024-4367)
+        "mathematic.vscode-pdf"
+      ],
+      "settings": {
+        // Formatting: Prettier formats all languages except Go and PlantUML, with
+        // the standard Prettier style.
+        // Prettier is the default formatter for all languages, so VS Code never uses
+        // the Deno formatter. Tailwind CSS classes are sorted by the plugin that is
+        // loaded from the global configuration /.prettierrc.json (layer prettier).
+        // Go keeps gofmt (layer go). The PlantUML extension formats PlantUML
+        // files and the PlantUML blocks of Markdown files.
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        // Same indentation as the standard Prettier output
+        "editor.insertSpaces": true,
+        "editor.tabSize": 2,
+        "editor.detectIndentation": false
+      }
+    }
+  }
+}

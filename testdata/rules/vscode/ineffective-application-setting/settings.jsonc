@@ -1,0 +1,13 @@
+{
+  "image": "node:22",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "editor.tabSize": 2,
+        "extensions.allowed": { "*": true }, // want: warning: "extensions.allowed" is an application-wide setting; VS Code ignores it here
+        "extensions.gallery.serviceUrl": "https://example.com", // want: warning: "extensions.gallery.serviceUrl" is an application-wide setting; VS Code ignores it here
+        "extensions.ignoreRecommendations": true
+      }
+    }
+  }
+}

@@ -2,6 +2,18 @@
   "name": "dcx",
   "version": "0.1.0",
   "description": "A linter for devcontainer.json",
+  "keywords": [
+    "devcontainer",
+    "devcontainer.json",
+    "linter",
+    "dev containers",
+    "codespaces"
+  ],
+  "homepage": "https://github.com/lonhutt/dcx#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lonhutt/dcx.git"
+  },
   "license": "MIT",
   "type": "module",
   "bin": {
@@ -17,18 +29,21 @@
     "@types/bun": "latest",
     "@types/vscode": "1.90.0",
     "ajv": "^8.20.0",
+    "fast-check": "^4.10.2",
     "jsonc-parser": "^3.3.1",
-    "prettier": "3.9.6"
+    "prettier": "3.9.6",
+    "yaml": "^2.9.1"
   },
   "peerDependencies": {
     "typescript": "^7"
   },
   "scripts": {
-    "build": "bun build ./index.ts --compile --minify --sourcemap --bytecode --outfile dist/dcx",
-    "bundle": "bun build ./index.ts --target=bun --minify --outfile dist/dcx.js",
+    "build": "bun build ./index.ts --compile --minify --sourcemap --bytecode --define DCX_COMMIT=\"'$(git rev-parse --short HEAD 2>/dev/null || echo dev)'\" --define DCX_BUILD_DATE=\"'$(date -u +%F)'\" --outfile dist/dcx",
+    "bundle": "bun build ./index.ts --target=bun --minify --define DCX_COMMIT=\"'$(git rev-parse --short HEAD 2>/dev/null || echo dev)'\" --define DCX_BUILD_DATE=\"'$(date -u +%F)'\" --outfile dist/dcx.js",
     "prepublishOnly": "bun run bundle",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "bun test"
+    "test": "bun test",
+    "rules-doc": "bun scripts/rules-doc.ts"
   }
 }

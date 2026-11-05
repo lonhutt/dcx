@@ -1,0 +1,11 @@
+{
+  "image": "node:22",
+  "forwardPorts": [3000],
+  "portsAttributes": {
+    "3000": { "label": "app" },
+    "db:5432": {},
+    "40000-55000": {},
+    ".+\\.js": {},
+    "web": {} // want: error: "web" isn't a port, a host:port, a range or a pattern
+  }
+}

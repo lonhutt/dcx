@@ -1,0 +1,5 @@
+{
+  "image": "node:20",
+  "name": "app",
+  "image": "node:22" // want: error: Duplicate key "image"; only the last one takes effect
+}

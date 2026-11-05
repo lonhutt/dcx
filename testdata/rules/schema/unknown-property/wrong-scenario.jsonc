@@ -1,0 +1,4 @@
+{
+  "image": "node:22",
+  "service": "app" // want: warning: "service" doesn't apply to an image-based config
+}

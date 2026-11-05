@@ -1,0 +1,5 @@
+{
+  "dockerComposeFile": "/etc/compose.yml", // want: warning: Compose file "/etc/compose.yml" is outside the workspace
+  "service": "app",
+  "workspaceFolder": "/workspace"
+}

@@ -1,0 +1,7 @@
+{
+  "image": "node:22",
+  "initializeCommand": {
+    "fetch": "git fetch",
+    "prep": ["ls", "/workspaces/app"] // want: info: "initializeCommand.prep" runs on the host, but this looks like it expects the container
+  }
+}

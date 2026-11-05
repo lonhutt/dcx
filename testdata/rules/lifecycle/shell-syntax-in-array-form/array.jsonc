@@ -1,0 +1,11 @@
+{
+  "image": "node:22",
+  "onCreateCommand": ["npm", "install", "&&", "npm", "test"], // want: warning: "onCreateCommand" is in array form, so "&&" is passed as a literal argument, not run by a shell
+  "postCreateCommand": ["sh", "-c", "npm install && npm test"],
+  "postStartCommand": ["echo", "a && b"],
+  "postAttachCommand": {
+    "logs": ["tail", "-f", "log", ">/tmp/out"], // want: warning: "postAttachCommand.logs" is in array form, so ">/tmp/out" is passed as a literal argument, not run by a shell
+    "ok": ["node", "server.js"]
+  },
+  "updateContentCommand": ["npm ci | tee log"] // want: warning: "updateContentCommand" is in array form, so "npm ci | tee log" is passed as a literal argument, not run by a shell
+}

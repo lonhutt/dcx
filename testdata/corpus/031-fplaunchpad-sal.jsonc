@@ -1,0 +1,21 @@
+{
+  "name": "SAL - Lean 4.26.0 (from DockerHub)",
+  "image": "pranavramesh2003/sal:v4.26.0",
+  "remoteUser": "lean",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "leanprover.lean4"
+      ],
+      "settings": {
+        "lean4.executablePath": "lake",
+        "editor.formatOnSave": true,
+        "[lean]": {
+          "editor.defaultFormatter": "leanprover.lean4",
+          "editor.tabSize": 2,
+          "editor.insertSpaces": true
+        }
+      }
+    }
+  }
+}

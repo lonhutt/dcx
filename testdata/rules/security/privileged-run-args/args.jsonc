@@ -1,0 +1,12 @@
+{
+  "image": "node:22",
+  "runArgs": [
+    "--init",
+    "--privileged", // want: warning: "--privileged" in "runArgs" runs the container privileged
+    "--cap-add=NET_ADMIN", // want: warning: "--cap-add NET_ADMIN" in "runArgs" adds a capability out of sight of "capAdd"
+    "--security-opt", // want: warning: "--security-opt apparmor=unconfined" in "runArgs" turns off a protection
+    "apparmor=unconfined",
+    "--pid=host", // want: warning: "--pid=host" in "runArgs" shares the host's namespace
+    "--network=host"
+  ]
+}
