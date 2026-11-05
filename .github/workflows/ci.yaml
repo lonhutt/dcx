@@ -42,6 +42,10 @@ jobs:
 
       - run: bun test
 
+      # not picked up by the root run; builds the extension and runs its server under Node
+      - run: bun test
+        working-directory: extensions/vscode
+
       # One copy is enough; the lcov content doesn't vary by OS.
       - name: Upload coverage
         if: matrix.os == 'ubuntu-latest'

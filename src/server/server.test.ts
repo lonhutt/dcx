@@ -287,6 +287,20 @@ describe("review fixes", () => {
     ]);
   });
 
+  test("run: onSave lints on open and save, not on each edit", async () => {
+    const p = start({ [PATH]: CLEAN });
+    await p.initialize({}, { run: "onSave" });
+    await p.open(PATH, CLEAN);
+    await p.diagnostics(PATH);
+    await p.change(PATH, { text: '{ "nmae": 1 }' });
+    await p.settle();
+    expect(p.published).toHaveLength(1);
+    await p.client.sendNotification("textDocument/didSave", {
+      textDocument: { uri: p.uriOf(PATH) },
+    });
+    expect((await p.diagnostics(PATH, 2)).map((d) => d.code)).toContain("schema/unknown-property");
+  });
+
   test("dispose stops analysis that's still pending", async () => {
     const p = lspPair({ fs: new MemFS({ [PATH]: CLEAN }), debounceMs: 10_000 });
     pair = p;

@@ -51,6 +51,8 @@ export interface InitializationOptions {
   readonly online?: boolean;
   /** An explicit .dcx.yaml, absolute or relative to the first workspace folder. */
   readonly configPath?: string;
+  /** `onSave` lints a document when it's opened and saved, not as it's edited. Default `onType`. */
+  readonly run?: "onSave" | "onType";
 }
 
 /** Exactly what's implemented; a client trusts these, so over-advertising breaks it. */
@@ -230,16 +232,22 @@ export function startServer(
     relintAll(0);
   });
 
+  const onType = () => init.run !== "onSave";
+  documents.onDidOpen(({ document }) => {
+    if (!onType() && devcontainer(document.uri)) analysis.schedule(document.uri, 0);
+  });
   // an open Compose file or Dockerfile is what the open configs read, so editing it re-lints them
   documents.onDidChangeContent(({ document }) => {
     if (!isLocal(document.uri)) return;
     const path = pathOf(document.uri);
     overlay.set(path, document.getText());
+    if (!onType()) return;
     if (isDevcontainer(path)) analysis.schedule(document.uri, debounceMs);
     else relintAll(debounceMs);
   });
   documents.onDidSave(({ document }) => {
     if (devcontainer(document.uri)) analysis.schedule(document.uri, 0);
+    else if (isLocal(document.uri) && !onType()) relintAll(0);
   });
   documents.onDidClose(({ document }) => {
     if (!isLocal(document.uri)) return;
@@ -262,10 +270,12 @@ export function startServer(
     }
     return actions;
   });
+  // answers whether it changed anything, so a client can say there was nothing to fix
   connection.onExecuteCommand(async ({ command, arguments: args }) => {
-    if (command !== FIX_ALL_COMMAND || typeof args?.[0] !== "string") return;
+    if (command !== FIX_ALL_COMMAND || typeof args?.[0] !== "string") return false;
     const edit = await fixAll(args[0]);
-    if (edit) await connection.workspace.applyEdit({ changes: { [args[0]]: [edit] } });
+    if (!edit) return false;
+    return (await connection.workspace.applyEdit({ changes: { [args[0]]: [edit] } })).applied;
   });
   connection.onHover(({ textDocument, position }) => {
     const doc = devcontainer(textDocument.uri);
