@@ -131,7 +131,7 @@ describe("code actions", () => {
     )!;
     const edited = '{\n  "name": "xyz",' + text.slice(text.indexOf('\n  "image'));
     await p.change(PATH, {
-      range: { start: { line: 1, character: 11 }, end: { line: 1, character: 11 } },
+      range: { start: { line: 1, character: 12 }, end: { line: 1, character: 12 } },
       text: "yz",
     });
     const textDocument = { uri: p.uriOf(PATH) };
