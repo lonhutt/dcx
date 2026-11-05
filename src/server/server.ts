@@ -1,4 +1,4 @@
-import { basename, dirname, isAbsolute, join } from "node:path";
+import { basename, dirname, isAbsolute, join, resolve } from "node:path";
 import { TextDocument } from "vscode-languageserver-textdocument";
 import {
   CodeActionKind,
@@ -67,7 +67,10 @@ export const CAPABILITIES = {
 const DEBOUNCE_MS = 200;
 const CONFIG_FILES = "**/.dcx.{yaml,yml,json}";
 const isDevcontainer = (path: string) => /(^|[\\/])\.?devcontainer\.json$/.test(path);
-const pathOf = (uri: string) => URI.parse(uri).fsPath;
+// fsPath lowercases a Windows drive letter and Node's paths don't; the overlay is keyed
+// by exact path, so a buffer stored under d:\ would be missed by a read of D:\
+const pathOf = (uri: string) =>
+  URI.parse(uri).fsPath.replace(/^[a-z]:/, (drive) => drive.toUpperCase());
 // a git: or untitled: document can share a working copy's fsPath, but isn't what's on disk
 const isLocal = (uri: string) => URI.parse(uri).scheme === "file";
 
@@ -182,8 +185,9 @@ export function startServer(
   };
   // the explicit config and the user config can live anywhere, under any name
   const watchers = (relative: boolean): FileSystemWatcher[] => {
-    const files = [configPath(), userConfigPath(options.env, options.home)].filter(
-      (p): p is string => !!p,
+    // resolved as the config loader resolves them: on Windows "/etc" means the current drive
+    const files = [configPath(), userConfigPath(options.env, options.home)].flatMap((p) =>
+      p ? [resolve(p)] : [],
     );
     return [
       { globPattern: CONFIG_FILES },
