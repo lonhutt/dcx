@@ -40,7 +40,7 @@
             "onSave",
             "onType"
           ],
-          "default": "onSave",
+          "default": "onType",
           "description": "Lint when a file is saved, or as you type."
         },
         "dcx.online": {

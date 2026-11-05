@@ -14,6 +14,7 @@ import type { Diagnostic } from "../diagnostic/diagnostic";
 import { parse } from "../jsonc/jsonc";
 import { propertiesAt } from "../schema/describe";
 import { fixAllEdit } from "./actions";
+import { FIX_ALL_COMMAND } from "./protocol";
 import { lspPair } from "../testutil/lsp";
 import { MemFS } from "../vfs/memfs";
 
@@ -112,29 +113,40 @@ describe("code actions", () => {
     const text = '{\n  "name": "x",\n  "image": "node:22",\n  "extensions": ["a.b"]\n}\n';
     const { p, textDocument } = await opened(text);
     await p.request("workspace/executeCommand", {
-      command: "dcx.fixAll",
+      command: FIX_ALL_COMMAND,
       arguments: [textDocument.uri],
     });
     expect(p.applied).toHaveLength(1);
   });
 
-  test("a quick fix isn't offered against an analysis of an older version", async () => {
+  // with run: onSave nothing re-analyses on an edit, so the fix has to come from the edited text
+  test("after an unsaved edit, the quick fix is for the text as it is now", async () => {
     const text = '{\n  "name": "x",\n  "image": "node:22",\n  "extensions": ["a.b"]\n}\n';
-    const { p, textDocument } = await opened(text);
+    pair = lspPair({ fs: new MemFS({ "/w/.git/HEAD": "", [PATH]: text }) });
+    const p = pair;
+    await p.initialize({}, { run: "onSave" });
+    await p.open(PATH, text);
     const target = (await p.diagnostics(PATH)).find(
       (d) => d.code === "deprecation/root-extensions",
     )!;
-    // a new version that hasn't been analysed yet; the debounce is still running
+    const edited = '{\n  "name": "xyz",' + text.slice(text.indexOf('\n  "image'));
     await p.change(PATH, {
-      range: { start: { line: 0, character: 1 }, end: { line: 0, character: 1 } },
-      text: " ",
+      range: { start: { line: 1, character: 11 }, end: { line: 1, character: 11 } },
+      text: "yz",
     });
+    const textDocument = { uri: p.uriOf(PATH) };
     const actions = await p.request<CodeAction[]>("textDocument/codeAction", {
       textDocument,
       range: target.range,
       context: { diagnostics: [target] },
     });
-    expect(actions).toEqual([]);
+    expect(actions.map((a) => a.kind)).toEqual(["quickfix"]);
+    const after = applied(edited, actions[0]!.edit!.changes![textDocument.uri]!);
+    expect(JSON.parse(after)).toEqual({
+      name: "xyz",
+      image: "node:22",
+      customizations: { vscode: { extensions: ["a.b"] } },
+    });
   });
 });
 

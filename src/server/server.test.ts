@@ -8,6 +8,7 @@ import { lspPair } from "../testutil/lsp";
 import { MemFS } from "../vfs/memfs";
 import { CAPABILITIES } from "./server";
 import { analyzer } from "./diagnostics";
+import { FIX_ALL_COMMAND } from "./protocol";
 
 const PATH = join("/w", ".devcontainer", "devcontainer.json");
 const CLEAN = '{\n  "name": "x",\n  "image": "node:22"\n}\n';
@@ -59,7 +60,7 @@ test("every advertised capability has a handler", async () => {
   const range = { start: position, end: position };
   const params: Record<string, object> = {
     "textDocument/codeAction": { textDocument, range, context: { diagnostics: [] } },
-    "workspace/executeCommand": { command: "dcx.fixAll", arguments: [textDocument.uri] },
+    "workspace/executeCommand": { command: FIX_ALL_COMMAND, arguments: [textDocument.uri] },
     "textDocument/hover": { textDocument, position },
     "textDocument/completion": { textDocument, position },
     "textDocument/documentLink": { textDocument },

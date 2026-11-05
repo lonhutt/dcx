@@ -216,7 +216,7 @@ silenced; every other format leaves them out.
 ## Editors
 
 The VS Code extension in `extensions/vscode` is a client for the language server below,
-which it bundles. Settings: `dcx.enable`, `dcx.run` (`onSave` or `onType`), `dcx.online`,
+which it bundles. Settings: `dcx.enable`, `dcx.run` (`onType`, the default, or `onSave`), `dcx.online`,
 `dcx.configPath`, and `dcx.trace.server` for logging the LSP traffic. Changing one
 restarts the server; so does **dcx: Restart Server**, which also brings it back after
 it's crashed more often than the client will retry on its own.
@@ -227,7 +227,7 @@ it's crashed more often than the client will retry on its own.
 `.dcx.yaml` the same way `dcx check` does, so the editor and CI agree. It provides:
 
 - diagnostics as you type (debounced; a newer edit cancels the older run)
-- quick fixes, and `source.fixAll.dcx` (or the `dcx.fixAll` command) for every fix at once
+- quick fixes, and `source.fixAll.dcx` (or the `dcx.server.fixAll` command) for every fix at once
 - hover and completion from the spec's own schema
 - links to the Dockerfile, Compose files and local features, and go-to-definition from
   `"service"` to its Compose service

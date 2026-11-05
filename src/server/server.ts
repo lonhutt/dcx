@@ -6,6 +6,7 @@ import {
   DidChangeWatchedFilesNotification,
   TextDocuments,
   TextDocumentSyncKind,
+  type CodeAction,
   type Connection,
   type DidChangeWatchedFilesClientCapabilities,
   type InitializeParams,
@@ -25,10 +26,11 @@ import type { Fetch } from "../net/http";
 import { LineIndex } from "../position/position";
 import { OverlayFS } from "../vfs/overlayfs";
 import type { FileSystem } from "../vfs/vfs";
-import { FIX_ALL_COMMAND, FIX_ALL_KIND, fixAllEdit, quickFixes, wantsFixAll } from "./actions";
+import { FIX_ALL_KIND, fixAllEdit, quickFixes, wantsFixAll } from "./actions";
 import { completions, hover } from "./assist";
-import { analyzer } from "./diagnostics";
+import { analyzer, type Analysis } from "./diagnostics";
 import { definition, documentLinks } from "./links";
+import { FIX_ALL_COMMAND, isDevcontainer } from "./protocol";
 
 export interface ServerOptions {
   readonly fs: FileSystem;
@@ -62,7 +64,6 @@ export const CAPABILITIES = {
 
 const DEBOUNCE_MS = 200;
 const CONFIG_FILES = "**/.dcx.{yaml,yml,json}";
-const isDevcontainer = (path: string) => /(^|[\\/])\.?devcontainer\.json$/.test(path);
 // fsPath lowercases a Windows drive letter and Node's paths don't; the overlay is keyed
 // by exact path, so a buffer stored under d:\ would be missed by a read of D:\
 const pathOf = (uri: string) =>
@@ -120,12 +121,16 @@ export function startServer(
       );
   };
 
+  const lintDoc = async (doc: TextDocument, signal?: AbortSignal) => {
+    const path = pathOf(doc.uri);
+    return (await lintText(path, signal))(parse(path, doc.getText()));
+  };
+
   const analysis = analyzer({
     connection,
     get: (uri) => documents.get(uri),
     async lint(doc, signal) {
-      const path = pathOf(doc.uri);
-      const found = await (await lintText(path, signal))(parse(path, doc.getText()));
+      const found = await lintDoc(doc, signal);
       for (const f of extra.failures()) {
         if (warned.has(f)) continue;
         warned.add(f);
@@ -164,15 +169,14 @@ export function startServer(
   };
   const fixAll = async (uri: string) => {
     const doc = devcontainer(uri);
-    if (!doc) return undefined;
-    try {
-      return await fixAllEdit(doc, pathOf(uri), await lintText(pathOf(uri)));
-    } catch (err) {
-      // a broken .dcx.yaml is already shown in that file by the analysis
-      if (!(err instanceof ConfigError))
-        connection.console.error(`couldn't fix ${pathOf(uri)}: ${(err as Error)?.stack ?? err}`);
-      return undefined;
-    }
+    return doc && fixAllEdit(doc, pathOf(uri), await lintText(pathOf(uri)));
+  };
+  // with run: onSave, or mid-debounce, the last analysis is of older text than the editor's
+  const current = async (doc: TextDocument): Promise<Analysis> => {
+    const latest = analysis.latest(doc.uri);
+    if (latest?.version === doc.version) return latest;
+    const version = doc.version;
+    return { version, diagnostics: await lintDoc(doc) };
   };
   const relintAll = (delayMs: number) => {
     for (const doc of documents.all())
@@ -251,22 +255,27 @@ export function startServer(
   connection.onCodeAction(async ({ textDocument, range, context }) => {
     const doc = devcontainer(textDocument.uri);
     if (!doc) return [];
-    const actions =
-      context.only?.length && !context.only.includes(CodeActionKind.QuickFix)
-        ? []
-        : quickFixes(doc, analysis.latest(doc.uri), range);
-    if (wantsFixAll(context.only)) {
-      const edit = await fixAll(doc.uri);
+    const actions: CodeAction[] = [];
+    try {
+      if (!context.only?.length || context.only.includes(CodeActionKind.QuickFix))
+        actions.push(...quickFixes(doc, await current(doc), range));
+      const edit = wantsFixAll(context.only) && (await fixAll(doc.uri));
       if (edit)
         actions.push({
           title: "Fix all dcx problems",
           kind: FIX_ALL_KIND,
           edit: { changes: { [doc.uri]: [edit] } },
         });
+    } catch (err) {
+      // a broken .dcx.yaml is already shown in that file by the analysis
+      if (!(err instanceof ConfigError))
+        connection.console.error(
+          `couldn't fix ${pathOf(doc.uri)}: ${(err as Error)?.stack ?? err}`,
+        );
     }
     return actions;
   });
-  // answers whether it changed anything, so a client can say there was nothing to fix
+  // a failure is an error response, so a client can tell it from there being nothing to fix
   connection.onExecuteCommand(async ({ command, arguments: args }) => {
     if (command !== FIX_ALL_COMMAND || typeof args?.[0] !== "string") return false;
     const edit = await fixAll(args[0]);

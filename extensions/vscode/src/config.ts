@@ -17,7 +17,7 @@ export function readConfig(scope?: ConfigurationScope): DcxConfig {
   return {
     enable: c.get("enable", true),
     path: c.get("path", ""),
-    run: c.get<string>("run", "onSave") === "onType" ? "onType" : "onSave",
+    run: c.get<string>("run", "onType") === "onSave" ? "onSave" : "onType",
     online: explicit(c.inspect<boolean>("online")),
     configPath: c.get("configPath", ""),
   };

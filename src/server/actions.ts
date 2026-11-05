@@ -10,11 +10,10 @@ import { diff } from "../rules/deprecation/edits";
 import { lspRange, shown, toLsp, type Analysis } from "./diagnostics";
 
 export const FIX_ALL_KIND = `${CodeActionKind.SourceFixAll}.dcx`;
-export const FIX_ALL_COMMAND = "dcx.fixAll";
 
 /**
  * A quick fix for each fixable finding that touches `range`. `fix.edits` are already
- * UTF-16 text edits, so this is a relabelling. Nothing when the analysis is of an older
+ * UTF-16 text edits, so this is a relabelling. Nothing when the analysis is of another
  * version than the document: its offsets would land in the wrong place.
  */
 export function quickFixes(

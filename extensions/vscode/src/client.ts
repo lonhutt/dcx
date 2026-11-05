@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { window, type ExtensionContext, type OutputChannel } from "vscode";
+import type { ExtensionContext, OutputChannel } from "vscode";
 import {
   LanguageClient,
   TransportKind,
@@ -9,9 +9,6 @@ import {
 import type { InitializationOptions } from "../../../src/server/server";
 import type { DcxConfig } from "./config";
 
-// the server's command; not imported, since that would bundle the rules into the client
-export const FIX_ALL_COMMAND = "dcx.fixAll";
-
 /** A client for the bundled server, or for a dcx checkout's when `dcx.path` is set. */
 export function createClient(
   context: ExtensionContext,
@@ -19,7 +16,12 @@ export function createClient(
   outputChannel: OutputChannel,
 ): LanguageClient {
   const server: ServerOptions = config.path
-    ? { command: "bun", args: [join(config.path, "index.ts"), "serve", "--stdio"] }
+    ? // run from the checkout, or bun loads the opened project's .env into the server
+      {
+        command: "bun",
+        args: [join(config.path, "index.ts"), "serve", "--stdio"],
+        options: { cwd: config.path },
+      }
     : { module: context.asAbsolutePath(join("dist", "server.js")), transport: TransportKind.ipc };
   const initializationOptions: InitializationOptions = {
     run: config.run,
@@ -29,23 +31,13 @@ export function createClient(
   const options: LanguageClientOptions = {
     documentSelector: [
       { scheme: "file", pattern: "**/{devcontainer.json,.devcontainer.json}" },
-      // synced so an unsaved Compose file or Dockerfile reaches the configs that use it
-      { scheme: "file", language: "dockercompose" },
+      // synced so an unsaved Compose file or Dockerfile reaches the configs that use it; by
+      // name, since the dockercompose language only exists with Docker's extension installed
+      { scheme: "file", pattern: "**/*compose*.{yml,yaml}" },
       { scheme: "file", language: "dockerfile" },
     ],
     initializationOptions,
     outputChannel,
-    middleware: {
-      // from the command palette there's no document argument; use the open one
-      async executeCommand(command, args, next) {
-        if (command !== FIX_ALL_COMMAND || args.length) return next(command, args);
-        const doc = window.activeTextEditor?.document;
-        if (!doc) return void window.showInformationMessage("dcx: open a devcontainer.json to fix");
-        // the server only fixes devcontainer.json, and answers false for anything else
-        if (!(await next(command, [doc.uri.toString()])))
-          void window.showInformationMessage("dcx: nothing to fix in this file");
-      },
-    },
   };
   // the id makes dcx.trace.server the client's trace setting
   return new LanguageClient("dcx", "dcx", server, options);
