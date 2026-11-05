@@ -4,11 +4,7 @@ import { analyze } from "../../lint/analyze";
 import { stubSources } from "../../registry/stub";
 import { MemFS } from "../../vfs/memfs";
 import { APPLICATION_SCOPED, isApplicationScoped } from "./app-scope";
-import { normaliseId, parseExtensionId } from "./extensions";
-
-test("IDs that differ only in case look up the same", () => {
-  expect(new Set(["golang.Go", "GOLANG.go", "golang.go"].map(normaliseId)).size).toBe(1);
-});
+import { parseExtensionId } from "./extensions";
 
 test.each(["golang", "a.b.c", ".go", "golang.", "go lang.go", "ESLint", ""])(
   "%p isn't an ID",

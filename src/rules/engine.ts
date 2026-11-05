@@ -4,43 +4,36 @@ import type { Finding, Pass, Rule } from "./rule";
 /** A pass without `report`; the engine gives each rule its own. */
 export type PassInput = Omit<Pass, "report">;
 
-export interface EngineOptions {
-  /** The severity to run each rule at; `off` skips it. Defaults to the rule's own. */
-  readonly severity?: (rule: Rule) => Severity;
-}
-
 /**
- * Runs rules over one document. Offline rules go one at a time, yielding to the event
+ * Runs `rules` over one document, each at the severity `severity` gives it (`off` skips
+ * it). Offline rules go one at a time, yielding to the event
  * loop between them so a pending cancellation gets seen; network rules run together,
  * since they spend their time waiting. A rule that throws becomes one error finding of
- * its own and costs nobody else theirs. Never throws.
+ * its own and costs nobody else theirs. Never throws. The findings come back sorted:
+ * whatever was collected before the signal aborted, if it did.
  */
-export class Engine {
-  constructor(
-    private readonly rules: readonly Rule[],
-    private readonly options: EngineOptions = {},
-  ) {}
+export async function runRules(
+  rules: readonly Rule[],
+  input: PassInput,
+  severity: (rule: Rule) => Severity = (rule) => rule.defaultSeverity,
+): Promise<Diagnostic[]> {
+  const found: Diagnostic[] = [];
+  const active = rules
+    .map((rule) => ({ rule, severity: severity(rule) }))
+    .filter((r) => r.severity !== "off");
 
-  /** The findings, sorted; whatever was collected before the signal aborted, if it did. */
-  async run(input: PassInput): Promise<Diagnostic[]> {
-    const found: Diagnostic[] = [];
-    const active = this.rules
-      .map((rule) => ({ rule, severity: this.options.severity?.(rule) ?? rule.defaultSeverity }))
-      .filter((r) => r.severity !== "off");
-
-    for (const r of active.filter((r) => !r.rule.requiresNetwork)) {
-      if (input.signal.aborted) return sortDiagnostics(found);
-      await runRule(r.rule, r.severity, input, found);
-      // setImmediate, not a microtask: I/O callbacks (a didChange) only run between
-      // macrotasks; and not setTimeout, whose ~1ms floor adds up over 71 rules
-      await new Promise((resolve) => setImmediate(resolve));
-    }
-    const network = active.filter((r) => r.rule.requiresNetwork);
-    if (network.length && !input.signal.aborted) {
-      await Promise.allSettled(network.map((r) => runRule(r.rule, r.severity, input, found)));
-    }
-    return sortDiagnostics(found);
+  for (const r of active.filter((r) => !r.rule.requiresNetwork)) {
+    if (input.signal.aborted) return sortDiagnostics(found);
+    await runRule(r.rule, r.severity, input, found);
+    // setImmediate, not a microtask: I/O callbacks (a didChange) only run between
+    // macrotasks; and not setTimeout, whose ~1ms floor adds up over every rule
+    await new Promise((resolve) => setImmediate(resolve));
   }
+  const network = active.filter((r) => r.rule.requiresNetwork);
+  if (network.length && !input.signal.aborted) {
+    await Promise.allSettled(network.map((r) => runRule(r.rule, r.severity, input, found)));
+  }
+  return sortDiagnostics(found);
 }
 
 async function runRule(rule: Rule, severity: Severity, input: PassInput, into: Diagnostic[]) {

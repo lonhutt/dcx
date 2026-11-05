@@ -19,7 +19,7 @@ export class OverlayFS implements FileSystem {
   private readonly base: FileSystem;
   private readonly buffers: Map<string, string>;
 
-  /** @param base Serves every path that has no buffer, usually a `BunFS`. */
+  /** @param base Serves every path that has no buffer, usually a `DiskFS`. */
   constructor(base: FileSystem) {
     this.base = base;
     this.buffers = new Map();

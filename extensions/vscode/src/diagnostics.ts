@@ -12,7 +12,9 @@ import type { Diagnostic, Severity } from "../../../src/diagnostic/diagnostic";
 import { catalog } from "../../../src/report/rules";
 import { all } from "../../../src/rules/index";
 
-const SEVERITY: Record<Exclude<Severity, "off">, DiagnosticSeverity> = {
+type Shown = Diagnostic & { readonly severity: Exclude<Severity, "off"> };
+
+const SEVERITY: Record<Shown["severity"], DiagnosticSeverity> = {
   error: DiagnosticSeverity.Error,
   warning: DiagnosticSeverity.Warning,
   info: DiagnosticSeverity.Information,
@@ -31,14 +33,10 @@ export function toDiagnostics(
   const range = (r: { start: number; end: number }) =>
     new Range(doc.positionAt(r.start), doc.positionAt(r.end));
   return diagnostics
-    .filter((d) => !d.suppressed && d.severity !== "off")
+    .filter((d): d is Shown => !d.suppressed && d.severity !== "off")
     .map((d) => {
       const message = d.help ? `${d.message}\n${d.help}` : d.message;
-      const out = new VsDiagnostic(
-        range(d.range),
-        message,
-        SEVERITY[d.severity as keyof typeof SEVERITY],
-      );
+      const out = new VsDiagnostic(range(d.range), message, SEVERITY[d.severity]);
       out.source = "dcx";
       const help = HELP.get(d.ruleId);
       out.code = help ? { value: d.ruleId, target: Uri.parse(help) } : d.ruleId;

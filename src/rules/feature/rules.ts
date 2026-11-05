@@ -1,6 +1,6 @@
 import { rangeOf } from "../../jsonc/jsonc";
 import { parseFeatureRef } from "../../features/ref";
-import { identity } from "../../model/ref";
+import { identity, isPinned } from "../../model/ref";
 import { members } from "../../model/model";
 import { suggest } from "../../schema/suggest";
 import { rule } from "../util";
@@ -59,7 +59,7 @@ track at latest can be listed under "features.allow-unpinned" in .dcx.yaml.`,
       ),
     );
     for (const e of featureEntries(pass)) {
-      if (e.ref?.kind !== "oci" || e.ref.digest || (e.ref.tag && e.ref.tag !== "latest")) continue;
+      if (e.ref?.kind !== "oci" || isPinned(e.ref)) continue;
       if (allowed.has(identity(e.ref))) continue;
       pass.report({
         range: rangeOf(e.field.node),

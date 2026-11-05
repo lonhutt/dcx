@@ -7,18 +7,12 @@ import {
   SCOPED_VARIABLES,
   type Substitution,
 } from "../../model/subst";
+import { LIFECYCLE } from "../../model/lifecycle";
 import { suggest } from "../../schema/suggest";
 import { REFERENCE, rule } from "../util";
 
 const VARIABLES_DOCS = `${REFERENCE}#variables-in-devcontainerjson`;
-const LIFECYCLE = [
-  "initializeCommand",
-  "onCreateCommand",
-  "updateContentCommand",
-  "postCreateCommand",
-  "postStartCommand",
-  "postAttachCommand",
-];
+const LIFECYCLE_PROPERTIES: readonly string[] = LIFECYCLE;
 
 /** Every substitution in every string value, with the top-level property it sits under. */
 function substitutions(doc: Document): { top: string; s: Substitution }[] {
@@ -177,7 +171,11 @@ Point "waitFor" at a command the config defines, or define the command.`,
   defaultSeverity: "warning",
   check({ model, report }) {
     const waitFor = model.string("waitFor");
-    if (!waitFor || !LIFECYCLE.includes(waitFor.value) || model.properties.has(waitFor.value))
+    if (
+      !waitFor ||
+      !LIFECYCLE_PROPERTIES.includes(waitFor.value) ||
+      model.properties.has(waitFor.value)
+    )
       return;
     report({
       range: rangeOf(waitFor.node),

@@ -1,4 +1,4 @@
-import { DEFAULT_SOURCES, type Config, type SourceConfig } from "../lintconfig/config";
+import { DEFAULT_SOURCES, DEFAULTS, type Config, type SourceConfig } from "../lintconfig/config";
 import type { Fetch } from "../net/http";
 import type { Cache } from "../vfs/diskcache";
 import type { FileSystem } from "../vfs/vfs";
@@ -63,7 +63,7 @@ function remote(s: SourceConfig, config: Config, network: Network): Source {
   const options = {
     fetch: network.fetch,
     cache: network.cache,
-    ttlMs: config.cacheTtl ?? 86_400_000,
+    ttlMs: config.cacheTtl ?? DEFAULTS.cacheTtl!,
   };
   if (s.kind === "vscode-gallery" && !s.url)
     throw new SourceError(`extension source "${s.id}": a vscode-gallery source needs "url"`);

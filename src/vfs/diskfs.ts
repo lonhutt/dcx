@@ -1,21 +1,17 @@
 import type { DirEntry, FileSystem, FileType, Stats } from "./vfs";
 import { byName } from "./vfs";
 import { join } from "node:path";
-import { readdir, realpath, stat } from "node:fs/promises";
+import { readdir, readFile, realpath, stat } from "node:fs/promises";
 
-/**
- * The on-disk {@link FileSystem} the CLI uses. Bun-only APIs (`Bun.file` etc.) stay in
- * `src/vfs`, `src/cli` and `src/position`; the published package also has to run on
- * Node 22+, so everything else stays runtime-agnostic.
- */
-export class BunFS implements FileSystem {
+/** The on-disk {@link FileSystem}; plain `node:fs`, so the CLI and the VS Code extension share it. */
+export class DiskFS implements FileSystem {
   async readFile(path: string): Promise<string> {
-    return Bun.file(path).text();
+    return readFile(path, "utf8");
   }
 
   async stat(path: string): Promise<Stats | undefined> {
     try {
-      return { kind: getFileType(await Bun.file(path).stat()) };
+      return { kind: getFileType(await stat(path)) };
     } catch (err) {
       if (isMissing(err)) {
         return undefined;
@@ -53,7 +49,7 @@ export class BunFS implements FileSystem {
  * from a real I/O failure such as `EACCES` or `ELOOP`, which it rejects with.
  * `ENOTDIR` counts as absence: nothing is at a path below a file.
  */
-export function isMissing(err: unknown): boolean {
+function isMissing(err: unknown): boolean {
   const code = (err as NodeJS.ErrnoException)?.code;
   return code === "ENOENT" || code === "ENOTDIR";
 }
@@ -74,6 +70,6 @@ async function targetKind(path: string): Promise<FileType> {
 }
 
 /** Accepts both a `Stats` and a `Dirent`, which agree on these two predicates. */
-export function getFileType(entry: { isFile(): boolean; isDirectory(): boolean }): FileType {
+function getFileType(entry: { isFile(): boolean; isDirectory(): boolean }): FileType {
   return entry.isFile() ? "file" : entry.isDirectory() ? "directory" : "other";
 }

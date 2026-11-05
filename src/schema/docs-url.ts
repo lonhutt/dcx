@@ -1,16 +1,9 @@
+import { LIFECYCLE } from "../model/lifecycle";
 import { definitionKeys } from "./generated/devContainer.scenarios.validator.js";
 
-const REFERENCE = "https://containers.dev/implementors/json_reference/";
+export const REFERENCE = "https://containers.dev/implementors/json_reference/";
 
-const LIFECYCLE = new Set([
-  "initializeCommand",
-  "onCreateCommand",
-  "updateContentCommand",
-  "postCreateCommand",
-  "postStartCommand",
-  "postAttachCommand",
-  "waitFor",
-]);
+const LIFECYCLE_DOCS = new Set<string>([...LIFECYCLE, "waitFor"]);
 const COMPOSE = new Set(
   definitionKeys.compose.filter((k) => !definitionKeys.nonCompose.includes(k)),
 );
@@ -27,7 +20,7 @@ const IMAGE = new Set([
 export function docsUrl(path: readonly string[]): string {
   const [top] = path;
   if (top === undefined) return REFERENCE;
-  if (LIFECYCLE.has(top)) return `${REFERENCE}#lifecycle-scripts`;
+  if (LIFECYCLE_DOCS.has(top)) return `${REFERENCE}#lifecycle-scripts`;
   if (top === "portsAttributes" || top === "otherPortsAttributes")
     return `${REFERENCE}#port-attributes`;
   if (top === "hostRequirements") return `${REFERENCE}#min-host-reqs`;

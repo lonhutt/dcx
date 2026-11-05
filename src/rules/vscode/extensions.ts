@@ -12,9 +12,6 @@ export interface ExtensionEntry {
 
 const ID = /^(-?)([a-z0-9][a-z0-9-]*)\.([a-z0-9][a-z0-9_-]*)(?:@([^\s@]+))?$/i;
 
-/** Lowercased, for lookup keys only; never shown back to the user. */
-export const normaliseId = (id: string) => id.toLowerCase();
-
 export function parseExtensionId(s: string): Omit<ExtensionEntry, "field"> | undefined {
   const m = ID.exec(s.trim());
   if (!m) return undefined;

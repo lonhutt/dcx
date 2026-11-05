@@ -2,7 +2,7 @@ import { rangeOf, type Node } from "../jsonc/jsonc";
 import type { Range } from "../position/position";
 import type { Rule } from "./rule";
 
-export const REFERENCE = "https://containers.dev/implementors/json_reference/";
+export { REFERENCE } from "../schema/docs-url";
 
 /** Declares a rule; the defaults cover what most rules share. */
 export function rule(

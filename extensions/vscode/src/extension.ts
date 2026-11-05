@@ -16,7 +16,7 @@ import { fixDocument } from "../../../src/lint/fix";
 import { ConfigError } from "../../../src/lintconfig/load";
 import { ConfigResolver } from "../../../src/lintconfig/resolve";
 import { services as servicesFor } from "../../../src/lint/services";
-import { NodeFS } from "../../../src/vfs/nodefs";
+import { DiskFS } from "../../../src/vfs/diskfs";
 import { NEEDS_RELOAD, readConfig, type DcxConfig } from "./config";
 import { toDiagnostics } from "./diagnostics";
 
@@ -28,7 +28,7 @@ const TYPING_DELAY_MS = 300;
 export function activate(context: ExtensionContext): void {
   const collection = languages.createDiagnosticCollection("dcx");
   const output = window.createOutputChannel("dcx");
-  const fs = new NodeFS();
+  const fs = new DiskFS();
   let config = readConfig();
   let resolver = newResolver(config);
   let services = servicesFor(process.env, homedir(), fs);

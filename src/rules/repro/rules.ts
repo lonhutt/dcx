@@ -1,6 +1,6 @@
 import { rangeOf } from "../../jsonc/jsonc";
 import { members } from "../../model/model";
-import { parseOci } from "../../model/ref";
+import { isPinned, parseOci } from "../../model/ref";
 import type { Pass } from "../rule";
 import { REFERENCE, rule } from "../util";
 
@@ -29,7 +29,7 @@ digest too.`,
   defaultSeverity: "warning",
   check(pass) {
     const i = image(pass);
-    if (!i || i.ref.digest || (i.ref.tag && i.ref.tag !== "latest")) return;
+    if (!i || isPinned(i.ref)) return;
     pass.report({
       range: rangeOf(i.field.node),
       message: i.ref.tag

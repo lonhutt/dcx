@@ -22,7 +22,7 @@ import { sarif } from "../report/sarif";
 import { text } from "../report/text";
 import { all, get } from "../rules/index";
 import { suggest } from "../schema/suggest";
-import { BunFS } from "../vfs/bunfs";
+import { DiskFS } from "../vfs/diskfs";
 import type { FileSystem } from "../vfs/vfs";
 import { ToolError, UsageError } from "./errors";
 import { excluded } from "./exclude";
@@ -201,7 +201,7 @@ const REPORTERS: Record<Exclude<Format, "sarif">, Reporter> = { text, json, comp
 export async function check(
   args: string[],
   io: Io,
-  fs: FileSystem = new BunFS(),
+  fs: FileSystem = new DiskFS(),
   fetchFn: Fetch = fetch,
 ): Promise<number> {
   const { values, paths } = parseCheckArgs(args);

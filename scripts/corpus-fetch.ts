@@ -52,7 +52,6 @@ interface Row {
 
 const api = async <T>(path: string): Promise<T> =>
   JSON.parse(await $`gh api ${path}`.quiet().text());
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function search(): Promise<Hit[]> {
   const hits: Hit[] = [];
@@ -63,7 +62,7 @@ async function search(): Promise<Hit[]> {
       ).catch((err) => (console.error(`search "${q}" page ${page}: ${err}`), { items: [] }));
       hits.push(...res.items);
       if (res.items.length < 100) break;
-      await sleep(7000); // code search allows 10 requests a minute
+      await Bun.sleep(7000); // code search allows 10 requests a minute
     }
   }
   return hits;

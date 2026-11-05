@@ -14,17 +14,3 @@ export function request(
   const timeout = AbortSignal.timeout(timeoutMs);
   return fetchFn(url, { ...init, signal: signal ? AbortSignal.any([signal, timeout]) : timeout });
 }
-
-/** Coalesces concurrent calls for one key into one in-flight promise. */
-export class Inflight<T> {
-  private readonly pending = new Map<string, Promise<T>>();
-
-  run(key: string, work: () => Promise<T>): Promise<T> {
-    let p = this.pending.get(key);
-    if (!p) {
-      p = work().finally(() => this.pending.delete(key));
-      this.pending.set(key, p);
-    }
-    return p;
-  }
-}

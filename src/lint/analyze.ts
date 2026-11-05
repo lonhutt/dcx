@@ -10,7 +10,7 @@ import type { Document } from "../jsonc/jsonc";
 import { DEFAULTS, type Config } from "../lintconfig/config";
 import { lower } from "../model/lower";
 import { NO_SOURCES, type ExtensionSources } from "../registry/sources";
-import { Engine, type PassInput } from "../rules/engine";
+import { runRules, type PassInput } from "../rules/engine";
 import { all, get } from "../rules/index";
 import type { Rule } from "../rules/rule";
 import { schemaErrors } from "../schema/translate";
@@ -56,8 +56,7 @@ export async function analyze(
   const runnable = parsedCleanly ? rules : rules.filter((r) => r.category === "syntax");
 
   const input = passInput(doc, path, options, config, signal, parsedCleanly);
-  const engine = new Engine(runnable, { severity: (rule) => severityFor(rule, config) });
-  const found = await engine.run(input);
+  const found = await runRules(runnable, input, (rule) => severityFor(rule, config));
 
   const { diagnostics, unused } = apply(found, parseDirectives(doc), doc.lines);
   const unusedRule = rules.find((r) => r.id === UNUSED_SUPPRESSION);

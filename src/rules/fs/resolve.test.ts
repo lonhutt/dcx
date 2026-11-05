@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, realpathSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { BunFS } from "../../vfs/bunfs";
+import { DiskFS } from "../../vfs/diskfs";
 import { MemFS } from "../../vfs/memfs";
 import { inside, readInside, resolveRef } from "./resolve";
 
@@ -63,7 +63,7 @@ describe("resolveRef with real symlinks", () => {
   let outside: string;
   let canLink = true;
   beforeAll(() => {
-    // native: the JS realpath keeps Windows 8.3 names (RUNNER~1), BunFS.realpath expands them
+    // native: the JS realpath keeps Windows 8.3 names (RUNNER~1), DiskFS.realpath expands them
     const base = realpathSync.native(mkdtempSync(join(tmpdir(), "dcx-resolve-")));
     root = join(base, "repo");
     outside = join(base, "outside");
@@ -85,14 +85,14 @@ describe("resolveRef with real symlinks", () => {
   test("a symlink pointing outside the workspace is caught", async () => {
     if (!canLink) return;
     expect(
-      (await resolveRef(new BunFS(), root, join(root, ".devcontainer"), "../escape")).escapes,
+      (await resolveRef(new DiskFS(), root, join(root, ".devcontainer"), "../escape")).escapes,
     ).toBe(true);
   });
 
   test("a symlink inside the workspace is followed", async () => {
     if (!canLink) return;
     expect(
-      await resolveRef(new BunFS(), root, join(root, ".devcontainer"), "../fine"),
+      await resolveRef(new DiskFS(), root, join(root, ".devcontainer"), "../fine"),
     ).toMatchObject({
       escapes: false,
       kind: "file",
@@ -102,7 +102,7 @@ describe("resolveRef with real symlinks", () => {
 
   test("a symlink loop is an error, not a hang", async () => {
     if (!canLink) return;
-    const r = await resolveRef(new BunFS(), root, join(root, ".devcontainer"), "../loop-a");
+    const r = await resolveRef(new DiskFS(), root, join(root, ".devcontainer"), "../loop-a");
     expect(r.escapes).toBe(false);
     expect(r.error).toBeDefined();
   });

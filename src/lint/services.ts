@@ -1,6 +1,6 @@
 import { ociResolver } from "../features/oci";
 import type { AnalyzeOptions } from "./analyze";
-import type { Config } from "../lintconfig/config";
+import { DEFAULTS, type Config } from "../lintconfig/config";
 import type { Fetch } from "../net/http";
 import { buildSources, type Network } from "../registry/build";
 import { cacheDir, DiskCache } from "../vfs/diskcache";
@@ -29,7 +29,7 @@ export function services(
     if (!s) {
       s = (async () => {
         if (!config.online) return { extensions: await buildSources(config, fs) };
-        const ttl = config.cacheTtl ?? 86_400_000;
+        const ttl = config.cacheTtl ?? DEFAULTS.cacheTtl!;
         let features = resolvers.get(ttl);
         if (!features)
           resolvers.set(ttl, (features = ociResolver({ fetch: fetchFn, cache, ttlMs: ttl })));

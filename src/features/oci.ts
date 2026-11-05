@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { gunzipSync } from "node:zlib";
-import { request, Inflight, type Fetch } from "../net/http";
+import { request, type Fetch } from "../net/http";
 import type { Cache } from "../vfs/diskcache";
 import { canonical } from "../model/ref";
 import { parseFeatureRef } from "./ref";
@@ -35,7 +35,8 @@ class NotFound extends Error {}
 export function ociResolver(
   options: ResolverOptions,
 ): FeatureResolver & { readonly failures: readonly string[] } {
-  const inflight = new Inflight<Resolution>();
+  // concurrent resolves of one feature share a request
+  const inflight = new Map<string, Promise<Resolution>>();
   const failures: string[] = [];
   const tokens = new Map<string, string>();
 
@@ -153,7 +154,9 @@ export function ociResolver(
       if (!ref || ref.kind === "local")
         return Promise.resolve({ kind: "unavailable", reason: "not a remote feature" });
       const key = ref.kind === "oci" ? canonical(ref) : ref.url;
-      return inflight.run(key, async (): Promise<Resolution> => {
+      let pending = inflight.get(key);
+      if (pending) return pending;
+      pending = (async (): Promise<Resolution> => {
         try {
           const metadata =
             ref.kind === "oci"
@@ -177,7 +180,9 @@ export function ociResolver(
           if (!signal.aborted) failures.push(`couldn't resolve feature "${reference}": ${reason}`);
           return { kind: "unavailable", reason };
         }
-      });
+      })().finally(() => inflight.delete(key));
+      inflight.set(key, pending);
+      return pending;
     },
   };
 }

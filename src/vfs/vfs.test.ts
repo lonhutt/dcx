@@ -2,7 +2,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } fr
 import { chmodSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { BunFS } from "./bunfs";
+import { DiskFS } from "./diskfs";
 import { OverlayFS } from "./overlayfs";
 import type { FileSystem } from "./vfs";
 
@@ -35,8 +35,8 @@ afterAll(() => {
 
 // The FileSystem contract. An OverlayFS with no buffers must be indistinguishable from its base.
 describe.each<[string, () => FileSystem]>([
-  ["BunFS", () => new BunFS()],
-  ["OverlayFS with no buffers", () => new OverlayFS(new BunFS())],
+  ["DiskFS", () => new DiskFS()],
+  ["OverlayFS with no buffers", () => new OverlayFS(new DiskFS())],
 ])("%s", (_, create) => {
   const fs = create();
 
@@ -92,7 +92,7 @@ describe.each<[string, () => FileSystem]>([
 describe("OverlayFS", () => {
   let fs: OverlayFS;
   beforeEach(() => {
-    fs = new OverlayFS(new BunFS());
+    fs = new OverlayFS(new DiskFS());
   });
 
   test("a buffer shadows the file on disk", async () => {
