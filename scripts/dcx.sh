@@ -1,5 +1,7 @@
 #!/bin/sh
-# Runs the dcx release binary for this machine, downloading and verifying it on first use.
+# Runs the dcx release binary for this machine, downloading it on first use and checking it
+# against the release's SHA256SUMS. That catches a corrupt download, not a tampered release:
+# the sums come from the same place as the binary.
 # Used by action.yml and the pre-commit hook, so neither needs Bun.
 #
 #   DCX_VERSION       the version to run; defaults to the one in this checkout's package.json
@@ -13,6 +15,7 @@ fail() {
 
 here=$(cd "$(dirname "$0")" && pwd)
 version=${DCX_VERSION:-}
+version=${version#v}
 [ -n "$version" ] || version=$(sed -n 's/^  "version": "\(.*\)",$/\1/p' "$here/../package.json")
 [ -n "$version" ] || fail "no version in $here/../package.json"
 
@@ -36,7 +39,9 @@ esac
 [ "$os" = linux ] && [ -f /etc/alpine-release ] && arch=$arch-musl
 
 asset=dcx-$os-$arch$ext
-dir=${XDG_CACHE_HOME:-$HOME/.cache}/dcx/bin/$version
+cache=${XDG_CACHE_HOME:-${HOME:+$HOME/.cache}}
+[ -n "$cache" ] || fail "set HOME or XDG_CACHE_HOME"
+dir=$cache/dcx/bin/$version
 bin=$dir/$asset
 
 if [ ! -x "$bin" ]; then
@@ -48,7 +53,7 @@ if [ ! -x "$bin" ]; then
   curl -fsSL "$url/SHA256SUMS" -o "$tmp/SHA256SUMS" || fail "couldn't download $url/SHA256SUMS"
   grep "  $asset\$" "$tmp/SHA256SUMS" > "$tmp/want" || fail "$asset isn't in v$version's SHA256SUMS"
   if command -v sha256sum > /dev/null; then
-    (cd "$tmp" && sha256sum -c --status want) || fail "checksum mismatch for $asset"
+    (cd "$tmp" && sha256sum -c want > /dev/null 2>&1) || fail "checksum mismatch for $asset"
   else
     (cd "$tmp" && shasum -a 256 -c -s want) || fail "checksum mismatch for $asset"
   fi

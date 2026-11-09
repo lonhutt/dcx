@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { chmodSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import pkg from "../package.json" with { type: "json" };
@@ -66,6 +66,23 @@ describe.skipIf(process.platform === "win32")("dcx.sh", () => {
     expect(r.code).toBe(0);
   });
 
+  test("a leading v on the version is ignored", async () => {
+    const server = release(good("9.9.9"));
+    const r = await run({
+      DCX_VERSION: "v9.9.9",
+      DCX_RELEASE_BASE: server.url.origin,
+      XDG_CACHE_HOME: tmp(),
+    });
+    expect(r.stdout).toBe("fake check a.json\n");
+    expect(r.code).toBe(0);
+  });
+
+  test("no HOME or XDG_CACHE_HOME exits 2", async () => {
+    const r = await run({ DCX_VERSION: "9.9.9", HOME: "" });
+    expect(r.code).toBe(2);
+    expect(r.stderr).toMatch(/HOME/);
+  });
+
   test("a cached binary runs without the network", async () => {
     const server = release(good("9.9.9"));
     const env = {
@@ -109,7 +126,7 @@ describe.skipIf(process.platform === "win32")("dcx.sh", () => {
 
   test("an unknown platform exits 2", async () => {
     const bin = tmp();
-    writeFileSync(join(bin, "uname"), '#!/bin/sh\n[ "$1" = -m ] && echo riscv64 || echo Linux\n');
+    await Bun.write(join(bin, "uname"), '#!/bin/sh\n[ "$1" = -m ] && echo riscv64 || echo Linux\n');
     chmodSync(join(bin, "uname"), 0o755);
     const r = await run({
       PATH: `${bin}:${process.env.PATH}`,

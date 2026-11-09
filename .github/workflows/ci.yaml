@@ -142,21 +142,22 @@ jobs:
           bunx @vscode/vsce@4.1.0 publish --oidc --no-dependencies --skip-license --skip-duplicate
         working-directory: extensions/vscode
 
-  # Cuts GitHub Release vV when the root package.json version has no published release.
+  # Builds the release binaries when the root package.json version has no published release.
   # Each run checks for itself instead of diffing against the last commit, so a release a
   # cancelled run left half done gets finished by the next one.
-  release:
-    name: release
+  build-release:
+    name: build release
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [test, check, build-smoke, vscode]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
-      contents: write
+      contents: read
     env:
       GH_TOKEN: ${{ github.token }}
     outputs:
       version: ${{ steps.v.outputs.version }}
+      done: ${{ steps.v.outputs.done }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -166,44 +167,117 @@ jobs:
         with:
           bun-version: "1.4.2"
 
+      # Looks the release up in the list: a draft has no tag yet, so `gh release view` can miss it.
       - id: v
         run: |
           V=$(bun -p 'require("./package.json").version')
           echo "version=$V" >> "$GITHUB_OUTPUT"
-          if [ "$(gh release view "v$V" --json isDraft -q .isDraft 2>/dev/null)" = false ]; then
+          found=$(gh release list --limit 100 --json tagName,isDraft,targetCommitish \
+            -q ".[] | select(.tagName == \"v$V\") | [.isDraft, .targetCommitish] | @tsv")
+          draft=${found%%$'\t'*}
+          if [ "$draft" = false ]; then
             echo "v$V is already released"
             echo "done=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      # a draft a cancelled run left behind gets tagged at its own target when it's published,
-      # so finish it from that commit, not whatever main is now
-      - if: steps.v.outputs.done != 'true'
-        env:
-          V: ${{ steps.v.outputs.version }}
-        run: |
-          if target=$(gh release view "v$V" --json targetCommitish -q .targetCommitish 2>/dev/null); then
-            git checkout "$target"
+          elif [ "$draft" = true ]; then
+            # a draft a cancelled run left behind gets tagged at its own target when it's published,
+            # so finish it from that commit, not whatever main is now
+            git checkout "${found#*$'\t'}"
           fi
 
       - if: steps.v.outputs.done != 'true'
         run: |
           bun install --frozen-lockfile
           bun scripts/release.ts
-          dist/release/dcx-linux-x64 --version
-          dist/release/dcx-linux-x64 check
 
-      # draft first, so a cancelled upload never leaves a public release missing binaries;
-      # publishing the draft is what creates the tag
       - if: steps.v.outputs.done != 'true'
-        env:
-          V: ${{ steps.v.outputs.version }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: release
+          path: dist/release/*
+          if-no-files-found: error
+
+  # Every binary runs on its own platform before the release goes public: the cross-compiled
+  # ones can build fine and still crash at startup.
+  smoke-release:
+    name: smoke ${{ matrix.asset }}
+    needs: build-release
+    if: needs.build-release.outputs.done != 'true'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { os: ubuntu-latest, asset: dcx-linux-x64 }
+          - { os: ubuntu-24.04-arm, asset: dcx-linux-arm64 }
+          - { os: ubuntu-latest, asset: dcx-linux-x64-musl, alpine: true }
+          - { os: ubuntu-24.04-arm, asset: dcx-linux-arm64-musl, alpine: true }
+          - { os: macos-15-intel, asset: dcx-darwin-x64 }
+          - { os: macos-latest, asset: dcx-darwin-arm64 }
+          - { os: windows-latest, asset: dcx-windows-x64.exe }
+          - { os: windows-11-arm, asset: dcx-windows-arm64.exe }
+    defaults:
+      run:
+        shell: bash
+    steps:
+      # the binary lints this repo's own devcontainer.json
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: release
+          path: release
+
+      - if: ${{ !matrix.alpine }}
         run: |
-          if gh release view "v$V" > /dev/null 2>&1; then
-            gh release upload "v$V" --clobber dist/release/*
+          chmod +x "release/${{ matrix.asset }}"
+          "release/${{ matrix.asset }}" --version
+          "release/${{ matrix.asset }}" check
+
+      - if: ${{ matrix.alpine }}
+        run: |
+          docker run --rm -v "$PWD:/w" -w /w alpine sh -c '
+            apk add --no-cache libstdc++ libgcc >/dev/null
+            chmod +x "release/${{ matrix.asset }}"
+            "release/${{ matrix.asset }}" --version
+            "release/${{ matrix.asset }}" check'
+
+  # Draft first, so a cancelled upload never leaves a public release missing binaries;
+  # publishing the draft is what creates the tag.
+  release:
+    name: release
+    needs: [build-release, smoke-release]
+    if: ${{ !cancelled() && needs.build-release.result == 'success' && contains(fromJSON('["success","skipped"]'), needs.smoke-release.result) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      V: ${{ needs.build-release.outputs.version }}
+    outputs:
+      version: ${{ needs.build-release.outputs.version }}
+    steps:
+      - if: needs.build-release.outputs.done != 'true'
+        uses: actions/download-artifact@v8
+        with:
+          name: release
+          path: release
+
+      - if: needs.build-release.outputs.done != 'true'
+        run: |
+          if gh release list --limit 100 --json tagName -q '.[].tagName' | grep -qx "v$V"; then
+            gh release upload "v$V" --clobber release/*
           else
-            gh release create "v$V" --draft --target "$(git rev-parse HEAD)" --generate-notes dist/release/*
+            gh release create "v$V" --draft --target "$GITHUB_SHA" --generate-notes release/*
           fi
           gh release edit "v$V" --draft=false
+
+      # a version bumped before its draft was finished leaves the draft behind; flag it, don't delete it
+      - run: |
+          gh release list --limit 100 --json tagName,isDraft -q '.[] | select(.isDraft) | .tagName' |
+            while read -r tag; do echo "::warning::stale draft release $tag"; done
 
   # npm trusted publishing trusts this workflow file in the npm environment; no token.
   publish-npm:
