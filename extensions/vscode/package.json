@@ -5,7 +5,18 @@
   "version": "0.1.1",
   "publisher": "lonhutt",
   "license": "MIT",
+  "icon": "icon.png",
   "repository": "https://github.com/lonhutt/dcx",
+  "homepage": "https://github.com/lonhutt/dcx#readme",
+  "bugs": "https://github.com/lonhutt/dcx/issues",
+  "keywords": [
+    "devcontainer",
+    "devcontainer.json",
+    "dev containers",
+    "linter",
+    "cli",
+    "ci"
+  ],
   "engines": {
     "vscode": "^1.90.0"
   },

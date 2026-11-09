@@ -9,3 +9,7 @@ testdata/corpus/*.jsonc -text
 
 # position fixtures depend on their exact line endings (\n, \r\n, lone \r)
 src/position/testdata/*.jsonc -text
+
+# the pre-commit hook runs dcx.sh from a git clone, and it reads package.json with sed
+scripts/*.sh text eol=lf
+package.json text eol=lf

@@ -319,11 +319,13 @@ describe("--online", () => {
   });
 });
 
-test("the pre-commit hook and the action run this version", async () => {
+// both take the version from the package.json they're checked out with, so nothing to bump
+test("the pre-commit hook and the action run the release binary for their own version", async () => {
   const repo = join(import.meta.dir, "..", "..");
-  const { version } = await Bun.file(join(repo, "package.json")).json();
-  expect(await Bun.file(join(repo, ".pre-commit-hooks.yaml")).text()).toContain(
-    `bunx dcx@${version} check`,
-  );
-  expect(await Bun.file(join(repo, "action.yml")).text()).toContain(`default: ${version}`);
+  const hook = await Bun.file(join(repo, ".pre-commit-hooks.yaml")).text();
+  const action = await Bun.file(join(repo, "action.yml")).text();
+  expect(hook).toContain("entry: scripts/dcx.sh check");
+  expect(action).toContain('"$GITHUB_ACTION_PATH/scripts/dcx.sh" check');
+  expect(action).toContain('default: ""');
+  expect(hook + action).not.toContain("bunx");
 });

@@ -141,3 +141,110 @@ jobs:
           bun run build
           bunx @vscode/vsce@4.1.0 publish --oidc --no-dependencies --skip-license --skip-duplicate
         working-directory: extensions/vscode
+
+  # Cuts GitHub Release vV when the root package.json version has no published release.
+  # Each run checks for itself instead of diffing against the last commit, so a release a
+  # cancelled run left half done gets finished by the next one.
+  release:
+    name: release
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [test, check, build-smoke, vscode]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+
+      - id: v
+        run: |
+          V=$(bun -p 'require("./package.json").version')
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          if [ "$(gh release view "v$V" --json isDraft -q .isDraft 2>/dev/null)" = false ]; then
+            echo "v$V is already released"
+            echo "done=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # a draft a cancelled run left behind gets tagged at its own target when it's published,
+      # so finish it from that commit, not whatever main is now
+      - if: steps.v.outputs.done != 'true'
+        env:
+          V: ${{ steps.v.outputs.version }}
+        run: |
+          if target=$(gh release view "v$V" --json targetCommitish -q .targetCommitish 2>/dev/null); then
+            git checkout "$target"
+          fi
+
+      - if: steps.v.outputs.done != 'true'
+        run: |
+          bun install --frozen-lockfile
+          bun scripts/release.ts
+          dist/release/dcx-linux-x64 --version
+          dist/release/dcx-linux-x64 check
+
+      # draft first, so a cancelled upload never leaves a public release missing binaries;
+      # publishing the draft is what creates the tag
+      - if: steps.v.outputs.done != 'true'
+        env:
+          V: ${{ steps.v.outputs.version }}
+        run: |
+          if gh release view "v$V" > /dev/null 2>&1; then
+            gh release upload "v$V" --clobber dist/release/*
+          else
+            gh release create "v$V" --draft --target "$(git rev-parse HEAD)" --generate-notes dist/release/*
+          fi
+          gh release edit "v$V" --draft=false
+
+  # npm trusted publishing trusts this workflow file in the npm environment; no token.
+  publish-npm:
+    name: publish npm package
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      V: ${{ needs.release.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: v${{ needs.release.outputs.version }}
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+
+      - run: bun install --frozen-lockfile
+
+      # Node only here: trusted publishing needs npm >= 11.5.1, and bun publish can't do OIDC
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - run: npm install -g npm@^11.5.1
+
+      - run: |
+          if [ "$(npm view "@craftbuild/dcx@$V" version 2>/dev/null)" = "$V" ]; then
+            echo "@craftbuild/dcx@$V is already on npm"
+            exit 0
+          fi
+          if ! err=$(npm view @craftbuild/dcx name 2>&1 > /dev/null); then
+            case $err in
+              *E404*) echo "@craftbuild/dcx is not on npm yet; first publish is by hand" && exit 0 ;;
+              *) echo "$err" >&2 && exit 1 ;;
+            esac
+          fi
+          npm publish

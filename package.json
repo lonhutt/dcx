@@ -1,5 +1,5 @@
 {
-  "name": "dcx",
+  "name": "@craftbuild/dcx",
   "version": "0.1.0",
   "description": "A linter for devcontainer.json",
   "keywords": [
@@ -22,6 +22,9 @@
   "files": [
     "dist/dcx.js"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "bun": ">=1.4"
   },
