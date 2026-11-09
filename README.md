@@ -1,4 +1,4 @@
-# dcx
+# <img src="assets/icon.svg" width="32" alt=""> dcx
 
 A linter for `devcontainer.json`. It catches the mistakes the dev container CLI doesn't
 tell you about until a build fails, or never tells you about at all: typos in property
@@ -7,7 +7,7 @@ Compose services that don't exist, mounts that collide, extensions that won't in
 for half the team, tokens committed in plain text.
 
 ```console
-$ bunx dcx check
+$ bunx @craftbuild/dcx check
 .devcontainer/devcontainer.json:4:3: warning: Unknown property "postCreateComand"; did you mean "postCreateCommand"? [schema/unknown-property]
 
  2 │   "name": "api",
@@ -26,12 +26,23 @@ There are 72 rules; [RULES.md](RULES.md) lists them all, with an explanation of 
 
 ## Install
 
-dcx runs on [Bun](https://bun.com) 1.4 or later.
+From npm, with [Bun](https://bun.com) 1.4 or later:
 
 ```bash
-bunx dcx check            # no install
-bun add -d dcx            # or as a dev dependency
+bunx @craftbuild/dcx check            # no install
+bun add -d @craftbuild/dcx            # or as a dev dependency
 ```
+
+Or the standalone binary from [Releases](https://github.com/lonhutt/dcx/releases), which
+needs nothing installed (Linux, macOS and Windows; x64 and arm64):
+
+```bash
+curl -fsSL https://github.com/lonhutt/dcx/releases/latest/download/dcx-linux-x64 -o dcx
+chmod +x dcx
+./dcx check
+```
+
+The command is `dcx` either way.
 
 ## Usage
 
@@ -171,8 +182,8 @@ SARIF; give the job `security-events: write`).
     - id: dcx
 ```
 
-The hook runs `bunx dcx@0.1.0 check` with the Bun on your PATH, so it needs Bun installed;
-pre-commit doesn't install it.
+The hook downloads the release binary for the `rev` you pinned (once; it's cached), so
+it doesn't need Bun. Neither does the action.
 
 ## JSON output
 
@@ -214,6 +225,9 @@ Suppressed findings are included, marked, so a consumer can show why something w
 silenced; every other format leaves them out.
 
 ## Editors
+
+dcx is on the VS Code Marketplace:
+[lonhutt.dcx](https://marketplace.visualstudio.com/items?itemName=lonhutt.dcx).
 
 The VS Code extension in `extensions/vscode` is a client for the language server below,
 which it bundles. Settings: `dcx.enable`, `dcx.run` (`onType`, the default, or `onSave`), `dcx.online`,
@@ -268,7 +282,6 @@ The post-create step pulls the `devcontainer-spec` submodule and runs `bun insta
 The Bun version is pinned in more than one place; bump all of them together:
 
 - `.devcontainer/Dockerfile`: the `FROM oven/bun:<version>-slim` tag
-- `.github/workflows/ci.yaml`: `bun-version` in each of the three jobs (test, check, build smoke)
-- `action.yml`: `bun-version` in the setup step
+- `.github/workflows/ci.yaml`: `bun-version` in every job
 - this README: the version in the dev container description above
 - `package.json`: `engines.bun` (only if the minimum supported version changes)

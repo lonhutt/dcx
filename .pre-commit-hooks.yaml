@@ -7,9 +7,8 @@
 - id: dcx
   name: dcx check
   description: Lint devcontainer.json
-  # system, not node: the published bin is a Bun bundle, so pre-commit's nodeenv can't
-  # run it; this uses the Bun already on the PATH. Bump the version with each release
-  entry: bunx dcx@0.1.0 check
-  language: system
+  # runs the release binary for whatever rev you pinned; no Bun needed
+  entry: scripts/dcx.sh check
+  language: script
   files: (^|/)\.?devcontainer\.json$
   pass_filenames: true
