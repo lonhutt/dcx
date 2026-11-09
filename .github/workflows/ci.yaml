@@ -172,8 +172,8 @@ jobs:
         run: |
           V=$(bun -p 'require("./package.json").version')
           echo "version=$V" >> "$GITHUB_OUTPUT"
-          found=$(gh release list --limit 100 --json tagName,isDraft,targetCommitish \
-            -q ".[] | select(.tagName == \"v$V\") | [.isDraft, .targetCommitish] | @tsv")
+          found=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+            -q ".[] | select(.tag_name == \"v$V\") | [.draft, .target_commitish] | @tsv")
           draft=${found%%$'\t'*}
           if [ "$draft" = false ]; then
             echo "v$V is already released"
